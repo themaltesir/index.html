@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Recomp43</title>
+<style>
+:root{--bg:#0e1116;--card:#171c24;--card2:#1e2530;--line:#2a3342;--txt:#e8edf4;--dim:#8b97a8;--acc:#4fc3f7;--grn:#5dd39e;--amb:#ffc766;--red:#ff7a7a;--pink:#f48fb1;--pur:#b39ddb}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.45;padding-bottom:80px}
+header{position:sticky;top:0;z-index:10;background:rgba(14,17,22,.95);backdrop-filter:blur(8px);padding:12px 16px 8px;border-bottom:1px solid var(--line)}
+header h1{font-size:17px;letter-spacing:.5px}
+header h1 span{color:var(--acc)}
+.sub{color:var(--dim);font-size:12px}
+main{padding:14px 14px 20px;max-width:640px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h2{font-size:15px;margin-bottom:8px;color:var(--acc)}
+.card h3{font-size:13.5px;margin:10px 0 4px}
+.card p{margin-bottom:8px}
+.dim{color:var(--dim);font-size:13px}
+.small{font-size:12.5px}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0}
+th{color:var(--dim);text-align:left;font-weight:600;padding:5px 6px;border-bottom:1px solid var(--line)}
+td{padding:6px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.chip{display:inline-block;background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:4px 12px;font-size:12.5px;margin:2px 4px 2px 0}
+.chip.on{background:var(--acc);color:#06222e;border-color:var(--acc);font-weight:600}
+.chip.pink.on{background:var(--pink);color:#3d0f22;border-color:var(--pink)}
+button{font-family:inherit;cursor:pointer}
+.btn{background:var(--acc);color:#06222e;border:none;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:600;width:100%}
+.btn2{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px}
+.btn3{background:none;border:none;color:var(--red);font-size:16px;padding:2px 8px}
+nav{position:fixed;bottom:0;left:0;right:0;background:rgba(14,17,22,.97);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:20}
+nav button{flex:1;background:none;border:none;color:var(--dim);font-size:10.5px;padding:9px 0 7px;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button .ic{font-size:19px;line-height:1}
+nav button.on{color:var(--acc)}
+.ex{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px;margin-bottom:9px}
+.ex .name{font-weight:600;font-size:14.5px}
+.ex .scheme{color:var(--grn);font-size:12.5px;margin:3px 0}
+.ex .cue{color:var(--dim);font-size:12px}
+.ex .her{color:var(--pink);font-size:12px;margin-top:3px}
+.ex .last{color:var(--pur);font-size:12px;margin-top:4px}
+select,input[type=text],input[type=number],input[type=date],textarea{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:14px}
+input[type=text],input[type=number],input[type=date],textarea{width:100%;background:var(--card2)}
+label{font-size:12px;color:var(--dim);display:block;margin:8px 0 3px}
+.setrow{display:flex;gap:6px;align-items:center;margin:4px 0}
+.setrow input{width:70px;text-align:center;padding:6px 4px}
+.setrow .sn{color:var(--dim);font-size:12px;width:38px}
+.tag{font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 7px;border-radius:6px;text-transform:uppercase}
+.tag.main{background:#153a52;color:var(--acc)}
+.tag.acc{background:#1d3a2d;color:var(--grn)}
+.tag.ss{background:#3a2d15;color:var(--amb)}
+.tag.iso{background:#33202c;color:var(--pink)}
+.banner{border-radius:12px;padding:12px;margin-bottom:12px;font-size:13.5px;border:1px solid}
+.banner.g{background:#12261d;border-color:#1f4433;color:var(--grn)}
+.banner.a{background:#2b2312;border-color:#4d3f1e;color:var(--amb)}
+.banner.r{background:#2b1515;border-color:#4d2424;color:var(--red)}
+.banner.n{background:#181f2b;border-color:#2a3a52;color:var(--dim)}
+.timer{position:fixed;bottom:66px;left:0;right:0;text-align:center;z-index:15;pointer-events:none}
+.timer .box{display:inline-block;background:var(--acc);color:#06222e;font-weight:700;font-size:22px;padding:8px 26px;border-radius:30px;pointer-events:auto;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>*{flex:1}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+details{margin-bottom:8px}
+summary{cursor:pointer;font-weight:600;font-size:14px;padding:9px 0}
+summary::marker{color:var(--acc)}
+.hide{display:none!important}
+ul{padding-left:18px;margin-bottom:8px}
+li{margin-bottom:4px}
+.kpi{background:var(--card2);border-radius:10px;padding:9px 6px;text-align:center}
+.kpi .v{font-size:16px;font-weight:700;color:var(--acc)}
+.kpi .v.over{color:var(--red)}
+.kpi .v.good{color:var(--grn)}
+.kpi .k{font-size:10px;color:var(--dim)}
+.bar{height:6px;background:var(--card2);border-radius:3px;margin-top:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--acc);border-radius:3px}
+.bar i.over{background:var(--red)}
+.fresult{padding:9px 6px;border-bottom:1px solid var(--line);font-size:13.5px;display:flex;justify-content:space-between;cursor:pointer}
+.fresult .m{color:var(--dim);font-size:11.5px}
+.fentry{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+hr{border:none;border-top:1px solid var(--line);margin:10px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>RECOMP<span>43</span> <span class="sub" id="hdrSub"></span></h1>
+  <div class="sub" id="hdrSub2">Adaptive recomposition engine</div>
+</header>
+<main id="main"></main>
+<div class="timer hide" id="timer"><div class="box" id="timerBox" onclick="stopTimer()">0:00</div></div>
+<nav id="nav"></nav>
+
+<script>
+/* ============ STORAGE ============ */
+const S={
+ get(k,d){try{const v=localStorage.getItem('r43_'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+ set(k,v){try{localStorage.setItem('r43_'+k,JSON.stringify(v))}catch(e){}},
+ del(k){try{localStorage.removeItem('r43_'+k)}catch(e){}}
+};
+const todayKey=(d)=>{const x=d||new Date();return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
+const dayName=k=>['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(k+'T12:00').getDay()];
+let tab=S.get('tab','today'), openSession=null, foodDate=todayKey(), foodQ='';
+
+/* ============ SETTINGS ============ */
+function cfg(){return S.get('cfg',{wt:86,mode:'recomp',start:'',her:false})}
+function setCfg(k,v){const c=cfg();c[k]=v;S.set('cfg',c);render()}
+function weekNum(){
+ const c=cfg(); if(!c.start) return 1;
+ const d=Math.floor((new Date(todayKey()+'T12:00')-new Date(c.start+'T12:00'))/864e5);
+ return Math.min(12,Math.max(1,Math.floor(d/7)+1));
+}
+function curBlock(){const w=weekNum();return w<=4?'b1':w<=8?'b2':'b3'}
+function isConsol(){return weekNum()%4===0}
+
+/* ============ PERIODISATION ============ */
+const BLOCKS={
+ b1:{name:'Block 1 · Foundation',wks:'Weeks 1–4',
+  sch:{main:{sets:4,txt:'6–8 reps · RIR 2 · rest 2–3 min · 3s eccentric'},acc:{sets:3,txt:'8–12 reps · RIR 1–2 · rest 60–90s · controlled'},ss:{sets:3,txt:'10–15 reps · RIR 1 · superset, rest 60s after pair'},iso:{sets:2,txt:'12–15 reps · RIR 0–1 · rest 45s'}},
+  goal:'Re-establish technique, full range, controlled tempo. The slow eccentric is the stimulus — most long-time lifters have never trained slow lowering seriously.',
+  cond:'Engine day = steady Zone 2 only. Build the aerobic base.'},
+ b2:{name:'Block 2 · Intensification',wks:'Weeks 5–8',
+  sch:{main:{sets:5,txt:'4–6 reps · RIR 2 · rest 3 min · drive up fast'},acc:{sets:3,txt:'6–10 reps · RIR 1–2 · rest 90s'},ss:{sets:3,txt:'8–12 reps · RIR 1 · last set = drop set (−30%, to RIR 0)'},iso:{sets:2,txt:'10–12 reps · RIR 0 + drop set on final set'}},
+  goal:'Heavier loads, more rest, explosive intent. New strength = new hypertrophy headroom. Rotate 1–2 exercise swaps from Block 1.',
+  cond:'Engine alternates: Zone 2 one week, Norwegian 4×4 the next (green days only).'},
+ b3:{name:'Block 3 · Definition',wks:'Weeks 9–12',
+  sch:{main:{sets:4,txt:'8–10 reps · RIR 1 · rest 2 min · 1s pause in stretch'},acc:{sets:3,txt:'10–15 reps · RIR 1 · rest 60s'},ss:{sets:3,txt:'12–15 reps · RIR 0–1 · rest 45s after pair'},iso:{sets:3,txt:'15–20 reps · RIR 0 · rest 30s · chase the pump'}},
+  goal:'Shorter rests, stretch pauses, higher density. With the nutrition plan, this is the visible-definition block. Rotate swaps again.',
+  cond:'Engine: 4×4 weekly if green + one extra 30-min Zone 2 midweek.'}
+};
+const CONSOL='Consolidation week: −1 set on everything, RIR 3, no finishers, same loads. Planned recovery is what lets the next block progress.';
+const PROGRESSION=[
+ ['Double progression','Work within the rep range. Hit the TOP of the range on ALL sets at prescribed RIR → add weight next time (+2.5 kg upper / +5 kg lower or next DB) and rebuild from the bottom.'],
+ ['RIR honesty','RIR 2 = two more clean reps in the tank, no grinding. Plateaued veterans usually train at RIR 4 believing it’s RIR 1. Film a top set; if bar speed never slows, you’re sandbagging.'],
+ ['Beat the logbook','Purple line under each exercise = last session. Beat it by a rep or 2.5 kg. That’s the entire game.'],
+ ['Rotate, don’t shuffle','Same movement SLOTS all 12 weeks; swap the exercise filling a slot at block changes via the swap menu. Novelty without losing tracking.'],
+ ['Auto-deload','The app ambers/reds your day automatically from your Data entries (RHR up, HRV down, short sleep). Two amber days running → treat the week as consolidation.'],
+ ['Missed sessions','Rotation-based: nothing is “missed”, the next session in rotation is simply next. 7+ days gap → −10% loads for one session. 14+ days → restart current block week 1.']
+];
+
+/* ============ SESSIONS ============ */
+const ROT=['upA','loA','upB','eng'];
+const SESSIONS=[
+ {id:'upA',title:'Upper A — Chest & Back',dur:'55 min',lower:false,
+  warm:'3 min easy row/bike → band pull-aparts ×15 → cat-cow ×8 → arm circles → 2 ramp-up sets of first lift (50%, 75%)',
+  work:[
+   {t:'main',pool:['Flat DB Bench Press','Barbell Bench Press','Machine Chest Press','Smith Bench Press'],cue:'Full stretch at the bottom, don’t bounce',herN:'Same — machine press is a great option'},
+   {t:'acc',pool:['Chest-Supported Row','Seated Cable Row','Machine Row','1-Arm DB Row'],cue:'Pause 1s at chest, control the lower',herN:'Same'},
+   {t:'acc',pool:['Incline Machine Press','Incline DB Press','Pec Deck','Weighted Push-up'],cue:'Upper-chest focus, 30–45°',herN:'Same'},
+   {t:'acc',pool:['Lat Pulldown','Pull-up','Neutral-Grip Pulldown','1-Arm Cable Pulldown'],cue:'Elbows down, chest tall',herN:'Same'},
+   {t:'ss',pool:['Cable Lateral Raise + Face Pull','DB Lateral Raise + Reverse Pec Deck'],cue:'Light, perfect reps — delts respond to volume',herN:'Same'}],
+  fin:{name:'Bike sprints',desc:'6 × 20s hard / 40s easy (6 min)',swaps:'Rower or ski erg'}},
+ {id:'loA',title:'Lower A — Squat & Hinge',dur:'55 min',lower:true,
+  warm:'3 min incline walk → 10 squats → 10 hip hinges → world’s greatest stretch ×3/side → 2 ramp-up sets',
+  work:[
+   {t:'main',pool:['Barbell or Smith Squat','Leg Press','Hack Squat','Heels-Elevated Goblet Squat'],cue:'Depth over load. Own every centimetre',herN:'Goblet or Smith squat, same scheme'},
+   {t:'acc',pool:['Romanian Deadlift','DB RDL','45° Back Extension','Cable Pull-Through'],cue:'Hips back, hamstrings load, soft knees',herN:'Same, or swap to Hip Thrust'},
+   {t:'acc',pool:['Bulgarian Split Squat','Walking Lunge','Leg Extension','Step-Up'],cue:'Torso slightly forward = more glute',herN:'Hip Thrust 3×10–12 preferred fill here'},
+   {t:'acc',pool:['Seated Leg Curl','Lying Leg Curl','Swiss-Ball Curl','Nordic Negatives'],cue:'Seated beats lying — long muscle length',herN:'Same'},
+   {t:'ss',pool:['Standing Calf Raise + Cable Crunch','Leg-Press Calves + Hanging Knee Raise'],cue:'Calves: 2s stretch pause. Crunch: flex spine',herN:'Same'}],
+  fin:{name:'None — density day',desc:'Legs + finisher wrecks the next 48h. Optional 5-min incline-walk cooldown.',swaps:''}},
+ {id:'upB',title:'Upper B — Shoulders & Arms',dur:'55 min',lower:false,
+  warm:'3 min row → band dislocates ×10 → scap pull-ups ×8 → 2 ramp-up sets',
+  work:[
+   {t:'main',pool:['Seated DB Shoulder Press','Machine Shoulder Press','Barbell OHP','Arnold Press'],cue:'Elbows slightly forward, no lower-back arch',herN:'Same — machine version fine'},
+   {t:'acc',pool:['Pull-up','Assisted Pull-up','Neutral-Grip Pulldown','Machine Pulldown'],cue:'Full hang to chin over. Add weight at 3×8',herN:'Assisted pull-up machine, same scheme'},
+   {t:'acc',pool:['Cable Fly','Pec Deck','DB Fly','Deficit Push-up AMRAP'],cue:'1s squeeze, wide stretch',herN:'Same'},
+   {t:'ss',pool:['EZ-Bar Curl + Rope Pressdown','DB Curl + Bench Dips'],cue:'No swinging, elbows pinned',herN:'Same, lighter'},
+   {t:'ss',pool:['Incline DB Curl + Overhead Rope Extension','Hammer Curl + Close-Grip Push-up'],cue:'Both train the stretch — that’s where growth lives',herN:'Same'},
+   {t:'iso',pool:['Reverse Pec Deck','Bent-Over Rear-Delt Raise','Face Pull'],cue:'Rear delts = 3D shoulders from behind',herN:'Same'}],
+  fin:{name:'8-min EMOM',desc:'Odd min: 12 KB swings · even min: 8 push-ups',swaps:'Rower 8×100m on the minute'}},
+ {id:'eng',title:'Engine — Conditioning, Core & Mobility',dur:'50 min',lower:false,
+  warm:'5 min easy on chosen machine',
+  work:[
+   {t:'main',pool:['Zone 2 — 35 min','Norwegian 4×4 (green days, Blocks 2–3)'],cue:'Z2: 60–70% max HR, conversational. 4×4: 4 min RPE 8 / 3 min easy ×4',herN:'Identical, her own HR zones'},
+   {t:'ss',pool:['Core Circuit ×3'],cue:'Dead bug ×10 · side plank 30s/side · Pallof press ×12',herN:'Identical'},
+   {t:'iso',pool:['Mobility — 8 min'],cue:'Couch stretch 60s/side · 90/90 · t-spine opener ×8 · hamstring floss ×10',herN:'Identical'}],
+  fin:{name:'Hangover rule',desc:'Drank last night? Session still happens — cap RPE 5, steady Z2 only, electrolytes + 500 ml before. Easy movement speeds recovery and protects the habit.',swaps:''}}
+];
+const OPTIONAL_WED='Any rest day: 20–30 min brisk walk + 10-min flow (down-dog → runner’s lunge → twist, 3 rounds/side). Active recovery, not training. In cut mode this becomes a second 30–40 min Zone 2 session.';
+
+/* ============ HEALTH METRICS / AUTO-READINESS ============ */
+function metrics(){return S.get('mx',{})}
+function saveMetric(dk,k,v){const m=metrics();m[dk]=m[dk]||{};if(v==='')delete m[dk][k];else m[dk][k]=parseFloat(v);S.set('mx',m)}
+function baseline(key,excl){
+ const m=metrics();const ks=Object.keys(m).filter(d=>d!==excl&&m[d][key]!=null).sort().slice(-14);
+ if(ks.length<3)return null;
+ const vals=ks.map(d=>m[d][key]).sort((a,b)=>a-b);
+ return vals[Math.floor(vals.length/2)];
+}
+function readiness(){
+ const dk=todayKey(),m=metrics()[dk]||{},reasons=[];let flags=0,dataUsed=false;
+ const bR=baseline('rhr',dk),bH=baseline('hrv',dk);
+ if(m.rhr!=null&&bR!=null){dataUsed=true;if(m.rhr>=bR+5){flags++;reasons.push('Resting HR '+m.rhr+' vs baseline '+bR+' (+'+(m.rhr-bR)+')')}}
+ if(m.hrv!=null&&bH!=null){dataUsed=true;if(m.hrv<=bH*0.8){flags++;reasons.push('HRV '+m.hrv+' vs baseline '+bH+' (−'+Math.round(100-100*m.hrv/bH)+'%)')}}
+ if(m.sleep!=null){dataUsed=true;if(m.sleep<6.5){flags++;reasons.push('Sleep '+m.sleep+'h (<6.5h)')}}
+ if(m.energy!=null){dataUsed=true;if(m.energy<=2){flags++;reasons.push('Energy '+m.energy+'/5')}}
+ if(!dataUsed){
+  const r=S.get('ready',null);
+  if(!r)return{st:'n',reasons:['No data today — enter this morning’s numbers in Data, or tap a manual readiness below'],manual:true};
+  const sc=r.s+r.e+r.m;
+  return{st:sc>=5?'g':sc>=3?'a':'r',reasons:['Manual readiness (no Watch data entered today)'],manual:true};
+ }
+ return{st:flags===0?'g':flags===1?'a':'r',reasons:reasons.length?reasons:['All markers at/near baseline'],manual:false};
+}
+const READLINE={g:'GREEN — full session as written. Chase progression.',a:'AMBER — the app has cut 1 set from every exercise and removed the finisher. Cap RIR 2–3.',r:'RED — do the “Exhausted” version (More → Versions) or full rest. Shrink it, don’t skip it.',n:'No readiness data yet.'};
+
+/* ============ SCHEDULER ============ */
+function hist(){return S.get('hist',[])}
+function logSession(id,dk){const h=hist();h.unshift({id,d:dk||todayKey()});S.set('hist',h.slice(0,400));render()}
+function undoLast(){const h=hist();h.shift();S.set('hist',h);render()}
+function nextSession(){
+ const h=hist();
+ if(!h.length)return{id:'upA',note:'Fresh start — Upper A opens the rotation.'};
+ const last=h[0];
+ const gap=Math.floor((new Date(todayKey()+'T12:00')-new Date(last.d+'T12:00'))/864e5);
+ const nid=ROT[(ROT.indexOf(last.id)+1)%4];
+ let note='';
+ if(gap>=14)note='14+ days off → restart this block at week 1 loads.';
+ else if(gap>=7)note='7+ days off → take −10% on all loads today, then resume normal progression.';
+ const nx=SESSIONS.find(s=>s.id===nid);
+ if(nx.lower&&SESSIONS.find(s=>s.id===last.id).lower&&gap<2)note='Lower day done <48h ago — swap to Upper A or Engine today.';
+ return{id:nid,note};
+}
+function doneToday(){return hist().filter(x=>x.d===todayKey()).map(x=>x.id)}
+function weekSessions(){
+ const now=new Date(todayKey()+'T12:00');const mon=new Date(now);mon.setDate(now.getDate()-((now.getDay()+6)%7));
+ return hist().filter(x=>new Date(x.d+'T12:00')>=mon).length;
+}
+
+/* ============ NUTRITION ENGINE ============ */
+const MODES={recomp:{d:350,n:'Recomposition',desc:'Slow fat loss, muscle gain. −0.2 kg/wk. Fits current weekends.'},cut:{d:500,n:'Cut',desc:'−0.4 kg/wk. Visible change monthly. Weekends make this the realistic ceiling.'},hard:{d:650,n:'Hard cut',desc:'−0.6 kg/wk. Only sustainable if weekend drinking is roughly halved — otherwise Mon–Thu becomes miserable and muscle loss risk rises.'}};
+function targets(dayType){
+ const c=cfg(),maint=Math.round(c.wt*30.8),def=MODES[c.mode].d;
+ let kcal,fat;
+ if(dayType==='drink'){kcal=maint-def-450;fat=Math.round(c.wt*0.6)}
+ else if(dayType==='rest'){kcal=maint-def-150;fat=Math.round(c.wt*0.75)}
+ else{kcal=maint-def;fat=Math.round(c.wt*0.75)}
+ const p=Math.round(c.wt*2.1);
+ const carbs=Math.max(0,Math.round((kcal-p*4-fat*9)/4));
+ return{kcal,p,f:fat,c:carbs,maint};
+}
+/* Food DB: [name, unit('g'=per100g,'u'=per unit), kcal, P, C, F, alc?] */
+const FDB=[
+['Chicken breast','g',165,31,0,3.6],['Chicken thigh','g',209,26,0,11],['Turkey breast','g',104,24,0,1],['Beef mince 5%','g',137,21,0,5],['Sirloin steak','g',183,27,0,8],['Pork loin','g',173,27,0,7],['Bacon rasher','u',90,7,0,7],['Ham slice','u',25,4.5,0.3,0.6],['Salmon fillet','g',208,20,0,13],['Cod / white fish','g',82,18,0,0.7],['Tuna tin (drained)','u',109,25,0,0.5],['Prawns','g',85,20,0,0.5],['Smoked mackerel','g',305,19,0,25],['Egg','u',74,6.3,0.4,5],['Egg whites','g',52,11,0.7,0.2],['Whey scoop','u',120,24,3,1.5],['Casein scoop','u',110,23,3,0.5],['Greek yoghurt 0%','g',57,10,4,0],['Greek yoghurt full-fat','g',97,9,4,5],['Skyr','g',63,11,4,0.2],['Cottage cheese','g',98,11,3,4],['Milk semi-skimmed (100ml)','g',47,3.6,4.8,1.8],['Cheddar','g',416,25,0.1,35],['Halloumi','g',321,22,2,26],['Tofu','g',76,8,2,4.5],['Biltong','g',250,50,3,4],['Protein bar','u',200,20,18,7],
+['White rice cooked','g',130,2.7,28,0.3],['Pasta cooked','g',158,6,31,0.9],['Potato','g',77,2,17,0.1],['Sweet potato','g',86,1.6,20,0.1],['Bread slice','u',95,4,17,1.2],['Tortilla wrap','u',190,6,32,4],['Bagel','u',250,10,48,1.5],['Oats dry','g',379,13,68,6.5],['Couscous cooked','g',112,3.8,23,0.2],['Quinoa cooked','g',120,4.4,21,1.9],['Baked beans','g',84,4.7,13,0.5],['Banana','u',105,1.3,27,0.4],['Apple','u',95,0.5,25,0.3],['Orange','u',62,1.2,15,0.2],['Berries','g',45,0.7,10,0.3],['Rice cakes','u',28,0.7,6,0.2],
+['Olive oil tbsp','u',119,0,0,13.5],['Butter 10g','u',74,0,0,8],['Avocado (half)','u',120,1.5,6,11],['Peanut butter tbsp','u',96,4,3,8],['Almonds','g',579,21,22,50],['Mixed nuts','g',607,20,17,54],['Dark chocolate square','u',55,0.7,4.5,4],['Hummus','g',237,7,14,17],
+['Broccoli','g',34,2.8,7,0.4],['Spinach','g',23,2.9,3.6,0.4],['Mixed salad','g',20,1.5,3,0.2],['Peppers','g',31,1,6,0.3],['Tomatoes','g',18,0.9,3.9,0.2],['Carrots','g',41,0.9,10,0.2],['Mushrooms','g',22,3.1,3.3,0.3],['Onion','g',40,1.1,9,0.1],['Frozen mixed veg','g',42,2.5,8,0.5],
+['Chicken burrito','u',850,40,90,32],['Pizza slice (margherita)','u',250,10,32,9],['Doner kebab','u',900,45,60,50],['Fish & chips','u',950,40,95,45],['Chicken tikka + rice','u',750,45,80,20],['Chinese sweet & sour','u',800,30,100,25],['Burger + fries','u',1100,40,110,55],['Sushi 8 pieces','u',350,15,60,5],['Caesar salad','u',470,30,15,30],['Full English','u',850,35,40,55],['Sunday roast','u',800,50,60,35],['Steak + chips (restaurant)','u',900,55,60,45],['Tapas meat plate','u',450,30,5,35],['Meal-deal sandwich','u',550,25,60,22],['Whey + banana','u',225,25,30,2],
+['Wine glass 175ml','u',159,0,5,0,1],['Wine bottle','u',625,0,20,0,1],['Beer pint','u',230,1.5,17,0,1],['Prosecco glass','u',90,0,2,0,1],['Spirit single + mixer','u',120,0,10,0,1],['Spirit single (neat/diet mix)','u',60,0,0,0,1],
+['Flat white','u',120,6,9,6],['Coke can','u',139,0,35,0],['Zero/diet drink','u',2,0,0,0]];
+function flog(){return S.get('flog',{})}
+function fday(dk){const f=flog();return f[dk]||{type:defType(dk),items:[]}}
+function defType(dk){const d=new Date(dk+'T12:00').getDay();return(d===5||d===6||d===0)?'drink':'train'}
+function saveFday(dk,day){const f=flog();f[dk]=day;S.set('flog',f)}
+function addFood(i){
+ const it=FDB[i];const isG=it[1]==='g';
+ const q=prompt(isG?it[0]+' — grams?':it[0]+' — how many?',isG?'100':'1');
+ if(!q)return;let n=parseFloat(q);if(!n||n<=0)return;
+ n=Math.min(n,isG?2000:30);
+ const mult=isG?n/100:n;
+ const day=fday(foodDate);
+ day.items.push({n:it[0]+(isG?' '+n+'g':n>1?' ×'+n:''),k:Math.round(it[2]*mult),p:Math.round(it[3]*mult),c:Math.round(it[4]*mult),f:Math.round(it[5]*mult),a:it[6]?1:0});
+ saveFday(foodDate,day);foodQ='';render();
+}
+function addCustom(){
+ const e=id=>document.getElementById(id).value;
+ const n=e('cf_n'),k=parseFloat(e('cf_k'))||0,p=parseFloat(e('cf_p'))||0,c=parseFloat(e('cf_c'))||0,f=parseFloat(e('cf_f'))||0;
+ if(!n||!k)return;
+ const day=fday(foodDate);day.items.push({n,k:Math.round(k),p:Math.round(p),c:Math.round(c),f:Math.round(f),a:0});
+ saveFday(foodDate,day);render();
+}
+function delFood(idx){const day=fday(foodDate);day.items.splice(idx,1);saveFday(foodDate,day);render()}
+function setDayType(t){const day=fday(foodDate);day.type=t;saveFday(foodDate,day);render()}
+function shiftFoodDate(n){const d=new Date(foodDate+'T12:00');d.setDate(d.getDate()+n);foodDate=todayKey(d);render()}
+function weekAlc(){
+ const f=flog(),now=new Date(todayKey()+'T12:00'),mon=new Date(now);mon.setDate(now.getDate()-((now.getDay()+6)%7));
+ let k=0;Object.keys(f).forEach(dk=>{if(new Date(dk+'T12:00')>=mon&&new Date(dk+'T12:00')<=now)f[dk].items.forEach(it=>{if(it.a)k+=it.k})});
+ return k;
+}
+
+/* ============ STATIC CONTENT ============ */
+const CUTCARD=`<div class="card"><h2>Getting properly cut — the honest version</h2>
+<p class="small">Visible definition ≈ 12–15% body fat; clear abs ≈ 10–12%. What that takes from where you are:</p>
+<table><tr><th>Scenario</th><th>Outcome</th></tr>
+<tr><td><b>Recomp mode + current weekends</b></td><td>Noticeably leaner & fuller in 12 wks; “cut” in ~9–12 months. Sustainable forever.</td></tr>
+<tr><td><b>Cut mode + weekends halved</b></td><td>~0.5 kg/wk. Visibly cut in ~16–20 weeks. The realistic “I want abs” path.</td></tr>
+<tr><td><b>Hard cut + current weekends</b></td><td>Doesn’t work. ~2,600 kcal of drinks erases the extra weekday deficit, training quality collapses. Not offered as a fake option.</td></tr></table>
+<p class="small">The app never lies to you: weekly alcohol kcal is tallied on the Food tab. Definition is made Monday–Thursday and defended or surrendered Friday–Sunday.</p>
+<p class="dim small">In cut/hard mode: steps floor rises to 10–12k, rest-day walk becomes a second Zone 2 session, lifting volume stays (muscle retention — never add extra HIIT to “burn more”).</p></div>`;
+const FUELSTATIC=`
+<div class="card"><h2>Meal timing</h2>
+<ul class="small"><li><b>Pre-workout</b> (60–90 min): carbs + protein — oats + whey, toast + eggs, banana + yoghurt. Fasted training at 43 in a deficit = flat sessions.</li>
+<li><b>Post-workout</b> (~2h window): 40 g protein + carbs.</li>
+<li><b>Protein spread</b>: 4 × 35–45 g feeds beats 2 big ones at your age.</li>
+<li><b>Before drinking (Fri)</b>: 50 g protein meal + veg before the first drink. Slows absorption, kills the 11pm kebab.</li>
+<li><b>Drinking-night bed routine</b>: 500 ml water + electrolytes + Greek yoghurt/casein.</li></ul></div>
+<div class="card"><h2>Hydration & electrolytes</h2><p class="small">Floor 2.5–3 L/day, +500 ml training days. Drinking days: 1 water per 2 drinks, electrolyte sachet (or ½ tsp salt + squash) before bed and on waking. Most Saturday wreckage is dehydration + sodium, not just alcohol.</p></div>
+<div class="card"><h2>Weekend design</h2><ul class="small"><li>Heavy lifting lives Mon–Thu — your recovered, fuelled 96 hours.</li><li>Friday rest; protein-forward dinner before going out.</li><li>Saturday Engine is hangover-proof by design (Z2 + core, RPE-capped).</li><li>Sunday: 8k+ steps, big protein breakfast, early night — Sunday sleep launches the week.</li><li>No punishment cardio after drinking. Ever.</li></ul></div>
+<div class="card"><h2>Monthly adjustment rules</h2>
+<table><tr><th>Signal (2-wk trend)</th><th>Action</th></tr>
+<tr><td>Waist ↓, weight flat</td><td>Perfect recomposition — change nothing</td></tr>
+<tr><td>Weight & waist ↑</td><td>Drop Mon–Thu 150 kcal (carbs) or step up mode</td></tr>
+<tr><td>Weight ↓ >0.7 kg/wk or lifts dropping</td><td>Add 150–200 kcal carbs Mon–Thu</td></tr>
+<tr><td>Energy ≤2/5 all week</td><td>Carbs pre-training first; fix sleep before cutting food</td></tr>
+<tr><td>All stalled 3+ wks</td><td>The drinks are the honest place to look</td></tr></table></div>`;
+const VERSIONS=[
+ ['30-minute gym','<p class="small">3-min warm-up (1 ramp set). MAIN lift exactly as prescribed. Then first two accessory slots as a superset, 3 rounds. Skip isolation + finisher. 80% of the stimulus in half the time.</p>'],
+ ['Home — dumbbells only',`<table><tr><th>Session</th><th>DB swap</th></tr><tr><td>Upper A</td><td>Floor press · 1-arm row · deficit push-up · DB pullover · lateral + rear-delt raises</td></tr><tr><td>Lower A</td><td>Goblet squat · DB RDL · split squat (foot on sofa) · hip thrust · single-leg calf raise + weighted crunch</td></tr><tr><td>Upper B</td><td>Seated DB press · renegade row · floor fly · curls + overhead extension · rear-delt raise</td></tr><tr><td>Engine</td><td>Hilly walk/stairs 35 min + same core & mobility</td></tr></table><p class="dim small">Same scheme as current block. DBs too light → 4s eccentric + 2s pause. Tension is tension.</p>`],
+ ['Hotel / holiday','<p class="small">Hotel gym: Home-DB version. No gym: bodyweight version, 3×/wk, 25 min + 8k steps. Holidays are for maintaining — maintenance is a win.</p>'],
+ ['Bodyweight-only','<p class="small">5 rounds: 10 tempo push-ups (3s down) · 15 squats or 10 jump squats · 10/leg split squats · 10 inverted rows under a table (or 15 prone Y-raises) · 30s plank. Finish: 20 walking lunges. ~25 min.</p>'],
+ ['“I feel exhausted”','<p class="small">Shrink, never skip Mon–Thu. 20–30 min easy walk/bike + 8-min mobility + optional 2×15 of two machines you enjoy at RIR 4. Leave better than you arrived. Red 2 days running → full rest + sleep.</p>'],
+ ['“Only 20 minutes”','<p class="small">Giant circuit ×4, 60s rest: DB press ×8 · DB row ×10/side · goblet squat ×12 · DB RDL ×12 · 30s plank. RIR 1 by round 4. 18 min, logged as a win.</p>'],
+ ['Busy gym (Basic-Fit peak)','<p class="small">Every slot has machine, cable AND DB options — nothing needs the occupied rack. Nuclear: one bench + one pair of DBs, run the Home-DB version on the gym floor. Accessory order freely swappable; main lift first.</p>'],
+ ['Partner mode','<p class="small">Toggle <b>Her</b> on Train. Same sessions/blocks/timer; pink notes show substitutions. She biases the top of each rep range, identical progression rules. Alternate sets on one station — under 60 min together.</p>']
+];
+const EDGE=`
+<div class="card"><h2>Basic stack</h2><table><tr><th>What</th><th>Dose / timing</th><th>Why</th></tr>
+<tr><td>Creatine monohydrate</td><td>5 g daily, any time</td><td>Most proven supplement in existence; strength, lean mass, cognition data. Never cycle.</td></tr>
+<tr><td>Whey/protein</td><td>25–40 g as needed</td><td>Cheapest route to 180 g/day</td></tr>
+<tr><td>Vitamin D3</td><td>2,000–4,000 IU w/ meal</td><td>Test via GP if possible; low D = fatigue</td></tr>
+<tr><td>Magnesium glycinate</td><td>200–400 mg evening</td><td>Sleep; alcohol depletes it</td></tr>
+<tr><td>Fish oil</td><td>1–2 g EPA+DHA</td><td>Recovery, cardiovascular, joints</td></tr>
+<tr><td>Caffeine</td><td>100–200 mg pre-training, <b>none after 14:00</b></td><td>Best legal performance aid; cutoff protects sleep</td></tr></table></div>
+<div class="card"><h2>Advanced stack (after 4 wks consistency)</h2><table><tr><th>What</th><th>Dose</th><th>Notes</th></tr>
+<tr><td>Citrulline malate</td><td>6–8 g pre</td><td>Pump, endurance, soreness — decent evidence</td></tr>
+<tr><td>Rhodiola rosea</td><td>200–400 mg AM</td><td>Best-evidenced adaptogen for fatigue/sharpness. Tired weekdays, not daily forever</td></tr>
+<tr><td>Ashwagandha KSM-66</td><td>300–600 mg PM, 8–12 wk cycles</td><td>Stress, sleep, small strength effect. <b>Skip on drinking nights.</b> Stop if you feel flat</td></tr>
+<tr><td>Electrolytes</td><td>Drinking nights + hard sessions</td><td>Cheapest hangover-severity reducer</td></tr>
+<tr><td>Beta-alanine</td><td>3.2 g/day</td><td>Only if you love finishers; harmless tingles</td></tr></table></div>
+<div class="card"><h2>Not worth your money</h2><p class="small">BCAAs · testosterone boosters (tribulus, D-AA, fenugreek — <b>especially pointless on TRT</b>) · fat burners · glutamine · ZMA claims · pre-workout blends (underdosed everything) · greens powders as veg replacement · collagen for muscle.</p></div>
+<div class="card"><h2>TRT notes (for your prescriber, not Reddit)</h2><ul class="small"><li>Fortnightly injections → peak-trough rollercoaster; flat/low-libido week-2 days are a known pattern. Many clinicians split the dose weekly. Worth the conversation; never self-adjust.</li><li>Periodic bloods regardless: haematocrit/FBC, oestradiol, PSA, BP. Alcohol + TRT both load the liver — add GGT/ALT.</li><li>Alcohol blocks the muscle-building signal ~24h — another reason lifting lives Mon–Thu.</li></ul></div>
+<div class="card"><h2>Sharpness protocol</h2>
+<h3>Morning</h3><ul class="small"><li>Fixed wake ±30 min, 7 days — including Sunday. Regularity beats duration.</li><li>10 min outdoor light within an hour of waking.</li><li>First coffee 60–90 min after waking; cutoff 14:00.</li><li>Protein breakfast; 5-min walk.</li></ul>
+<h3>Stress</h3><p class="small">Physiological sigh (double inhale, long exhale) ×3. Pre-sleep: 5 min of 4s-in/6s-out breathing.</p>
+<h3>Evening</h3><ul class="small"><li>Dim screens 21:30; bedroom 17–19°C.</li><li>Last alcohol ≥3h pre-bed when you can influence it — it crushes REM.</li><li>Magnesium + reading > doomscrolling.</li></ul>
+<h3>Fatigue triage</h3><table><tr><th>Pattern</th><th>Cause → fix</th></tr>
+<tr><td>Tired AM, fine by noon</td><td>Sleep timing → light + caffeine protocol</td></tr>
+<tr><td>Wrecked Mon–Tue, fine Thu</td><td>Weekend alcohol/sleep → hydration + Sunday-night protocol</td></tr>
+<tr><td>Flat only in gym</td><td>Under-fuelled → pre-training carbs</td></tr>
+<tr><td>Flat + low mood/libido wk 2 post-injection</td><td>TRT trough → log it, discuss interval with prescriber</td></tr>
+<tr><td>2+ wks tired despite sleep</td><td>Overreached/medical → consolidation week + GP bloods</td></tr></table>
+<h3>Yearly bloods</h3><p class="small">Total & free testosterone (timed vs injection) · oestradiol · haematocrit/FBC · PSA · GGT/ALT · lipids · HbA1c · ferritin · vitamin D · TSH · hs-CRP.</p></div>`;
+const ROADMAP=[['1','Baseline: film lifts, log loads, waist + weight, Watch baselines (RHR/HRV/VO₂/steps)'],['2–3','Foundation loading: double progression, nail tempo, nutrition habits'],['4','Consolidation + review: photos, waist, VO₂'],['5–7','Intensification: heavy 4–6s, drop sets, first 4×4s; rotate swaps'],['8','Consolidation + mid-point: visible upper-body change, +1–2 VO₂ expected'],['9–11','Definition: density, stretch-pauses, weekly intervals, tightest adherence'],['12','Consolidation + full reassessment; roll blocks forward with new numbers']];
+const HEALTHDATA=[['Resting HR','Auto: today ≥ baseline+5 → amber (app trims sets, kills finisher)'],['HRV','Auto: today ≤ 80% of baseline → amber; two triggers → red'],['Sleep','Auto: <6.5h → amber flag; fix sleep before food or training changes'],['Energy 1–5','Auto: ≤2 → amber flag'],['VO₂ max','Manual watch: aim +2–3 in 12 wks; stalled 8 wks → add a Z2 session'],['Steps','Floor 8–10k (10–12k in cut mode) — the quiet fat-loss lever'],['Weight','Enter Mon & Thu AM only; weekend readings are alcohol-water noise'],['1-min HR recovery','<25 bpm drop → bias Engine to Z2 over intervals']];
+
+/* ============ RENDER HELPERS ============ */
+const NAVS=[['today','☀️','Today'],['train','🏋️','Train'],['food','🍳','Food'],['data','📈','Data'],['more','⚙️','More']];
+function el(id){return document.getElementById(id)}
+function nav(){el('nav').innerHTML=NAVS.map(n=>`<button class="${tab===n[0]?'on':''}" onclick="go('${n[0]}')"><span class="ic">${n[1]}</span>${n[2]}</button>`).join('')}
+function go(t){tab=t;openSession=null;S.set('tab',t);render();window.scrollTo(0,0)}
+function adjSets(base){const rd=readiness();return Math.max(1,base-((rd.st==='a'||isConsol())?1:0))}
+function skipFin(){const rd=readiness();return rd.st==='a'||rd.st==='r'||isConsol()}
+
+/* ---- TODAY ---- */
+function setReady(k,v){const r=S.get('ready',{s:1,e:1,m:1});r[k]=v;S.set('ready',r);render()}
+function manualReadyChips(){
+ const r=S.get('ready',{s:1,e:1,m:1});
+ const q=(k,label,opts)=>`<div style="margin:6px 0"><span class="dim small">${label}</span><br>${opts.map((o,i)=>`<span class="chip ${r[k]===i?'on':''}" onclick="setReady('${k}',${i})">${o}</span>`).join('')}</div>`;
+ return q('s','Sleep',['<6h','6–7h','7h+'])+q('e','Energy',['Flat','OK','Good'])+q('m','Soreness',['Rough','Some','Fresh']);
+}
+function todayView(){
+ const rd=readiness(),nx=nextSession(),nxS=SESSIONS.find(s=>s.id===nx.id),done=doneToday();
+ const b=BLOCKS[curBlock()],wk=weekNum(),c=cfg();
+ return `
+ <div class="banner ${rd.st}"><b>${READLINE[rd.st]}</b><br><span class="small">${rd.reasons.join(' · ')}</span></div>
+ ${rd.manual&&rd.st==='n'?`<div class="card">${manualReadyChips()}<p class="dim small">Better: enter RHR / HRV / sleep on the Data tab each morning — the app then adapts automatically and learns your baselines.</p></div>`:''}
+ ${nx.note?`<div class="banner a">${nx.note}</div>`:''}
+ ${isConsol()?`<div class="banner n"><b>Week ${wk} = consolidation.</b> ${CONSOL}</div>`:''}
+ <div class="card"><h2>Next in rotation</h2>
+  ${done.length?`<p class="small" style="color:var(--grn)">Done today: ${done.map(id=>SESSIONS.find(s=>s.id===id).title.split('—')[0]).join(', ')} ✓</p>`:''}
+  <button class="btn" onclick="openSess('${nx.id}')">${nxS.title} · ${nxS.dur}</button>
+  <p class="dim small" style="margin-top:8px">Sessions follow rotation, not the calendar. Did something else? Log it below and the rotation reshuffles itself.</p>
+  <div class="row">${SESSIONS.map(s=>`<button class="btn2" onclick="logSession('${s.id}')">✓ Did ${s.title.split(' —')[0]}</button>`).join('')}</div>
+  ${hist().length?`<p class="dim small" style="margin-top:6px">Last: ${SESSIONS.find(s=>s.id===hist()[0].id).title.split('—')[0]} on ${dayName(hist()[0].d)} ${hist()[0].d.slice(5)} · <span style="color:var(--red)" onclick="undoLast()">undo</span> · ${weekSessions()}/4 this week</p>`:''}
+ </div>
+ <div class="card"><h2>Week ${wk} · ${b.name}</h2><p class="small">${b.goal}</p><p class="dim small">${b.cond}</p></div>
+ <div class="card"><h2>Today’s non-negotiables</h2><ul class="small"><li>${targets(fday(todayKey()).type).p} g protein (log it on Food)</li><li>${c.mode==='recomp'?'8k+':'10k+'} steps</li><li>Caffeine cutoff 14:00</li><li>10 min outdoor light this morning</li>${defType(todayKey())==='drink'?'<li>Drinking day rules: protein before first drink · 1 water per 2 drinks · electrolytes at bed</li>':''}</ul></div>`;
+}
+
+/* ---- TRAIN ---- */
+function openSess(id){openSession=id;tab='train';S.set('tab','train');render();window.scrollTo(0,0)}
+function exKey(sid,i){return sid+'_'+i}
+function doSwap(sid,i,val){S.set('swap_'+exKey(sid,i),val);render()}
+function setLog(sid,i){return S.get('sl_'+exKey(sid,i),null)}
+function saveSet(sid,i,si,field,val){
+ const key='sl_'+exKey(sid,i);let o=S.get(key,null);const tk=todayKey();
+ if(!o)o={d:tk,sets:[],prev:null};
+ if(o.d!==tk){o={d:tk,sets:[],prev:{d:o.d,sets:o.sets}}}
+ o.sets[si]=o.sets[si]||{};o.sets[si][field]=val;S.set(key,o);
+}
+function lastLine(o){
+ if(!o)return'';
+ const src=(o.d!==todayKey())?o:(o.prev);
+ if(!src||!src.sets||!src.sets.length)return'';
+ const txt=src.sets.filter(s=>s&&(s.w||s.r)).map(s=>(s.w||'?')+'×'+(s.r||'?')).join(' · ');
+ return txt?`<div class="last">Last (${dayName(src.d)} ${src.d.slice(5)}): ${txt} — beat it by a rep or +2.5 kg</div>`:'';
+}
+function exCard(sess,ex,i){
+ const chosen=S.get('swap_'+exKey(sess.id,i),ex.pool[0]);
+ const sch=BLOCKS[curBlock()].sch[ex.t],n=adjSets(sch.sets);
+ const o=setLog(sess.id,i);const cur=(o&&o.d===todayKey())?o.sets:[];
+ const rows=Array.from({length:n},(_,si)=>{
+  const s=cur[si]||{};
+  return `<div class="setrow"><span class="sn">Set ${si+1}</span>
+  <input type="number" inputmode="decimal" placeholder="kg" value="${s.w||''}" onchange="saveSet('${sess.id}',${i},${si},'w',this.value)">
+  <input type="number" inputmode="numeric" placeholder="reps" value="${s.r||''}" onchange="saveSet('${sess.id}',${i},${si},'r',this.value)"></div>`;
+ }).join('');
+ return `<div class="ex">
+  <span class="tag ${ex.t}">${ex.t==='main'?'Main':ex.t==='acc'?'Accessory':ex.t==='ss'?'Superset':'Isolation'}</span>
+  <div class="name">${chosen}</div>
+  <div class="scheme">${n} sets · ${sch.txt}${n<sch.sets?' <span style="color:var(--amb)">(auto-trimmed)</span>':''}</div>
+  <div class="cue">${ex.cue}</div>
+  ${cfg().her?`<div class="her">Her: ${ex.herN}</div>`:''}
+  ${lastLine(o)}
+  ${ex.pool.length>1?`<div style="margin-top:6px"><select onchange="doSwap('${sess.id}',${i},this.value)">${ex.pool.map(p=>`<option ${p===chosen?'selected':''}>${p}</option>`).join('')}</select></div>`:''}
+  <details><summary class="small" style="color:var(--dim)">Log sets</summary>${rows}</details>
+ </div>`;
+}
+function sessView(sess){
+ const rd=readiness();
+ return `<button class="btn2" onclick="openSession=null;render()">← Sessions</button>
+ <div class="banner ${rd.st}" style="margin-top:10px">${READLINE[rd.st]}</div>
+ <div class="card"><h2>${sess.title}</h2><p class="dim small">${sess.dur} · Week ${weekNum()} · ${BLOCKS[curBlock()].name}${isConsol()?' · CONSOLIDATION':''}</p>
+ <h3>Warm-up (5–8 min)</h3><p class="small">${sess.warm}</p></div>
+ ${sess.work.map((ex,i)=>exCard(sess,ex,i)).join('')}
+ <div class="card"><h3>Finisher — ${sess.fin.name}</h3>
+ ${skipFin()&&sess.fin.swaps!==''?`<p class="small" style="color:var(--amb)">Auto-removed today (${isConsol()?'consolidation week':'readiness'}). Go home.</p>`:`<p class="small">${sess.fin.desc}</p>${sess.fin.swaps?`<p class="dim small">Swap: ${sess.fin.swaps}</p>`:''}`}</div>
+ <div class="card"><h3>Rest timer</h3><div class="row">${[60,90,120,180].map(s=>`<button class="btn2" onclick="startTimer(${s})">${s<120?s+'s':(s/60)+' min'}</button>`).join('')}</div></div>
+ <button class="btn" onclick="logSession('${sess.id}')">✓ Session done — log it</button>`;
+}
+function trainView(){
+ if(openSession){const s=SESSIONS.find(x=>x.id===openSession);if(s)return sessView(s)}
+ const c=cfg(),nx=nextSession();
+ return `<div style="margin-bottom:10px"><span class="chip on">Week ${weekNum()} · ${BLOCKS[curBlock()].wks}</span>
+ <span class="chip pink ${c.her?'on':''}" onclick="setCfg('her',${!c.her})" style="float:right">Her ${c.her?'ON':'off'}</span></div>
+ ${SESSIONS.map(s=>`<div class="card" onclick="openSess('${s.id}')" style="cursor:pointer"><b>${s.title}</b> <span class="dim small">· ${s.dur} ${s.id===nx.id?'· <span style="color:var(--grn)">next up</span>':''} ›</span></div>`).join('')}
+ <div class="card"><p class="small">${OPTIONAL_WED}</p></div>
+ <div class="card"><h2>Rotation history</h2>${hist().slice(0,10).map(h=>`<p class="small" style="margin-bottom:3px">${dayName(h.d)} ${h.d.slice(5)} — ${SESSIONS.find(s=>s.id===h.id).title.split('—')[0]}</p>`).join('')||'<p class="dim small">Nothing logged yet.</p>'}</div>
+ <div class="card"><h2>Progression & adaptation rules</h2>${PROGRESSION.map(p=>`<h3>${p[0]}</h3><p class="small">${p[1]}</p>`).join('')}</div>
+ <div class="card"><h2>Consolidation weeks (4 · 8 · 12)</h2><p class="small">${CONSOL} The app applies this automatically from your start date (Settings in More).</p></div>`;
+}
+
+/* ---- FOOD ---- */
+function foodView(){
+ const day=fday(foodDate),t=targets(day.type);
+ const tot=day.items.reduce((a,it)=>({k:a.k+it.k,p:a.p+it.p,c:a.c+it.c,f:a.f+it.f}),{k:0,p:0,c:0,f:0});
+ const alcW=weekAlc();
+ const results=foodQ.length>=2?FDB.map((f,i)=>[f,i]).filter(x=>x[0][0].toLowerCase().includes(foodQ.toLowerCase())).slice(0,8):[];
+ const kpi=(label,v,tg,inv)=>{
+  const pct=Math.min(100,Math.round(100*v/tg));
+  const cls=inv?(v>tg?'over':''):(v>=tg?'good':'');
+  return `<div class="kpi"><div class="v ${cls}">${v}<span class="dim" style="font-size:10px">/${tg}</span></div><div class="k">${label}</div><div class="bar"><i class="${inv&&v>tg?'over':''}" style="width:${pct}%"></i></div></div>`;
+ };
+ return `
+ <div class="card"><div style="display:flex;justify-content:space-between;align-items:center">
+  <button class="btn2" onclick="shiftFoodDate(-1)">‹</button>
+  <b>${foodDate===todayKey()?'Today':dayName(foodDate)+' '+foodDate.slice(5)}</b>
+  <button class="btn2" onclick="shiftFoodDate(1)">›</button></div>
+  <div style="margin-top:8px">${[['train','Training'],['rest','Rest'],['drink','Drinking']].map(x=>`<span class="chip ${day.type===x[0]?'on':''}" onclick="setDayType('${x[0]}')">${x[1]}</span>`).join('')}</div>
+  <div class="grid2" style="margin-top:10px">${kpi('kcal',tot.k,t.kcal,true)}${kpi('protein g',tot.p,t.p,false)}</div>
+  <div class="grid2" style="margin-top:8px">${kpi('carbs g',tot.c,t.c,true)}${kpi('fat g',tot.f,t.f,true)}</div>
+  ${day.type==='drink'?'<p class="dim small" style="margin-top:8px">Targets are food-only — drinks land on top; the point is protecting protein and capping fat while alcohol is in the system.</p>':''}</div>
+ <div class="card"><h2>Add food</h2>
+  <input type="text" placeholder="Search 90+ foods… (chicken, pint, kebab)" value="${foodQ}" oninput="foodQ=this.value;render();this.focus();this.setSelectionRange(this.value.length,this.value.length)">
+  ${results.map(([f,i])=>`<div class="fresult" onclick="addFood(${i})"><span>${f[0]}${f[6]?' 🍷':''}</span><span class="m">${f[2]} kcal · ${f[3]}P ${f[1]==='g'?'/100g':'/each'}</span></div>`).join('')}
+  <details><summary class="small" style="color:var(--dim)">Custom entry</summary>
+   <input type="text" id="cf_n" placeholder="Name"><div class="grid2" style="margin-top:6px"><input type="number" id="cf_k" placeholder="kcal"><input type="number" id="cf_p" placeholder="protein g"></div>
+   <div class="grid2" style="margin-top:6px"><input type="number" id="cf_c" placeholder="carbs g"><input type="number" id="cf_f" placeholder="fat g"></div>
+   <div style="margin-top:8px"><button class="btn2" onclick="addCustom()">Add</button></div></details></div>
+ <div class="card"><h2>Logged</h2>${day.items.map((it,i)=>`<div class="fentry"><span>${it.a?'🍷 ':''}${it.n}</span><span class="dim small">${it.k} · ${it.p}P <button class="btn3" onclick="delFood(${i})">×</button></span></div>`).join('')||'<p class="dim small">Nothing yet.</p>'}</div>
+ <div class="card"><h2>This week’s alcohol</h2><p><b style="color:${alcW>1500?'var(--red)':alcW>700?'var(--amb)':'var(--grn)'}">${alcW} kcal</b> <span class="dim small">logged Mon–today. Your historical norm ≈ 2,600/wk. Every 700 kcal you shave ≈ 0.1 kg of fat that never arrives.</span></p></div>
+ ${CUTCARD}${FUELSTATIC}`;
+}
+
+/* ---- DATA ---- */
+function dataView(){
+ const dk=todayKey(),m=metrics(),tm=m[dk]||{};
+ const fields=[['rhr','Resting HR','52'],['hrv','HRV ms','45'],['sleep','Sleep h','7.2'],['energy','Energy 1–5','3'],['wt','Weight kg','86.0'],['waist','Waist cm','92']];
+ const days=Object.keys(m).sort().reverse().slice(0,14);
+ const bl=k=>baseline(k,dk);
+ return `
+ <div class="card"><h2>This morning (30 seconds — this is what makes the app adaptive)</h2>
+  <p class="dim small">From Apple Watch: Health app → Browse → Heart / Sleep. Enter what you have; the app learns your 14-day baselines and auto-adjusts today’s training.</p>
+  <div class="grid3">${fields.map(f=>`<div><label>${f[0]==='rhr'?'Resting HR':f[1]}</label><input type="number" inputmode="decimal" placeholder="${f[2]}" value="${tm[f[0]]??''}" onchange="saveMetric('${dk}','${f[0]}',this.value);render()"></div>`).join('')}</div>
+  <p class="dim small" style="margin-top:8px">Baselines so far: RHR ${bl('rhr')??'—'} · HRV ${bl('hrv')??'—'} · needs 3+ days of entries to activate auto-readiness.</p></div>
+ <div class="card"><h2>History</h2><table><tr><th>Date</th><th>RHR</th><th>HRV</th><th>Slp</th><th>E</th><th>Wt</th><th>Waist</th></tr>
+ ${days.map(d=>`<tr><td>${dayName(d)} ${d.slice(5)}</td><td>${m[d].rhr??''}</td><td>${m[d].hrv??''}</td><td>${m[d].sleep??''}</td><td>${m[d].energy??''}</td><td>${m[d].wt??''}</td><td>${m[d].waist??''}</td></tr>`).join('')}</table>
+ ${days.length?'':'<p class="dim small">No entries yet.</p>'}</div>
+ <div class="card"><h2>Bulk import (optional)</h2><p class="dim small">Paste CSV lines: <b>date,rhr,hrv,sleep</b> e.g. 2026-07-01,52,48,7.2 — works with Health Auto Export app output trimmed to those columns.</p>
+ <textarea id="csvBox" rows="3" placeholder="2026-07-01,52,48,7.2"></textarea>
+ <div style="margin-top:8px"><button class="btn2" onclick="importCSV()">Import</button> <span class="dim small" id="csvMsg"></span></div></div>
+ <div class="card"><h2>How each metric drives the plan</h2><table><tr><th>Metric</th><th>Rule</th></tr>${HEALTHDATA.map(h=>`<tr><td>${h[0]}</td><td>${h[1]}</td></tr>`).join('')}</table>
+ <p class="dim small" style="margin-top:6px">HR zones (est. max 177): Z1 &lt;106 · <b>Z2 106–124</b> · Z3 124–142 · Z4 142–159 · Z5 159+. Record lifting as “Traditional Strength Training” and Engine as “Indoor Cycle”/“Walk” on the Watch so VO₂ stays accurate.</p></div>
+ <div class="card"><h2>12-week roadmap</h2><table><tr><th>Wk</th><th>Focus</th></tr>${ROADMAP.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table></div>`;
+}
+function importCSV(){
+ const lines=el('csvBox').value.split('\n');let n=0;
+ lines.forEach(L=>{
+  const p=L.trim().split(',');
+  if(p.length>=2&&/^\d{4}-\d{2}-\d{2}/.test(p[0])){
+   const dk=p[0].slice(0,10);
+   if(p[1])saveMetric(dk,'rhr',p[1]);if(p[2])saveMetric(dk,'hrv',p[2]);if(p[3])saveMetric(dk,'sleep',p[3]);n++;
+  }});
+ el('csvMsg').textContent=n+' days imported';setTimeout(render,600);
+}
+
+/* ---- MORE ---- */
+function moreView(){
+ const c=cfg();
+ return `
+ <div class="card"><h2>Settings</h2>
+  <label>Body weight (kg) — drives calorie & protein targets</label><input type="number" value="${c.wt}" onchange="setCfg('wt',parseFloat(this.value)||86)">
+  <label>Goal mode</label>${Object.keys(MODES).map(k=>`<span class="chip ${c.mode===k?'on':''}" onclick="setCfg('mode','${k}')">${MODES[k].n}</span>`).join('')}
+  <p class="dim small" style="margin-top:4px">${MODES[c.mode].desc}</p>
+  <label>Programme start date (Monday) — auto-computes week, block & consolidation</label><input type="date" value="${c.start}" onchange="setCfg('start',this.value)">
+  <p class="dim small">Currently: Week ${weekNum()} · ${BLOCKS[curBlock()].name}${isConsol()?' · consolidation':''}</p></div>
+ <div class="card"><h2>Versions — switch any day</h2>${VERSIONS.map(v=>`<details><summary>${v[0]}</summary>${v[1]}</details>`).join('')}</div>
+ ${EDGE}
+ <div class="card"><h2>Weekly check-in (Sunday, 2 min)</h2><p class="small">Weight & waist go in Data. Ask yourself: sessions done vs 4? Energy trend? Drinks vs plan? Anything you dread doing? → Rotate it out via its swap menu. The monthly rules on the Food tab tell you what to change.</p></div>
+ <div class="card"><h2>Danger zone</h2><button class="btn2" style="color:var(--red)" onclick="if(confirm('Erase ALL logged data?')){localStorage.clear();location.reload()}">Reset all data</button></div>`;
+}
+
+/* ---- TIMER ---- */
+let tInt=null;
+function startTimer(sec){
+ clearInterval(tInt);el('timer').classList.remove('hide');
+ const end=Date.now()+sec*1000;
+ const tick=()=>{const left=Math.max(0,Math.round((end-Date.now())/1000));
+  el('timerBox').textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');
+  if(left<=0){clearInterval(tInt);el('timerBox').textContent='GO ✓';beep();setTimeout(()=>el('timer').classList.add('hide'),2500)}};
+ tick();tInt=setInterval(tick,250);
+}
+function stopTimer(){clearInterval(tInt);el('timer').classList.add('hide')}
+function beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.setValueAtTime(.3,c.currentTime);o.start();o.stop(c.currentTime+.35)}catch(e){}}
+
+/* ---- ROOT ---- */
+function render(){
+ nav();
+ el('hdrSub').textContent='· Wk '+weekNum();
+ el('hdrSub2').textContent=BLOCKS[curBlock()].name+(isConsol()?' · consolidation':'')+' · '+MODES[cfg().mode].n;
+ const views={today:todayView,train:trainView,food:foodView,data:dataView,more:moreView};
+ el('main').innerHTML=(views[tab]||todayView)();
+}
+render();
+</script>
+</body>
+</html>
