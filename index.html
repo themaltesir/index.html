@@ -369,7 +369,7 @@ function todayView(){
  const b=BLOCKS[curBlock()],wk=weekNum(),c=cfg();
  return `
  <div class="banner ${rd.st}"><b>${READLINE[rd.st]}</b><br><span class="small">${rd.reasons.join(' · ')}</span></div>
- ${rd.manual&&rd.st==='n'?`<div class="card">${manualReadyChips()}<p class="dim small">Better: enter RHR / HRV / sleep on the Data tab each morning — the app then adapts automatically and learns your baselines.</p></div>`:''}
+ ${rd.manual&&rd.st==='n'?`<div class="card">${manualReadyChips()}<p class="dim small">Better: enter RHR and sleep on the Data tab each morning; HRV is optional if Apple Health has SDNN samples. The app then adapts automatically and learns your baselines.</p></div>`:''}
  ${nx.note?`<div class="banner a">${nx.note}</div>`:''}
  ${isConsol()?`<div class="banner n"><b>Week ${wk} = consolidation.</b> ${CONSOL}</div>`:''}
  <div class="card"><h2>Next in rotation</h2>
@@ -491,20 +491,20 @@ function dataView(){
  return `
  ${S.get('lastSync','')?`<div class="banner g">✓ Auto-synced from Apple Health: ${S.get('lastSync','')}</div>`:''}
  <div class="card"><h2>Automatic sync from Apple Health</h2>
-  <p class="small">A web app can’t read HealthKit directly — but an iPhone <b>Shortcut</b> can push your data in with one tap, or fully automatically every morning:</p>
+  <p class="small">A web app can’t read HealthKit directly — but an iPhone <b>Shortcut</b> can push your data in with one tap, or fully automatically every morning. HRV is optional: if Apple Health has no HRV SDNN samples, leave it out rather than estimating it from heart rate.</p>
   <ol class="small" style="padding-left:18px">
    <li>Shortcuts app → <b>+</b> → name it “Sync Recomp43”.</li>
    <li>Add action <b>Find Health Samples</b> → type: <b>Resting Heart Rate</b>, sorted Latest, limit 1.</li>
-   <li>Add <b>Find Health Samples</b> again → <b>Heart Rate Variability</b>, Latest, limit 1.</li>
    <li>Add <b>Find Health Samples</b> again → <b>Sleep</b> (Asleep), Last night, get <b>duration in hours</b>.</li>
-   <li>Add <b>Open URLs</b> with:<br><span style="color:var(--acc)">https://YOUR-USERNAME.github.io/recomp43/?rhr=</span>[Sample 1]<span style="color:var(--acc)">&hrv=</span>[Sample 2]<span style="color:var(--acc)">&sleep=</span>[Sample 3]<br>(tap each [ ] and insert the magic variable from the matching step)</li>
+   <li>Add <b>Open URLs</b> with:<br><span style="color:var(--acc)">https://themaltesir.github.io/index.html/?rhr=</span>[Resting HR]<span style="color:var(--acc)">&sleep=</span>[Sleep hours]<br>(tap each [ ] and insert the magic variable from the matching step)</li>
+   <li>Optional: if Health has <b>Heart Rate Variability SDNN</b>, add it as <span style="color:var(--acc)">&hrv=</span>[HRV].</li>
    <li>Fully automatic: Shortcuts → Automation → Time of Day 08:00 → Run Shortcut → turn OFF “Ask Before Running”.</li>
   </ol>
   <p class="dim small">The app reads the URL, logs today’s numbers, sets your readiness and cleans the address bar. Weight/waist still get typed in — scales don’t talk to Shortcuts.</p></div>
  <div class="card"><h2>This morning (or manual entry, 30 seconds)</h2>
   <p class="dim small">From Apple Watch: Health app → Browse → Heart / Sleep. Enter what you have; the app learns your 14-day baselines and auto-adjusts today’s training.</p>
   <div class="grid3">${fields.map(f=>`<div><label>${f[0]==='rhr'?'Resting HR':f[1]}</label><input type="number" inputmode="decimal" placeholder="${f[2]}" value="${tm[f[0]]??''}" onchange="saveMetric('${dk}','${f[0]}',this.value);render()"></div>`).join('')}</div>
-  <p class="dim small" style="margin-top:8px">Baselines so far: RHR ${bl('rhr')??'—'} · HRV ${bl('hrv')??'—'} · needs 3+ days of entries to activate auto-readiness.</p></div>
+  <p class="dim small" style="margin-top:8px">Baselines so far: RHR ${bl('rhr')??'—'} · HRV ${bl('hrv')??'—'} (optional) · needs 3+ days of entries to activate auto-readiness.</p></div>
  <div class="card"><h2>History</h2><table><tr><th>Date</th><th>RHR</th><th>HRV</th><th>Slp</th><th>E</th><th>Wt</th><th>Waist</th></tr>
  ${days.map(d=>`<tr><td>${dayName(d)} ${d.slice(5)}</td><td>${m[d].rhr??''}</td><td>${m[d].hrv??''}</td><td>${m[d].sleep??''}</td><td>${m[d].energy??''}</td><td>${m[d].wt??''}</td><td>${m[d].waist??''}</td></tr>`).join('')}</table>
  ${days.length?'':'<p class="dim small">No entries yet.</p>'}</div>
