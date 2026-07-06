@@ -146,30 +146,32 @@ const SESSIONS=[
  {id:'upA',title:'Upper A — Chest & Back',dur:'55 min',lower:false,
   warm:'3 min easy row/bike → band pull-aparts ×15 → cat-cow ×8 → arm circles → 2 ramp-up sets of first lift (50%, 75%)',
   work:[
-   {t:'main',pool:['Flat DB Bench Press','Barbell Bench Press','Machine Chest Press','Smith Bench Press'],cue:'Full stretch at the bottom, don’t bounce',herN:'Same — machine press is a great option'},
-   {t:'acc',pool:['Chest-Supported Row','Seated Cable Row','Machine Row','1-Arm DB Row'],cue:'Pause 1s at chest, control the lower',herN:'Same'},
-   {t:'acc',pool:['Incline Machine Press','Incline DB Press','Pec Deck','Weighted Push-up'],cue:'Upper-chest focus, 30–45°',herN:'Same'},
-   {t:'acc',pool:['Lat Pulldown','Pull-up','Neutral-Grip Pulldown','1-Arm Cable Pulldown'],cue:'Elbows down, chest tall',herN:'Same'},
-   {t:'ss',pool:['Cable Lateral Raise + Face Pull','DB Lateral Raise + Reverse Pec Deck'],cue:'Light, perfect reps — delts respond to volume',herN:'Same'}],
+   {t:'main',pool:['Flat DB Bench Press','Barbell Bench Press','Machine Chest Press','Smith Bench Press','Weighted Dip','Floor Press'],cue:'Full stretch at the bottom, don’t bounce',herN:'Same — machine press is a great option'},
+   {t:'acc',pool:['Chest-Supported Row','Seated Cable Row','Machine Row','1-Arm DB Row','Barbell Row','T-Bar Row'],cue:'Pause 1s at chest, control the lower',herN:'Same'},
+   {t:'acc',pool:['Incline Machine Press','Incline DB Press','Pec Deck','Weighted Push-up','Low-to-High Cable Fly','Incline Smith Press'],cue:'Upper-chest focus, 30–45°',herN:'Same'},
+   {t:'acc',pool:['Lat Pulldown','Pull-up','Neutral-Grip Pulldown','1-Arm Cable Pulldown','Straight-Arm Pulldown','Chin-up'],cue:'Elbows down, chest tall',herN:'Same'},
+   {t:'ss',pool:['Cable Lateral Raise + Face Pull','DB Lateral Raise + Reverse Pec Deck','Machine Lateral Raise + Cable Rear-Delt Fly'],cue:'Light, perfect reps — delts respond to volume',herN:'Same'}],
   fin:{name:'Bike sprints',desc:'6 × 20s hard / 40s easy (6 min)',swaps:'Rower or ski erg'}},
  {id:'loA',title:'Lower A — Squat & Hinge',dur:'55 min',lower:true,
   warm:'3 min incline walk → 10 squats → 10 hip hinges → world’s greatest stretch ×3/side → 2 ramp-up sets',
   work:[
-   {t:'main',pool:['Barbell or Smith Squat','Leg Press','Hack Squat','Heels-Elevated Goblet Squat'],cue:'Depth over load. Own every centimetre',herN:'Goblet or Smith squat, same scheme'},
-   {t:'acc',pool:['Romanian Deadlift','DB RDL','45° Back Extension','Cable Pull-Through'],cue:'Hips back, hamstrings load, soft knees',herN:'Same, or swap to Hip Thrust'},
-   {t:'acc',pool:['Bulgarian Split Squat','Walking Lunge','Leg Extension','Step-Up'],cue:'Torso slightly forward = more glute',herN:'Hip Thrust 3×10–12 preferred fill here'},
-   {t:'acc',pool:['Seated Leg Curl','Lying Leg Curl','Swiss-Ball Curl','Nordic Negatives'],cue:'Seated beats lying — long muscle length',herN:'Same'},
-   {t:'ss',pool:['Standing Calf Raise + Cable Crunch','Leg-Press Calves + Hanging Knee Raise'],cue:'Calves: 2s stretch pause. Crunch: flex spine',herN:'Same'}],
+   {t:'main',pool:['Barbell or Smith Squat','Leg Press','Hack Squat','Heels-Elevated Goblet Squat','Front Squat','Belt Squat'],cue:'Depth over load. Own every centimetre',herN:'Goblet or Smith squat, same scheme'},
+   {t:'acc',pool:['Romanian Deadlift','DB RDL','45° Back Extension','Cable Pull-Through','Hip Thrust','Good Morning (light)'],cue:'Hips back, hamstrings load, soft knees',herN:'Same, or swap to Hip Thrust'},
+   {t:'acc',pool:['Bulgarian Split Squat','Walking Lunge','Leg Extension','Step-Up','Smith Reverse Lunge','Single-Leg Press'],cue:'Torso slightly forward = more glute',herN:'Hip Thrust 3×10–12 preferred fill here'},
+   {t:'acc',pool:['Seated Leg Curl','Lying Leg Curl','Swiss-Ball Curl','Nordic Negatives','Glute-Ham Raise'],cue:'Seated beats lying — long muscle length',herN:'Same'},
+   {t:'ss',pool:['Standing Calf Raise + Cable Crunch','Leg-Press Calves + Hanging Knee Raise','Seated Calf Raise + Ab-Wheel Rollout'],cue:'Calves: 2s stretch pause. Crunch: flex spine',herN:'Same'},
+   {t:'iso',pool:['Leg Extension','Sissy Squat','Adductor Machine','Abductor Machine'],cue:'Optional quad/hip polish — skip if over 55 min',herN:'Abductor/adductor machines are a good fill here'}],
   fin:{name:'None — density day',desc:'Legs + finisher wrecks the next 48h. Optional 5-min incline-walk cooldown.',swaps:''}},
  {id:'upB',title:'Upper B — Shoulders & Arms',dur:'55 min',lower:false,
   warm:'3 min row → band dislocates ×10 → scap pull-ups ×8 → 2 ramp-up sets',
   work:[
-   {t:'main',pool:['Seated DB Shoulder Press','Machine Shoulder Press','Barbell OHP','Arnold Press'],cue:'Elbows slightly forward, no lower-back arch',herN:'Same — machine version fine'},
-   {t:'acc',pool:['Pull-up','Assisted Pull-up','Neutral-Grip Pulldown','Machine Pulldown'],cue:'Full hang to chin over. Add weight at 3×8',herN:'Assisted pull-up machine, same scheme'},
-   {t:'acc',pool:['Cable Fly','Pec Deck','DB Fly','Deficit Push-up AMRAP'],cue:'1s squeeze, wide stretch',herN:'Same'},
-   {t:'ss',pool:['EZ-Bar Curl + Rope Pressdown','DB Curl + Bench Dips'],cue:'No swinging, elbows pinned',herN:'Same, lighter'},
-   {t:'ss',pool:['Incline DB Curl + Overhead Rope Extension','Hammer Curl + Close-Grip Push-up'],cue:'Both train the stretch — that’s where growth lives',herN:'Same'},
-   {t:'iso',pool:['Reverse Pec Deck','Bent-Over Rear-Delt Raise','Face Pull'],cue:'Rear delts = 3D shoulders from behind',herN:'Same'}],
+   {t:'main',pool:['Seated DB Shoulder Press','Machine Shoulder Press','Barbell OHP','Arnold Press','Landmine Press','Smith OHP'],cue:'Elbows slightly forward, no lower-back arch',herN:'Same — machine version fine'},
+   {t:'acc',pool:['Pull-up','Assisted Pull-up','Weighted Pull-up','Neutral-Grip Pulldown','Machine Pulldown','Meadows Row'],cue:'Full hang to chin over. Add weight at 3×8',herN:'Assisted pull-up machine, same scheme'},
+   {t:'acc',pool:['Cable Fly','Pec Deck','DB Fly','Incline Cable Fly','Deficit Push-up AMRAP'],cue:'1s squeeze, wide stretch',herN:'Same'},
+   {t:'ss',pool:['EZ-Bar Curl + Rope Pressdown','DB Curl + Bench Dips','Cable Curl + Skullcrusher'],cue:'No swinging, elbows pinned',herN:'Same, lighter'},
+   {t:'ss',pool:['Incline DB Curl + Overhead Rope Extension','Hammer Curl + Close-Grip Push-up','Preacher Curl + JM Press'],cue:'Both train the stretch — that’s where growth lives',herN:'Same'},
+   {t:'iso',pool:['Reverse Pec Deck','Bent-Over Rear-Delt Raise','Face Pull','Cable Rear-Delt Fly'],cue:'Rear delts = 3D shoulders from behind',herN:'Same'},
+   {t:'iso',pool:['DB Shrug','Cable Shrug','Farmer Carry 3×40m','Behind-Back Smith Shrug'],cue:'Optional traps/grip — the neck-to-shoulder line sells the physique',herN:'Optional — farmer carries are excellent'}],
   fin:{name:'8-min EMOM',desc:'Odd min: 12 KB swings · even min: 8 push-ups',swaps:'Rower 8×100m on the minute'}},
  {id:'eng',title:'Engine — Conditioning, Core & Mobility',dur:'50 min',lower:false,
   warm:'5 min easy on chosen machine',
@@ -314,7 +316,8 @@ const VERSIONS=[
  ['“I feel exhausted”','<p class="small">Shrink, never skip Mon–Thu. 20–30 min easy walk/bike + 8-min mobility + optional 2×15 of two machines you enjoy at RIR 4. Leave better than you arrived. Red 2 days running → full rest + sleep.</p>'],
  ['“Only 20 minutes”','<p class="small">Giant circuit ×4, 60s rest: DB press ×8 · DB row ×10/side · goblet squat ×12 · DB RDL ×12 · 30s plank. RIR 1 by round 4. 18 min, logged as a win.</p>'],
  ['Busy gym (Basic-Fit peak)','<p class="small">Every slot has machine, cable AND DB options — nothing needs the occupied rack. Nuclear: one bench + one pair of DBs, run the Home-DB version on the gym floor. Accessory order freely swappable; main lift first.</p>'],
- ['Partner mode','<p class="small">Toggle <b>Her</b> on Train. Same sessions/blocks/timer; pink notes show substitutions. She biases the top of each rep range, identical progression rules. Alternate sets on one station — under 60 min together.</p>']
+ ['Partner mode','<p class="small">Toggle <b>Her</b> on Train. Same sessions/blocks/timer; pink notes show substitutions. She biases the top of each rep range, identical progression rules. Alternate sets on one station — under 60 min together.</p>'],
+ ['Optional Pump Day (5th session, 30 min)','<p class="small">Only when green readiness AND all 4 rotation sessions are done this week. Pure vanity, zero recovery cost: 3 rounds — cable lateral raise ×15 · cable curl ×12 · rope pressdown ×12 · pec deck ×15 · reverse pec deck ×15 · cable crunch ×15, 30–45s rests, all RIR 0–1. Never replaces a rotation session.</p>']
 ];
 const EDGE=`
 <div class="card"><h2>Basic stack</h2><table><tr><th>What</th><th>Dose / timing</th><th>Why</th></tr>
@@ -444,11 +447,15 @@ function trainView(){
 }
 
 /* ---- FOOD ---- */
+function fresHTML(){
+ const results=foodQ.length>=2?FDB.map((f,i)=>[f,i]).filter(x=>x[0][0].toLowerCase().includes(foodQ.toLowerCase())).slice(0,8):[];
+ return results.map(([f,i])=>`<div class="fresult" onclick="addFood(${i})"><span>${f[0]}${f[6]?' 🍷':''}</span><span class="m">${f[2]} kcal · ${f[3]}P ${f[1]==='g'?'/100g':'/each'}</span></div>`).join('');
+}
+function fres(){el('fres').innerHTML=fresHTML()}
 function foodView(){
  const day=fday(foodDate),t=targets(day.type);
  const tot=day.items.reduce((a,it)=>({k:a.k+it.k,p:a.p+it.p,c:a.c+it.c,f:a.f+it.f}),{k:0,p:0,c:0,f:0});
  const alcW=weekAlc();
- const results=foodQ.length>=2?FDB.map((f,i)=>[f,i]).filter(x=>x[0][0].toLowerCase().includes(foodQ.toLowerCase())).slice(0,8):[];
  const kpi=(label,v,tg,inv)=>{
   const pct=Math.min(100,Math.round(100*v/tg));
   const cls=inv?(v>tg?'over':''):(v>=tg?'good':'');
@@ -464,8 +471,8 @@ function foodView(){
   <div class="grid2" style="margin-top:8px">${kpi('carbs g',tot.c,t.c,true)}${kpi('fat g',tot.f,t.f,true)}</div>
   ${day.type==='drink'?'<p class="dim small" style="margin-top:8px">Targets are food-only — drinks land on top; the point is protecting protein and capping fat while alcohol is in the system.</p>':''}</div>
  <div class="card"><h2>Add food</h2>
-  <input type="text" placeholder="Search 90+ foods… (chicken, pint, kebab)" value="${foodQ}" oninput="foodQ=this.value;render();this.focus();this.setSelectionRange(this.value.length,this.value.length)">
-  ${results.map(([f,i])=>`<div class="fresult" onclick="addFood(${i})"><span>${f[0]}${f[6]?' 🍷':''}</span><span class="m">${f[2]} kcal · ${f[3]}P ${f[1]==='g'?'/100g':'/each'}</span></div>`).join('')}
+  <input type="text" placeholder="Search 90+ foods… (chicken, pint, kebab)" value="${foodQ}" oninput="foodQ=this.value;fres()">
+  <div id="fres">${fresHTML()}</div>
   <details><summary class="small" style="color:var(--dim)">Custom entry</summary>
    <input type="text" id="cf_n" placeholder="Name"><div class="grid2" style="margin-top:6px"><input type="number" id="cf_k" placeholder="kcal"><input type="number" id="cf_p" placeholder="protein g"></div>
    <div class="grid2" style="margin-top:6px"><input type="number" id="cf_c" placeholder="carbs g"><input type="number" id="cf_f" placeholder="fat g"></div>
@@ -482,7 +489,19 @@ function dataView(){
  const days=Object.keys(m).sort().reverse().slice(0,14);
  const bl=k=>baseline(k,dk);
  return `
- <div class="card"><h2>This morning (30 seconds — this is what makes the app adaptive)</h2>
+ ${S.get('lastSync','')?`<div class="banner g">✓ Auto-synced from Apple Health: ${S.get('lastSync','')}</div>`:''}
+ <div class="card"><h2>Automatic sync from Apple Health</h2>
+  <p class="small">A web app can’t read HealthKit directly — but an iPhone <b>Shortcut</b> can push your data in with one tap, or fully automatically every morning:</p>
+  <ol class="small" style="padding-left:18px">
+   <li>Shortcuts app → <b>+</b> → name it “Sync Recomp43”.</li>
+   <li>Add action <b>Find Health Samples</b> → type: <b>Resting Heart Rate</b>, sorted Latest, limit 1.</li>
+   <li>Add <b>Find Health Samples</b> again → <b>Heart Rate Variability</b>, Latest, limit 1.</li>
+   <li>Add <b>Find Health Samples</b> again → <b>Sleep</b> (Asleep), Last night, get <b>duration in hours</b>.</li>
+   <li>Add <b>Open URLs</b> with:<br><span style="color:var(--acc)">https://YOUR-USERNAME.github.io/recomp43/?rhr=</span>[Sample 1]<span style="color:var(--acc)">&hrv=</span>[Sample 2]<span style="color:var(--acc)">&sleep=</span>[Sample 3]<br>(tap each [ ] and insert the magic variable from the matching step)</li>
+   <li>Fully automatic: Shortcuts → Automation → Time of Day 08:00 → Run Shortcut → turn OFF “Ask Before Running”.</li>
+  </ol>
+  <p class="dim small">The app reads the URL, logs today’s numbers, sets your readiness and cleans the address bar. Weight/waist still get typed in — scales don’t talk to Shortcuts.</p></div>
+ <div class="card"><h2>This morning (or manual entry, 30 seconds)</h2>
   <p class="dim small">From Apple Watch: Health app → Browse → Heart / Sleep. Enter what you have; the app learns your 14-day baselines and auto-adjusts today’s training.</p>
   <div class="grid3">${fields.map(f=>`<div><label>${f[0]==='rhr'?'Resting HR':f[1]}</label><input type="number" inputmode="decimal" placeholder="${f[2]}" value="${tm[f[0]]??''}" onchange="saveMetric('${dk}','${f[0]}',this.value);render()"></div>`).join('')}</div>
   <p class="dim small" style="margin-top:8px">Baselines so far: RHR ${bl('rhr')??'—'} · HRV ${bl('hrv')??'—'} · needs 3+ days of entries to activate auto-readiness.</p></div>
@@ -535,6 +554,20 @@ function startTimer(sec){
 }
 function stopTimer(){clearInterval(tInt);el('timer').classList.add('hide')}
 function beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.setValueAtTime(.3,c.currentTime);o.start();o.stop(c.currentTime+.35)}catch(e){}}
+
+/* ---- URL SYNC (Apple Health via iOS Shortcut) ---- */
+(function(){try{
+ const src=(location.search&&location.search.length>1)?location.search:(location.hash&&location.hash.indexOf('=')>-1?'?'+location.hash.slice(1):'');
+ if(!src)return;
+ const q=new URLSearchParams(src);
+ const dk=(q.get('d')||todayKey()).slice(0,10);let got=[];
+ [['rhr',30,120],['hrv',5,250],['sleep',0,16],['energy',1,5],['wt',40,200],['waist',50,200]].forEach(([k,lo,hi])=>{
+  const v=parseFloat(q.get(k));
+  if(!isNaN(v)&&v>=lo&&v<=hi){saveMetric(dk,k,String(Math.round(v*10)/10));got.push(k.toUpperCase()+' '+(Math.round(v*10)/10))}
+ });
+ if(got.length){S.set('lastSync',dk+' — '+got.join(' · '));tab='today';S.set('tab','today');
+  try{history.replaceState(null,'',location.pathname)}catch(e){}}
+}catch(e){}})();
 
 /* ---- ROOT ---- */
 function render(){
