@@ -491,13 +491,14 @@ function dataView(){
  return `
  ${S.get('lastSync','')?`<div class="banner g">✓ Auto-synced from Apple Health: ${S.get('lastSync','')}</div>`:''}
  ${S.get('syncWarn','')?`<div class="banner a">${S.get('syncWarn','')}</div>`:''}
+ ${S.get('lastSyncAttempt','')?`<div class="card"><h2>Last sync attempt</h2><p class="dim small">${S.get('lastSyncAttempt','')}</p></div>`:''}
  <div class="card"><h2>Automatic sync from Apple Health</h2>
   <p class="small">A web app can’t read HealthKit directly — but an iPhone <b>Shortcut</b> can push your data in with one tap, or fully automatically every morning. HRV is optional: if Apple Health has no HRV SDNN samples, leave it out rather than estimating it from heart rate.</p>
   <ol class="small" style="padding-left:18px">
    <li>Shortcuts app → <b>+</b> → name it “Sync Recomp43”.</li>
    <li>Add action <b>Find Health Samples</b> → type: <b>Resting Heart Rate</b>, sorted Latest, limit 1.</li>
    <li>Add <b>Find Health Samples</b> again → <b>Sleep</b>, <b>End Date</b> in the last 1 day, get <b>duration in hours</b>.</li>
-   <li>Add <b>Open URLs</b> with:<br><span style="color:var(--acc)">https://themaltesir.github.io/index.html/?rhr=</span>[Resting HR]<span style="color:var(--acc)">&sleep=</span>[Sleep hours]<br>(tap each [ ] and insert the magic variable from the matching step)</li>
+   <li>Add <b>Open URLs</b> with:<br><span style="color:var(--acc)">https://themaltesir.github.io/index.html/?sync=1&amp;rhr=</span>[Resting HR]<span style="color:var(--acc)">&amp;sleep=</span>[Sleep hours]<br>(tap each [ ] and insert the magic variable from the matching step)</li>
    <li>Optional: if Health has <b>Heart Rate Variability SDNN</b>, add it as <span style="color:var(--acc)">&hrv=</span>[HRV].</li>
    <li>Fully automatic: Shortcuts → Automation → Time of Day 08:00 → Run Shortcut → turn OFF “Ask Before Running”.</li>
   </ol>
@@ -561,13 +562,15 @@ function beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)
  const src=(location.search&&location.search.length>1)?location.search:(location.hash&&location.hash.indexOf('=')>-1?'?'+location.hash.slice(1):'');
  if(!src)return;
  const q=new URLSearchParams(src);
- const dk=(q.get('d')||todayKey()).slice(0,10);let got=[];
- [['rhr',30,120],['hrv',5,250],['sleep',0,16],['energy',1,5],['wt',40,200],['waist',50,200]].forEach(([k,lo,hi])=>{
+ const dk=(q.get('d')||todayKey()).slice(0,10), checked=['rhr','sleep','hrv'];let got=[],issues=[];
+  [['rhr',30,120],['hrv',5,250],['sleep',0,16],['energy',1,5],['wt',40,200],['waist',50,200]].forEach(([k,lo,hi])=>{
   const v=parseFloat(q.get(k));
   if(!isNaN(v)&&v>=lo&&v<=hi){saveMetric(dk,k,String(Math.round(v*10)/10));got.push(k.toUpperCase()+' '+(Math.round(v*10)/10))}
  });
+ checked.forEach(k=>{if(q.has(k)&&!got.some(g=>g.startsWith(k.toUpperCase()+' ')))issues.push(k.toUpperCase()+' was blank or invalid')});
+ S.set('lastSyncAttempt',dk+' — accepted: '+(got.length?got.join(' · '):'none')+(issues.length?' — check: '+issues.join(' · '):''));
  if(got.length){S.set('lastSync',dk+' — '+got.join(' · '));S.del('syncWarn')}
- else{S.set('syncWarn','Sync opened, but no valid numbers were received from the shortcut. Check Health permissions and run the newest Recomp43 shortcut selected in Automation.')}
+ else{S.set('syncWarn','Sync opened, but no valid numbers were received from the shortcut. Check Health permissions for Shortcuts in the Health app.')}
  tab='data';S.set('tab','data');
  try{history.replaceState(null,'',location.pathname)}catch(e){}
 }catch(e){}})();
