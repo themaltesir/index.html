@@ -3,14 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Recomp43</title>
 <style>
 :root{--bg:#0e1116;--card:#171c24;--card2:#1e2530;--line:#2a3342;--txt:#e8edf4;--dim:#8b97a8;--acc:#4fc3f7;--grn:#5dd39e;--amb:#ffc766;--red:#ff7a7a;--pink:#f48fb1;--pur:#b39ddb}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.45;padding-bottom:80px}
-header{position:sticky;top:0;z-index:10;background:rgba(14,17,22,.95);backdrop-filter:blur(8px);padding:10px 14px 8px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+header{position:sticky;top:0;z-index:10;background:rgba(14,17,22,.95);backdrop-filter:blur(8px);padding:calc(10px + env(safe-area-inset-top)) 14px 8px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
 header h1{font-size:16px;letter-spacing:.5px}
 header h1 span{color:var(--acc)}
 .sub{color:var(--dim);font-size:11.5px}
@@ -101,7 +99,7 @@ hr{border:none;border-top:1px solid var(--line);margin:8px 0}
 <nav id="nav"></nav>
 
 <script>
-const VERSION='3.0';
+const VERSION='3.1';
 /* ============ STORAGE / PROFILE ============ */
 const S={
  get(k,d){try{const v=localStorage.getItem('r43_'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
@@ -114,6 +112,7 @@ let tab=S.get('tab','today'), openSession=null, foodDate=todayKey(), foodQ='';
 let prof=S.get('prof','me');
 const P=()=>prof==='her'?'her_':'';
 function setProf(p){prof=p;openSession=null;S.set('prof',p);render()}
+function toggleTog(){S.set('tog',!S.get('tog',false));render()}
 
 /* ============ SETTINGS ============ */
 function cfg(){return S.get('cfg',{wt:86,wtHer:64,mode:'recomp',start:'',wake:'07:30'})}
@@ -216,7 +215,8 @@ const SESSIONS_HER=[
    {t:'acc',pool:['Curtsy Lunge','Single-Leg Press','Reverse Lunge'],cue:'Slow eccentric'},
    {t:'acc',pool:['Cable Kickback','Glute Kickback Machine','Single-Leg Hip Thrust'],cue:'Squeeze, don’t swing'},
    {t:'ss',pool:['Adductor + Abductor Machines','Banded Side Steps + Sumo Squat Hold'],cue:'Inner + outer pair'},
-   {t:'ss',pool:['Standing Calf Raise + Hanging Knee Raise','Seated Calf Raise + Cable Crunch'],cue:'Calves + core'}],
+   {t:'ss',pool:['Standing Calf Raise + Hanging Knee Raise','Seated Calf Raise + Cable Crunch'],cue:'Calves + core'},
+   {t:'iso',pool:['Cable Curl + Rope Pressdown (light)','DB Curl 21s','Bench Dips + Hammer Curl'],cue:'Optional arm finisher — skip if over 50 min'}],
   fin:{name:'Optional',desc:'10-min incline walk',swaps:''}},
  {id:'heng',title:'Engine — Conditioning & Core',dur:'45 min',lower:false,
   warm:'5 min easy',
@@ -228,6 +228,7 @@ const SESSIONS_HER=[
 ];
 function mySessions(){return prof==='her'?SESSIONS_HER:SESSIONS}
 function myRot(){return prof==='her'?ROT_HER:ROT}
+const PAIR={upA:'hup',loA:'hlo1',upB:'hlo2',eng:'heng'};
 
 /* ============ HEALTH METRICS / AUTO-READINESS (Brian's watch) ============ */
 function metrics(){return S.get('mx',{})}
@@ -260,7 +261,10 @@ const READLINE={g:'GREEN — full session, chase the targets.',a:'AMBER — 1 se
 
 /* ============ SCHEDULER ============ */
 function hist(){return S.get(P()+'hist',[])}
-function logSession(id,dk){const h=hist();h.unshift({id,d:dk||todayKey()});S.set(P()+'hist',h.slice(0,400));render()}
+function pushHist(id,pfx,name){const h=S.get(pfx+'hist',[]);h.unshift(Object.assign({id,d:todayKey()},name?{n:name}:{}));S.set(pfx+'hist',h.slice(0,400))}
+function logSession(id){pushHist(id,P());render()}
+function logHome(i){pushHist('home',P(),HOMEOPTS[i].n.split(' ·')[0]);go('today')}
+function doneTogether(sid){pushHist(sid,'');pushHist(PAIR[sid],'her_');go('today')}
 function undoLast(){const h=hist();h.shift();S.set(P()+'hist',h);render()}
 function lastRotEntry(){return hist().find(x=>myRot().includes(x.id))}
 function nextSession(){
@@ -282,22 +286,22 @@ function weekSessions(){
 }
 
 /* ============ SET LOGGING & LOAD SUGGESTION (keyed by exercise name) ============ */
-function slKey(name){return 'sl_'+P()+slug(name)}
-function setLog(name){return S.get(slKey(name),null)}
-function saveSet(name,si,field,val){
- const key=slKey(name);let o=S.get(key,null);const tk=todayKey();
+function slKey(name,pfx){return 'sl_'+(pfx??P())+slug(name)}
+function setLog(name,pfx){return S.get(slKey(name,pfx),null)}
+function saveSet(name,si,field,val,pfx){
+ const key=slKey(name,pfx);let o=S.get(key,null);const tk=todayKey();
  if(!o)o={d:tk,sets:[],prev:null};
  if(o.d!==tk){o={d:tk,sets:[],prev:{d:o.d,sets:o.sets}}}
  o.sets[si]=o.sets[si]||{};o.sets[si][field]=val;S.set(key,o);
 }
-function lastRecord(name){
- const o=setLog(name);if(!o)return null;
+function lastRecord(name,pfx){
+ const o=setLog(name,pfx);if(!o)return null;
  if(o.d!==todayKey()&&o.sets&&o.sets.some(s=>s&&(s.w||s.r)))return{d:o.d,sets:o.sets};
  if(o.prev&&o.prev.sets&&o.prev.sets.some(s=>s&&(s.w||s.r)))return o.prev;
  return null;
 }
-function suggest(name,sch,lower){
- const rec=lastRecord(name);
+function suggest(name,sch,lower,pfx){
+ const rec=lastRecord(name,pfx);
  if(!rec)return{main:'First time: pick a weight you could lift ~'+(sch.hi+3)+' times clean. Log it — the app takes over from there.',last:''};
  const ws=rec.sets.filter(s=>s&&s.w).map(s=>parseFloat(s.w));
  const maxW=ws.length?Math.max(...ws):null;
@@ -324,11 +328,11 @@ function targets(dayType){
  return{kcal,p,f:fat,c:carbs,maint};
 }
 const FDB=[
-['Chicken breast','g',165,31,0,3.6],['Chicken thigh','g',209,26,0,11],['Turkey breast','g',104,24,0,1],['Beef mince 5%','g',137,21,0,5],['Sirloin steak','g',183,27,0,8],['Pork loin','g',173,27,0,7],['Bacon rasher','u',90,7,0,7],['Ham slice','u',25,4.5,0.3,0.6],['Salmon fillet','g',208,20,0,13],['Cod / white fish','g',82,18,0,0.7],['Tuna tin (drained)','u',109,25,0,0.5],['Prawns','g',85,20,0,0.5],['Smoked mackerel','g',305,19,0,25],['Egg','u',74,6.3,0.4,5],['Egg whites','g',52,11,0.7,0.2],['Whey scoop','u',120,24,3,1.5],['Casein scoop','u',110,23,3,0.5],['Greek yoghurt 0%','g',57,10,4,0],['Greek yoghurt full-fat','g',97,9,4,5],['Skyr','g',63,11,4,0.2],['Cottage cheese','g',98,11,3,4],['Milk semi (100ml)','g',47,3.6,4.8,1.8],['Cheddar','g',416,25,0.1,35],['Halloumi','g',321,22,2,26],['Tofu','g',76,8,2,4.5],['Biltong','g',250,50,3,4],['Protein bar','u',200,20,18,7],
-['White rice cooked','g',130,2.7,28,0.3],['Pasta cooked','g',158,6,31,0.9],['Potato','g',77,2,17,0.1],['Sweet potato','g',86,1.6,20,0.1],['Bread slice','u',95,4,17,1.2],['Tortilla wrap','u',190,6,32,4],['Bagel','u',250,10,48,1.5],['Oats dry','g',379,13,68,6.5],['Couscous cooked','g',112,3.8,23,0.2],['Quinoa cooked','g',120,4.4,21,1.9],['Baked beans','g',84,4.7,13,0.5],['Banana','u',105,1.3,27,0.4],['Apple','u',95,0.5,25,0.3],['Orange','u',62,1.2,15,0.2],['Berries','g',45,0.7,10,0.3],['Watermelon','g',30,0.6,8,0.2],['Rice cakes','u',28,0.7,6,0.2],
+['Chicken breast','g',165,31,0,3.6],['Chicken thigh','g',209,26,0,11],['Turkey breast','g',104,24,0,1],['Beef mince 5%','g',137,21,0,5],['Sirloin steak','g',183,27,0,8],['Pork loin','g',173,27,0,7],['Bacon rasher','u',90,7,0,7],['Ham slice','u',25,4.5,0.3,0.6],['Salmon fillet','g',208,20,0,13],['Cod / white fish','g',82,18,0,0.7],['Tuna tin (drained)','u',109,25,0,0.5],['Prawns','g',85,20,0,0.5],['Smoked mackerel','g',305,19,0,25],['Egg','u',74,6.3,0.4,5],['Egg whites','g',52,11,0.7,0.2],['Whey scoop','u',120,24,3,1.5],['Casein scoop','u',110,23,3,0.5],['Greek yoghurt 0%','g',57,10,4,0],['Greek yoghurt full-fat','g',97,9,4,5],['Skyr','g',63,11,4,0.2],['Cottage cheese','g',98,11,3,4],['Milk semi (100ml)','g',47,3.6,4.8,1.8],['Cheddar','g',416,25,0.1,35],['Halloumi','g',321,22,2,26],['Tofu','g',76,8,2,4.5],['Biltong','g',250,50,3,4],['Protein bar','u',200,20,18,7],['Kwark (quark) 0%','g',57,10,4,0.2],['Kwark full-fat','g',113,7.5,4,4.5],['Protein pudding pot','u',150,20,9,3.5],['Protein yoghurt pot','u',90,15,5,0.5],['Kefir 100ml','g',55,3.1,4.5,3],['Feta','g',264,14,4,21],['Mozzarella','g',280,22,2,20],['Chickpeas','g',139,7,22,2.5],['Lentils cooked','g',116,9,20,0.4],['Edamame','g',121,11,9,5],
+['White rice cooked','g',130,2.7,28,0.3],['Pasta cooked','g',158,6,31,0.9],['Potato','g',77,2,17,0.1],['Sweet potato','g',86,1.6,20,0.1],['Bread slice','u',95,4,17,1.2],['Tortilla wrap','u',190,6,32,4],['Bagel','u',250,10,48,1.5],['Oats dry','g',379,13,68,6.5],['Couscous cooked','g',112,3.8,23,0.2],['Quinoa cooked','g',120,4.4,21,1.9],['Baked beans','g',84,4.7,13,0.5],['Banana','u',105,1.3,27,0.4],['Apple','u',95,0.5,25,0.3],['Orange','u',62,1.2,15,0.2],['Berries','g',45,0.7,10,0.3],['Watermelon','g',30,0.6,8,0.2],['Rice cakes','u',28,0.7,6,0.2],['Pita','u',165,5,33,1],['Croissant','u',260,5,26,15],['Granola','g',450,10,60,16],['Honey tbsp','u',64,0,17,0],['Ice cream scoop','u',140,2,17,7],['Crisps bag 25g','u',130,1.5,13,8],['Oat milk 100ml','g',45,1,7,1.5],
 ['Olive oil tbsp','u',119,0,0,13.5],['Butter 10g','u',74,0,0,8],['Avocado (half)','u',120,1.5,6,11],['Peanut butter tbsp','u',96,4,3,8],['Almonds','g',579,21,22,50],['Mixed nuts','g',607,20,17,54],['Dark chocolate square','u',55,0.7,4.5,4],['Hummus','g',237,7,14,17],
 ['Broccoli','g',34,2.8,7,0.4],['Spinach','g',23,2.9,3.6,0.4],['Mixed salad','g',20,1.5,3,0.2],['Peppers','g',31,1,6,0.3],['Tomatoes','g',18,0.9,3.9,0.2],['Carrots','g',41,0.9,10,0.2],['Mushrooms','g',22,3.1,3.3,0.3],['Onion','g',40,1.1,9,0.1],['Frozen mixed veg','g',42,2.5,8,0.5],
-['Chicken burrito','u',850,40,90,32],['Pizza slice','u',250,10,32,9],['Doner kebab','u',900,45,60,50],['Fish & chips','u',950,40,95,45],['Chicken tikka + rice','u',750,45,80,20],['Sweet & sour chicken','u',800,30,100,25],['Burger + fries','u',1100,40,110,55],['Sushi 8 pieces','u',350,15,60,5],['Caesar salad','u',470,30,15,30],['Full English','u',850,35,40,55],['Sunday roast','u',800,50,60,35],['Steak + chips (out)','u',900,55,60,45],['Tapas meat plate','u',450,30,5,35],['Meal-deal sandwich','u',550,25,60,22],['Whey + banana','u',225,25,30,2],['Poke bowl','u',600,30,80,15],['Gazpacho bowl','u',150,4,20,6],
+['Chicken burrito','u',850,40,90,32],['Pizza slice','u',250,10,32,9],['Doner kebab','u',900,45,60,50],['Fish & chips','u',950,40,95,45],['Chicken tikka + rice','u',750,45,80,20],['Sweet & sour chicken','u',800,30,100,25],['Burger + fries','u',1100,40,110,55],['Sushi 8 pieces','u',350,15,60,5],['Caesar salad','u',470,30,15,30],['Full English','u',850,35,40,55],['Sunday roast','u',800,50,60,35],['Steak + chips (out)','u',900,55,60,45],['Tapas meat plate','u',450,30,5,35],['Meal-deal sandwich','u',550,25,60,22],['Whey + banana','u',225,25,30,2],['Poke bowl','u',600,30,80,15],['Gazpacho bowl','u',150,4,20,6],['Chicken gyros wrap','u',700,40,60,30],['Ramen bowl','u',800,30,90,30],['Pad thai','u',750,30,85,28],['3-egg cheese omelette','u',350,25,2,26],
 ['Wine glass 175ml','u',159,0,5,0,1],['Wine bottle','u',625,0,20,0,1],['Beer pint','u',230,1.5,17,0,1],['Prosecco glass','u',90,0,2,0,1],['Spirit + mixer','u',120,0,10,0,1],['Spirit (neat/diet mix)','u',60,0,0,0,1],
 ['Flat white','u',120,6,9,6],['Coke can','u',139,0,35,0],['Zero/diet drink','u',2,0,0,0]];
 function flogKey(){return prof==='her'?'flogH':'flog'}
@@ -360,6 +364,41 @@ function weekAlc(){
  const f=flog(),now=new Date(todayKey()+'T12:00'),mon=new Date(now);mon.setDate(now.getDate()-((now.getDay()+6)%7));
  let k=0;Object.keys(f).forEach(dk=>{if(new Date(dk+'T12:00')>=mon&&new Date(dk+'T12:00')<=now)f[dk].items.forEach(it=>{if(it.a)k+=it.k})});
  return k;
+}
+/* Recipes — targeted at remaining macros */
+const RECIPES=[
+ {n:'Kwark power bowl',k:330,p:48,c:28,f:3,tags:['rest','quick','hot'],d:'300g kwark 0% + ½ scoop whey stirred in + berries + drizzle of honey'},
+ {n:'Chicken rice bowl',k:620,p:67,c:60,f:9,tags:['train'],d:'200g chicken + 200g cooked rice + salsa + rocket'},
+ {n:'Steak & potatoes',k:700,p:73,c:51,f:20,tags:['train'],d:'250g sirloin + 300g potatoes + green veg'},
+ {n:'Salmon traybake',k:580,p:40,c:42,f:24,tags:['train','rest'],d:'180g salmon + 200g sweet potato + broccoli — one tray, 20 min'},
+ {n:'3-egg omelette + salad',k:380,p:26,c:6,f:27,tags:['rest','quick'],d:'3 eggs + 30g cheddar + big dressed salad'},
+ {n:'Pre-drinks steak plate',k:520,p:70,c:8,f:22,tags:['drink'],d:'250g steak + large salad — the 50g-protein wall before the first glass'},
+ {n:'Tuna-kwark dip',k:250,p:38,c:10,f:5,tags:['drink','quick'],d:'1 tin tuna + 100g kwark + mustard, rice cakes to dip'},
+ {n:'Morning-after plate',k:480,p:38,c:28,f:24,tags:['drink'],d:'3 eggs + smoked salmon + 1 toast + salted avocado quarter'},
+ {n:'Cold prawn poke bowl',k:520,p:36,c:65,f:12,tags:['hot'],d:'150g prawns + 150g cold rice + edamame + cucumber + soy-lime'},
+ {n:'Whey-berry smoothie',k:300,p:31,c:38,f:3,tags:['quick','hot','train'],d:'1 scoop whey + banana + 100g frozen berries + 200ml milk'},
+ {n:'Chicken halloumi salad',k:540,p:52,c:12,f:32,tags:['rest','hot'],d:'150g chicken + 60g halloumi + big salad + olive oil'},
+ {n:'Yoghurt dessert',k:280,p:29,c:22,f:9,tags:['quick'],d:'250g Greek yoghurt 0% + dark-choc square + 15g almonds'}];
+function recipesFor(day,rem){
+ const c=ctx();
+ const want=day.type==='drink'?'drink':c.hot?'hot':(day.type==='train'?'train':'rest');
+ return RECIPES.map(r=>{
+  let s=0;if(r.tags.includes(want))s+=3;if(c.hot&&r.tags.includes('hot'))s+=1;
+  if(r.k<=rem.k+120)s+=2;s+=Math.min(2,r.p/25);
+  return[s,r]}).sort((a,b)=>b[0]-a[0]).slice(0,4).map(x=>x[1]);
+}
+function addRecipe(n){
+ const r=RECIPES.find(x=>x.n===n);if(!r)return;
+ const day=fday(foodDate);day.items.push({n:r.n,k:r.k,p:r.p,c:r.c,f:r.f,a:0});
+ saveFday(foodDate,day);render();
+}
+function aiPrompt(){
+ const day=fday(foodDate),t=targets(day.type),c=ctx();
+ const tot=day.items.reduce((a,it)=>({k:a.k+it.k,p:a.p+it.p}),{k:0,p:0});
+ const txt=`Suggest 3 simple ${day.type==='drink'?'high-protein, lower-carb ':''}meals for the rest of today. I have about ${Math.max(0,t.kcal-tot.k)} kcal left and still need ~${Math.max(0,t.p-tot.p)}g protein.${c.hot?' It is very hot (40°C+), prefer cold/light meals.':''}${c.hol?' I am on holiday with limited cooking.':''} Everyday supermarket ingredients (kwark, chicken, eggs, rice). Give macros per meal.`;
+ const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();
+ try{document.execCommand('copy');el('aiMsg').textContent='Copied ✓ — paste into ChatGPT / Claude'}catch(e){el('aiMsg').textContent=txt}
+ document.body.removeChild(ta);
 }
 /* Context (holiday / hot climate) */
 function ctx(){return S.get('ctx',{hol:false,hot:false})}
@@ -471,7 +510,7 @@ function todayView(){
  ${nx.note?`<div class="banner a">${nx.note}</div>`:''}
  ${isConsol()?`<div class="banner n"><b>Week ${wk} = consolidation.</b> ${CONSOL}</div>`:''}
  <div class="card">
-  ${done.length?`<p class="small" style="color:var(--grn);margin-bottom:6px">✓ Done today: ${done.map(x=>x.id==='home'?'Home session':(mySessions().find(s=>s.id===x.id)||{title:x.id}).title.split('—')[0]).join(', ')}</p>`:''}
+  ${done.length?`<p class="small" style="color:var(--grn);margin-bottom:6px">✓ Done today: ${done.map(x=>x.id==='home'?('Home'+(x.n?': '+x.n:'')):(mySessions().find(s=>s.id===x.id)||{title:x.id}).title.split('—')[0]).join(', ')}</p>`:''}
   <button class="btn ${prof==='her'?'pinkbg':''}" onclick="openSess('${nx.id}')">Next: ${nxS.title} · ${nxS.dur}</button>
   <div class="row" style="margin-top:8px"><button class="btn2" onclick="go('home')">🏠 Can’t make the gym → home options</button></div>
   <details><summary class="small dim">Log a session I already did</summary>
@@ -487,49 +526,62 @@ function todayView(){
 
 /* ---- TRAIN ---- */
 function openSess(id){openSession=id;tab='train';S.set('tab','train');render();window.scrollTo(0,0)}
-function swKey(sid,i){return 'swap_'+P()+curBlock()+'_'+sid+'_'+i}
-function chosenEx(sess,i){const ex=sess.work[i];return S.get(swKey(sess.id,i),ex.pool[(blockNum()-1+i)%ex.pool.length])}
-function doSwap(sid,i,val){S.set(swKey(sid,i),val);render()}
-function shuffleEx(sid,i){
- const sess=mySessions().find(s=>s.id===sid);const ex=sess.work[i];
- const cur=chosenEx(sess,i);const idx=ex.pool.indexOf(cur);
- S.set(swKey(sid,i),ex.pool[(idx+1)%ex.pool.length]);render();
+function swKey(sid,i,pfx){return 'swap_'+(pfx??P())+curBlock()+'_'+sid+'_'+i}
+function sessOf(sid,pfx){return((pfx??P())==='her_'?SESSIONS_HER:SESSIONS).find(s=>s.id===sid)}
+function chosenEx(sess,i,pfx){const ex=sess.work[i];return S.get(swKey(sess.id,i,pfx),ex.pool[(blockNum()-1+i)%ex.pool.length])}
+function doSwap(sid,i,val,pfx){S.set(swKey(sid,i,pfx),val);render()}
+function shuffleEx(sid,i,pfx){
+ const sess=sessOf(sid,pfx);const ex=sess.work[i];
+ const cur=chosenEx(sess,i,pfx);const idx=ex.pool.indexOf(cur);
+ S.set(swKey(sid,i,pfx),ex.pool[(idx+1)%ex.pool.length]);render();
 }
-function exCard(sess,ex,i){
- const chosen=chosenEx(sess,i);
+function exCard(sess,ex,i,pfx){
+ const chosen=chosenEx(sess,i,pfx);
  const sch=BLOCKS[curBlock()].sch[ex.t],n=adjSets(sch.sets);
- const sg=suggest(chosen,sch,sess.lower);
- const o=setLog(chosen);const cur=(o&&o.d===todayKey())?o.sets:[];
+ const sg=suggest(chosen,sch,sess.lower,pfx);
+ const o=setLog(chosen,pfx);const cur=(o&&o.d===todayKey())?o.sets:[];
+ const nm=chosen.replace(/'/g,"\\'");
+ const nlog=cur.filter(s=>s&&(s.w||s.r)).length;
  const rows=Array.from({length:n},(_,si)=>{
   const s=cur[si]||{};
   return `<div class="setrow"><span class="sn">Set ${si+1}</span>
-  <input type="number" inputmode="decimal" placeholder="kg" value="${s.w||''}" onchange="saveSet('${chosen.replace(/'/g,"\\'")}',${si},'w',this.value)">
-  <input type="number" inputmode="numeric" placeholder="reps" value="${s.r||''}" onchange="saveSet('${chosen.replace(/'/g,"\\'")}',${si},'r',this.value)"></div>`;
+  <input type="number" inputmode="decimal" placeholder="kg" value="${s.w||''}" oninput="saveSet('${nm}',${si},'w',this.value,'${pfx}')">
+  <input type="number" inputmode="numeric" placeholder="reps" value="${s.r||''}" oninput="saveSet('${nm}',${si},'r',this.value,'${pfx}')"></div>`;
  }).join('');
- return `<div class="ex">
+ const pink=pfx==='her_'&&prof!=='her';
+ return `<div class="ex"${pink?' style="border-color:#592f42"':''}>
   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px"><div>
-  <span class="tag ${ex.t}">${ex.t==='main'?'Main':ex.t==='acc'?'Accessory':ex.t==='ss'?'Superset':'Isolation'}</span>
+  <span class="tag ${ex.t}">${ex.t==='main'?'Main':ex.t==='acc'?'Accessory':ex.t==='ss'?'Superset':'Isolation'}</span>${pink?' <span class="tag" style="background:#3a2030;color:var(--pink)">Her</span>':''}
   <div class="name">${chosen}</div>
   <div class="scheme">${n} × ${schTxt(sch)}${n<sch.sets?' <span style="color:var(--amb)">(trimmed)</span>':''}</div>
   <div class="cue">${ex.cue}</div>
   <div class="sugg">${sg.main}</div>
   ${sg.last?`<div class="last">${sg.last}</div>`:''}
-  </div><button class="btn2" style="flex:none;padding:6px 10px" onclick="shuffleEx('${sess.id}',${i})">🔀</button></div>
-  <details><summary class="small dim">Log sets · pick exercise</summary>
-  ${ex.pool.length>1?`<div style="margin:4px 0"><select onchange="doSwap('${sess.id}',${i},this.value)">${ex.pool.map(p=>`<option ${p===chosen?'selected':''}>${p}</option>`).join('')}</select></div>`:''}
+  </div><button class="btn2" style="flex:none;padding:6px 10px" onclick="shuffleEx('${sess.id}',${i},'${pfx}')">🔀</button></div>
+  <details><summary class="small dim">📝 Log sets${nlog?` · ${nlog} logged ✓`:''} · pick exercise</summary>
+  ${ex.pool.length>1?`<div style="margin:4px 0"><select onchange="doSwap('${sess.id}',${i},this.value,'${pfx}')">${ex.pool.map(p=>`<option ${p===chosen?'selected':''}>${p}</option>`).join('')}</select></div>`:''}
   ${rows}</details>
  </div>`;
 }
 function sessView(sess){
- const rd=readiness();
- return `<button class="btn2" onclick="openSession=null;render()">← Sessions</button>
+ const rd=readiness(),pfx=P();
+ const tog=prof==='me'&&S.get('tog',false);
+ const herS=tog?SESSIONS_HER.find(s=>s.id===PAIR[sess.id]):null;
+ return `<div style="display:flex;gap:8px;align-items:center"><button class="btn2" onclick="openSession=null;render()">← Sessions</button>
+ ${prof==='me'?`<span class="chip ${tog?'on':''}" onclick="toggleTog()">👫 Train together</span>`:''}</div>
  <div class="banner ${rd.st}" style="margin-top:8px">${READLINE[rd.st]}</div>
  <div class="card"><h2>${sess.title}</h2><p class="dim small">${sess.dur} · Wk ${weekNum()} · ${BLOCKS[curBlock()].name}${isConsol()?' · CONSOLIDATION':''}</p>
  <p class="small"><b>Warm-up:</b> ${sess.warm}</p></div>
- ${sess.work.map((ex,i)=>exCard(sess,ex,i)).join('')}
+ ${sess.work.map((ex,i)=>exCard(sess,ex,i,pfx)).join('')}
  ${sess.fin.name?`<div class="card"><h3>Finisher — ${sess.fin.name}</h3>${skipFin()&&sess.fin.swaps!==''?`<p class="small" style="color:var(--amb)">Auto-removed today. Go home.</p>`:`<p class="small">${sess.fin.desc}</p>`}</div>`:''}
+ ${herS?`<div class="card" style="border-color:var(--pink)"><h2 style="color:var(--pink)">Her · ${herS.title}</h2>
+ <p class="dim small">Same gym, same clock — her sets log straight to her profile. Share a rest timer.</p>
+ <p class="small"><b>Warm-up:</b> ${herS.warm}</p></div>
+ ${herS.work.map((ex,i)=>exCard(herS,ex,i,'her_')).join('')}`:''}
  <div class="card"><div class="row">${[60,90,120,180].map(s=>`<button class="btn2" onclick="startTimer(${s})">⏱ ${s<120?s+'s':(s/60)+'m'}</button>`).join('')}</div></div>
- <button class="btn ${prof==='her'?'pinkbg':''}" onclick="logSession('${sess.id}')">✓ Session done</button>`;
+ ${herS?`<button class="btn" onclick="doneTogether('${sess.id}')">✓ Done — log both of us</button>
+ <div style="height:7px"></div><button class="btn2" style="width:100%" onclick="logSession('${sess.id}')">Log mine only</button>`
+ :`<button class="btn ${prof==='her'?'pinkbg':''}" onclick="logSession('${sess.id}')">✓ Session done</button>`}`;
 }
 function trainView(){
  if(openSession){const s=mySessions().find(x=>x.id===openSession);if(s)return sessView(s)}
@@ -537,7 +589,7 @@ function trainView(){
  return `<div class="card"><span class="chip on">Wk ${weekNum()} · ${BLOCKS[curBlock()].wks}</span> <span class="chip">${prof==='her'?'Her programme':'Brian'}</span>
  <p class="dim small" style="margin-top:4px">Exercises rotate automatically each block. 🔀 shuffles any slot. Logs follow the exercise.</p></div>
  ${mySessions().map(s=>`<div class="card" onclick="openSess('${s.id}')" style="cursor:pointer"><b>${s.title}</b> <span class="dim small">· ${s.dur} ${s.id===nx.id?'· <span style="color:var(--grn)">next</span>':''} ›</span></div>`).join('')}
- <details class="card" style="display:block"><summary>History</summary>${hist().slice(0,12).map(h=>`<p class="small" style="margin-bottom:3px">${dayName(h.d)} ${h.d.slice(5)} — ${h.id==='home'?'Home session':(mySessions().find(s=>s.id===h.id)||{title:h.id}).title.split('—')[0]}</p>`).join('')||'<p class="dim small">Nothing yet.</p>'}</details>
+ <details class="card" style="display:block"><summary>History</summary>${hist().slice(0,12).map(h=>`<p class="small" style="margin-bottom:3px">${dayName(h.d)} ${h.d.slice(5)} — ${h.id==='home'?('Home'+(h.n?': '+h.n:'')):(mySessions().find(s=>s.id===h.id)||{title:h.id}).title.split('—')[0]}</p>`).join('')||'<p class="dim small">Nothing yet.</p>'}</details>
  <details class="card" style="display:block"><summary>Rules (progression · deload · misses)</summary>${PROGRESSION.map(p=>`<h3>${p[0]}</h3><p class="small">${p[1]}</p>`).join('')}<h3>Consolidation (wks 4/8/12)</h3><p class="small">${CONSOL} Applied automatically from your start date.</p></details>
  <details class="card" style="display:block"><summary>Quick versions (30-min · hotel · bodyweight · 20-min · busy gym)</summary>${VERSIONS.map(v=>`<h3>${v[0]}</h3>${v[1]}`).join('')}</details>`;
 }
@@ -545,9 +597,11 @@ function trainView(){
 /* ---- HOME ---- */
 function homeView(){
  const nx=nextSession(),nxS=mySessions().find(s=>s.id===nx.id);
- return `<div class="card"><h2>Can’t make the gym today?</h2>
+ const dh=doneToday().filter(x=>x.id==='home');
+ return `${dh.length?`<div class="banner g">✓ Logged today: ${dh.map(x=>x.n||'Home session').join(', ')}</div>`:''}
+ <div class="card"><h2>Can’t make the gym today?</h2>
  <p class="small">None of these advance your rotation — <b>${nxS.title.split('—')[0].trim()}</b> stays queued for your next gym visit. Pick by how you feel:</p></div>
- ${HOMEOPTS.map((o,i)=>`<div class="card"><h3>${o.n}</h3><p class="small">${o.d}</p><button class="btn2" onclick="logSession('home')">✓ Done — log it</button></div>`).join('')}
+ ${HOMEOPTS.map((o,i)=>`<div class="card"><h3>${o.n}</h3><p class="small">${o.d}</p><button class="btn2" onclick="logHome(${i})">✓ Done — log it</button></div>`).join('')}
  <div class="card"><p class="dim small">Rule: Mon–Thu never goes to zero. 15 minutes of anything keeps the habit alive — the habit is worth more than any single session.</p></div>`;
 }
 
@@ -594,6 +648,10 @@ function foodView(){
    <div class="grid2" style="margin-top:6px"><input type="number" id="cf_c" placeholder="carbs g"><input type="number" id="cf_f" placeholder="fat g"></div>
    <div style="margin-top:7px"><button class="btn2" onclick="addCustom()">Add</button></div></details></div>
  <div class="card">${day.items.map((it,i)=>`<div class="fentry"><span>${it.a?'🍷 ':''}${it.n}</span><span class="dim small">${it.k} · ${it.p}P <button class="btn3" onclick="delFood(${i})">×</button></span></div>`).join('')||'<p class="dim small">Nothing logged yet.</p>'}</div>
+ <div class="card"><h2>Recipes for what’s left today</h2>
+ ${recipesFor(day,{k:Math.max(0,t.kcal-tot.k),p:Math.max(0,t.p-tot.p)}).map(r=>`<div class="ex"><div style="display:flex;justify-content:space-between;gap:6px;align-items:center"><div><div class="name" style="font-size:13.5px">${r.n}</div><div class="dim small">${r.k} kcal · ${r.p}P ${r.c}C ${r.f}F — ${r.d}</div></div><button class="btn2" style="flex:none" onclick="addRecipe('${r.n}')">+ Log</button></div></div>`).join('')}
+ <button class="btn2" style="width:100%;margin-top:4px" onclick="aiPrompt()">🤖 Copy AI recipe prompt (with today’s remaining macros)</button>
+ <p class="dim small" id="aiMsg" style="margin-top:4px"></p></div>
  <div class="card"><h2>What to eat — ideas for today</h2>${ideaBlocks}</div>
  ${c.hot?HOTCARD:''}
  <div class="card"><h2>Week’s alcohol</h2><p><b style="color:${alcW>1500?'var(--red)':alcW>700?'var(--amb)':'var(--grn)'}">${alcW} kcal</b> <span class="dim small">Mon–today. Every 700 kcal shaved ≈ 0.1 kg fat that never arrives.</span></p></div>
@@ -614,7 +672,8 @@ function dataView(){
  return `
  ${S.get('lastSync','')?`<div class="banner g">✓ Synced: ${S.get('lastSync','')}</div>`:''}
  <div class="card"><h2>This morning</h2>
-  <div class="grid3">${fields.map(f=>`<div><label>${f[1]}</label><input type="number" inputmode="decimal" placeholder="${f[2]}" value="${tm[f[0]]??''}" onchange="saveMetric('${dk}','${f[0]}',this.value);render()"></div>`).join('')}</div>
+  <div class="grid3">${fields.map(f=>`<div><label>${f[1]}</label><input type="number" inputmode="decimal" placeholder="${f[2]}" value="${tm[f[0]]??''}" oninput="saveMetric('${dk}','${f[0]}',this.value)" onchange="render()"></div>`).join('')}</div>
+  <p class="dim small" style="margin-top:4px;color:var(--grn)">Saves as you type — no button needed.</p>
   <p class="dim small" style="margin-top:7px">Baselines: RHR ${bl('rhr')??'—'} · HRV ${bl('hrv')??'—'} · auto-readiness activates after 3 days of entries.</p></div>
  <details class="card" style="display:block"><summary>Shortcut auto-sync setup (incl. the HRV answer)</summary>
   <p class="small"><b>HRV:</b> your Watch does record it — in Health it’s “Heart Rate Variability” (SDNN), logged a few times a day automatically (more if you use the Mindfulness app for 1 min). In Shortcuts: Find Health Samples → type <b>Heart Rate Variability</b> → latest 1. If it returns nothing that day, skip it — readiness runs fine on RHR + sleep + energy.</p>
@@ -670,6 +729,7 @@ function moreView(){
  ${EDGE}
  <details class="card" style="display:block"><summary>Backup & restore (your data lives on this phone)</summary>
   <p class="dim small">Copy the text into Notes weekly. Restore by pasting it back and tapping Restore.</p>
+  <p class="small" style="color:var(--amb)">iOS keeps <b>separate data</b> for the Home-Screen icon vs Safari. Use Safari only (the morning sync opens there). If data is “missing”, it’s in the other one — Copy backup there, Restore here.</p>
   <textarea id="bkBox" rows="3" placeholder="Backup text appears / paste here"></textarea>
   <div class="row" style="margin-top:7px"><button class="btn2" onclick="doBackup()">Copy backup</button><button class="btn2" onclick="doRestore()">Restore</button></div>
   <p class="dim small" id="bkMsg"></p></details>
