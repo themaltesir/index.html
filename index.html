@@ -99,7 +99,7 @@ hr{border:none;border-top:1px solid var(--line);margin:8px 0}
 <nav id="nav"></nav>
 
 <script>
-const VERSION='3.2';
+const VERSION='3.3';
 /* ============ STORAGE / PROFILE ============ */
 const S={
  get(k,d){try{const v=localStorage.getItem('r43_'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
@@ -157,7 +157,7 @@ const SESSIONS=[
  {id:'loA',title:'Lower A — Squat & Hinge',dur:'55 min',lower:true,
   warm:'3 min incline walk · 10 squats · 10 hinges · world’s greatest stretch ×3/side · ramp-ups',
   work:[
-   {t:'main',pool:['Barbell or Smith Squat','Leg Press','Hack Squat','Front Squat','Heels-Elevated Goblet Squat','Belt Squat'],cue:'Depth over load'},
+   {t:'main',pool:['Barbell or Smith Squat','Leg Press','Hack Squat','Trap-Bar Deadlift','Front Squat','Heels-Elevated Goblet Squat','Belt Squat'],cue:'Depth over load'},
    {t:'acc',pool:['Romanian Deadlift','DB RDL','45° Back Extension','Hip Thrust','Cable Pull-Through','Good Morning (light)'],cue:'Hips back, hamstrings load'},
    {t:'acc',pool:['Bulgarian Split Squat','Walking Lunge','Smith Reverse Lunge','Step-Up','Leg Extension','Single-Leg Press'],cue:'Torso forward = more glute'},
    {t:'acc',pool:['Seated Leg Curl','Lying Leg Curl','Nordic Negatives','Swiss-Ball Curl','Glute-Ham Raise'],cue:'Seated beats lying'},
@@ -178,7 +178,7 @@ const SESSIONS=[
  {id:'eng',title:'Engine — Conditioning & Core',dur:'50 min',lower:false,
   warm:'5 min easy',
   work:[
-   {t:'main',pool:['Zone 2 — 35 min','Norwegian 4×4 (green days, Blocks 2–3)'],cue:'Z2: 106–124 bpm, conversational. 4×4: 4 min RPE 8 / 3 min easy ×4'},
+   {t:'main',pool:['Zone 2 — 35 min','Norwegian 4×4 (green days, Blocks 2–3)','Rower — 6×500m (90s rest)','Battle ropes — 10×30s on/30s off','Assault bike — 5×2 min hard/2 easy','Ski erg — 8×250m','Incline treadmill — 30 min @10–12%'],cue:'Z2: 106–124 bpm, conversational. Intervals: RPE 8, finish able to repeat'},
    {t:'ss',pool:['Core Circuit ×3'],cue:'Dead bug ×10 · side plank 30s/side · Pallof ×12'},
    {t:'iso',pool:['Mobility — 8 min'],cue:'Couch stretch · 90/90 · t-spine · hamstring floss'}],
   fin:{name:'Hangover rule',desc:'Drank last night? Still train — RPE 5 cap, Z2 only, electrolytes first.',swaps:''}}
@@ -221,7 +221,7 @@ const SESSIONS_HER=[
  {id:'heng',title:'Engine — Conditioning & Core',dur:'45 min',lower:false,
   warm:'5 min easy',
   work:[
-   {t:'main',pool:['Zone 2 — 30 min','Intervals: 1 min brisk / 2 min easy ×8'],cue:'Conversational pace for Z2'},
+   {t:'main',pool:['Zone 2 — 30 min','Intervals: 1 min brisk / 2 min easy ×8','Rower — 5×400m easy-hard','Battle ropes — 8×20s on/40s off','Stair climber — 20 min','Incline treadmill — 25 min'],cue:'Conversational pace for Z2; intervals leave 2 reps in the tank'},
    {t:'ss',pool:['Core Circuit ×3'],cue:'Dead bug ×10 · side plank 30s/side · glute bridge ×15'},
    {t:'iso',pool:['Mobility — 8 min'],cue:'Hip flexor · 90/90 · figure-4 · child’s pose'}],
   fin:{name:'',desc:'',swaps:''}}
@@ -293,6 +293,19 @@ function saveSet(name,si,field,val,pfx){
  if(!o)o={d:tk,sets:[],prev:null};
  if(o.d!==tk){o={d:tk,sets:[],prev:{d:o.d,sets:o.sets}}}
  o.sets[si]=o.sets[si]||{};o.sets[si][field]=val;S.set(key,o);
+ const st=o.sets[si],w=parseFloat(st.w||0),r=parseFloat(st.r||0);
+ if(w>0&&r>0&&r<=15){
+  const e1=Math.round(w*(1+r/30)*10)/10,pk='pr_'+(pfx??P())+slug(name),pr=S.get(pk,null);
+  if(!pr||e1>pr.e1)S.set(pk,{n:name,e1,w,r,d:tk});
+ }
+}
+function prList(){
+ const out=[],pf='r43_pr_'+P();
+ for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);
+  if(!k||!k.startsWith(pf))continue;
+  if(P()===''&&k.startsWith('r43_pr_her_'))continue;
+  try{const o=JSON.parse(localStorage.getItem(k));if(o&&o.e1)out.push(o)}catch(e){}}
+ return out.sort((a,b)=>b.e1-a.e1).slice(0,12);
 }
 function lastRecord(name,pfx){
  const o=setLog(name,pfx);if(!o)return null;
@@ -314,10 +327,12 @@ function suggest(name,sch,lower,pfx){
  const allTop=logged.length>=sch.sets-1&&reps.every(r=>r>=sch.hi);
  const below=reps.filter(r=>r>0&&r<sch.lo).length;
  const gapDays=Math.floor((new Date(todayKey()+'T12:00')-new Date(rec.d+'T12:00'))/864e5);
- if(gapDays>=21)return{main:'Today: '+rnd(maxW*0.9)+' kg × '+sch.lo+'–'+sch.hi+' (−10% — '+gapDays+' days off this lift, rebuild fast)',last:lastTxt};
- if(allTop)return{main:'Today: '+(maxW+inc)+' kg × '+sch.lo+'–'+sch.hi+' (you earned +'+inc+' kg)',last:lastTxt};
- if(below>=2&&below>=Math.ceil(reps.length/2))return{main:'Today: '+rnd(maxW*0.95)+' kg (−5% — reps fell under '+sch.lo+' last time; own the range, then climb)',last:lastTxt};
- return{main:'Today: '+maxW+' kg — beat last reps (top target '+sch.hi+')',last:lastTxt};
+ let tw=maxW,msg;
+ if(gapDays>=21){tw=rnd(maxW*0.9);msg='Today: '+tw+' kg × '+sch.lo+'–'+sch.hi+' (−10% — '+gapDays+' days off this lift, rebuild fast)'}
+ else if(allTop){tw=maxW+inc;msg='Today: '+tw+' kg × '+sch.lo+'–'+sch.hi+' (you earned +'+inc+' kg)'}
+ else if(below>=2&&below>=Math.ceil(reps.length/2)){tw=rnd(maxW*0.95);msg='Today: '+tw+' kg (−5% — reps fell under '+sch.lo+' last time; own the range, then climb)'}
+ else msg='Today: '+maxW+' kg — beat last reps (top target '+sch.hi+')';
+ return{main:msg,last:lastTxt,tw};
 }
 function howTo(name){window.open('https://www.youtube.com/results?search_query='+encodeURIComponent(name+' proper form technique'),'_blank')}
 
@@ -427,6 +442,28 @@ const HOTCARD=`<div class="card"><h2>Hot-climate protocol (35–45°C)</h2>
 <tr><td>Food</td><td>Lighter, colder, saltier (ideas above). Appetite drops in heat — protect protein first</td></tr>
 <tr><td>Sleep</td><td>AC 18–19°C. Cool shower before bed</td></tr></table></div>`;
 
+/* ============ CONDITIONING LOG ============ */
+const CARDIO=['Zone 2 (bike/walk)','Norwegian 4×4','Rower intervals','Battle ropes','Jump rope','Ski erg','Assault bike','Incline treadmill','Swim','Boxing bag','Stair climber','HIIT circuit','Sled push','Yoga / stretch'];
+function clog(){return S.get(P()+'clog',[])}
+function addCardio(){
+ const t=el('cdT').value,min=parseFloat(el('cdM').value)||0,rpe=el('cdR').value;
+ if(!min)return;
+ const c=clog();c.unshift({t,min,rpe,d:todayKey()});S.set(P()+'clog',c.slice(0,200));render();
+}
+function weekCardio(pfx){
+ const c=S.get((pfx??P())+'clog',[]);
+ const now=new Date(todayKey()+'T12:00'),mon=new Date(now);mon.setDate(now.getDate()-((now.getDay()+6)%7));
+ return Math.round(c.filter(x=>new Date(x.d+'T12:00')>=mon).reduce((a,x)=>a+x.min,0));
+}
+function cardioCard(){
+ return `<div class="card"><h2>Conditioning log</h2>
+ <div class="row"><select id="cdT" style="max-width:160px">${CARDIO.map(c=>`<option>${c}</option>`).join('')}</select>
+ <input type="number" id="cdM" inputmode="numeric" placeholder="min" style="max-width:70px">
+ <select id="cdR" style="max-width:95px">${[5,6,7,8,9,10].map(r=>`<option>RPE ${r}</option>`).join('')}</select></div>
+ <div style="margin-top:7px"><button class="btn2" onclick="addCardio()">+ Log it</button> <span class="dim small">${weekCardio()} min this week</span></div>
+ ${clog().slice(0,5).map(x=>`<p class="small dim" style="margin:4px 0 0">${dayName(x.d)} ${x.d.slice(5)} — ${x.t} · ${x.min} min · ${x.rpe}</p>`).join('')}</div>`;
+}
+
 /* ============ HOME FALLBACK ============ */
 const HOMEOPTS=[
  {n:'Recovery Flow · 20 min',d:'Cat-cow ×8 · down-dog→lunge flow ×5/side · pigeon 60s/side · couch stretch 60s/side · 90/90 ×5/side · child’s pose 2 min · 5 min slow 4s-in/6s-out breathing'},
@@ -514,8 +551,12 @@ function weekReview(){
  const cw=S.get('her_hist',[]).filter(x=>new Date(x.d+'T12:00')>=mon&&ROT_HER.includes(x.id)).length;
  const m=metrics(),ks=Object.keys(m).filter(d=>m[d].wt!=null).sort().slice(-8);
  const wtT=ks.length>=2?Math.round((m[ks[ks.length-1]].wt-m[ks[0]].wt)*10)/10:null;
+ const wk4=[3,2,1,0].map(off=>{const st=new Date(mon);st.setDate(st.getDate()-7*off);const en=new Date(st);en.setDate(en.getDate()+7);
+  return hist().filter(x=>{const d=new Date(x.d+'T12:00');return d>=st&&d<en&&myRot().includes(x.id)}).length});
  return `<details class="card" style="display:block"><summary>Week so far — Brian ${mineWk}/4 · Clare ${cw}/4</summary>
  <p class="small">Alcohol: <b style="color:${alc>1500?'var(--red)':alc>700?'var(--amb)':'var(--grn)'}">${alc} kcal</b> ${alc>1500?'— heavy week; food discipline Mon–Thu carries it':alc>700?'— the usual pattern; plan holds':'— light week, recomp loves this'}</p>
+ <p class="small">Conditioning: Brian ${weekCardio('')} min · Clare ${weekCardio('her_')} min</p>
+ <p class="small">Last 4 weeks (sessions): ${wk4.join(' · ')}</p>
  ${wtT!=null?`<p class="small">Weight trend: ${wtT>0?'+':''}${wtT} kg over last entries</p>`:''}
  <p class="dim small">Consistency beats intensity — 4/4 weeks stack up; heroic one-offs don’t.</p></details>`;
 }
@@ -540,7 +581,7 @@ function todayView(){
  </div>
  ${rhythmCard()}
  ${weekReview()}
- <div class="card"><span class="chip on">Wk ${wk} · ${b.name}</span>${(metrics()[todayKey()]||{}).steps?`<span class="chip">👣 ${metrics()[todayKey()].steps}</span>`:''}
+ <div class="card"><span class="chip on">Wk ${wk} · ${b.name}</span>${(metrics()[todayKey()]||{}).steps?`<span class="chip">👣 ${metrics()[todayKey()].steps}</span>`:''}${(metrics()[todayKey()]||{}).move?`<span class="chip">🔥 ${metrics()[todayKey()].move} kcal</span>`:''}${(metrics()[todayKey()]||{}).exmin?`<span class="chip">💍 ${metrics()[todayKey()].exmin} min</span>`:''}
  <span class="chip">${targets(fday(todayKey()).type).p}g protein</span><span class="chip">${cfg().mode==='recomp'?'8k+':'10k+'} steps</span><span class="chip">No caffeine post-14:00</span>${defType(todayKey())==='drink'?'<span class="chip">🍷 protein before drinks · water 1-per-2 · electrolytes at bed</span>':''}
  <p class="dim small" style="margin-top:6px">${b.goal}</p></div>`;
 }
@@ -574,9 +615,14 @@ function exCard(sess,ex,i,pfx){
   }).join('');
   return (parts.length>1?`<div class="small" style="font-weight:600;margin-top:8px">${pt} <span onclick="howTo('${nm}')" style="cursor:pointer;opacity:.8">🎬</span></div>`:'')+rows;
  }).join('');
+ const r25=w=>Math.max(2.5,Math.round(w/2.5)*2.5);
  const suggs=parts.map(pt=>{
   const sg=suggest(pt,sch,sess.lower,pfx);
-  return `<div class="sugg">${parts.length>1?`<span style="color:var(--txt)">${pt}:</span> `:''}${sg.main}</div>${sg.last?`<div class="last">${sg.last}</div>`:''}`;
+  const pr=S.get('pr_'+pfx+slug(pt),null);
+  return `<div class="sugg">${parts.length>1?`<span style="color:var(--txt)">${pt}:</span> `:''}${sg.main}</div>
+  ${ex.t==='main'&&sg.tw?`<div class="last">Ramp-up: ${r25(sg.tw*0.5)} ×8 → ${r25(sg.tw*0.7)} ×5 → ${r25(sg.tw*0.85)} ×3 → work sets</div>`:''}
+  ${sg.last?`<div class="last">${sg.last}</div>`:''}
+  ${pr?`<div class="last">🏆 Best: ${pr.w} kg × ${pr.r} (e1RM ${pr.e1})${pr.d===todayKey()?' — <b style="color:var(--grn)">new PR today!</b>':''}</div>`:''}`;
  }).join('');
  return `<div class="ex"${pink?' style="border-color:#592f42"':''}>
   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px"><div>
@@ -604,6 +650,7 @@ function sessView(sess){
  <p class="small"><b>Warm-up:</b> ${sess.warm}</p></div>
  ${sess.work.map((ex,i)=>exCard(sess,ex,i,pfx)).join('')}
  ${sess.fin.name?`<div class="card"><h3>Finisher — ${sess.fin.name}</h3>${skipFin()&&sess.fin.swaps!==''?`<p class="small" style="color:var(--amb)">Auto-removed today. Go home.</p>`:`<p class="small">${sess.fin.desc}</p>`}</div>`:''}
+ ${(sess.id==='eng'||sess.id==='heng')?cardioCard():''}
  ${herS?`<div class="card" style="border-color:var(--pink)"><h2 style="color:var(--pink)">Clare · ${herS.title}</h2>
  <p class="dim small">Same gym, same clock — Clare’s sets log straight to her profile. Share a rest timer.</p>
  <p class="small"><b>Warm-up:</b> ${herS.warm}</p></div>
@@ -623,6 +670,8 @@ function trainView(){
  <p class="dim small" style="margin-top:4px">Exercises rotate automatically each block. 🔀 shuffles any slot. Logs follow the exercise.</p></div>
  ${mySessions().map(s=>`<div class="card" onclick="openSess('${s.id}')" style="cursor:pointer"><b>${s.title}</b> <span class="dim small">· ${s.dur} ${s.id===nx.id?'· <span style="color:var(--grn)">next</span>':''} ›</span></div>`).join('')}
  <details class="card" style="display:block"><summary>History</summary>${hist().slice(0,12).map(h=>`<p class="small" style="margin-bottom:3px">${dayName(h.d)} ${h.d.slice(5)} — ${h.id==='home'?('Home'+(h.n?': '+h.n:'')):(mySessions().find(s=>s.id===h.id)||{title:h.id}).title.split('—')[0]}</p>`).join('')||'<p class="dim small">Nothing yet.</p>'}</details>
+ <details class="card" style="display:block"><summary>🏆 Personal records (est. 1RM)</summary>
+ ${prList().length?`<table><tr><th>Lift</th><th>Best set</th><th>e1RM</th></tr>${prList().map(p=>`<tr><td>${p.n}</td><td>${p.w} kg × ${p.r}</td><td><b>${p.e1} kg</b></td></tr>`).join('')}</table>`:'<p class="dim small">Log some sets — records build themselves.</p>'}</details>
  <details class="card" style="display:block"><summary>Rules (progression · deload · misses)</summary>${PROGRESSION.map(p=>`<h3>${p[0]}</h3><p class="small">${p[1]}</p>`).join('')}<h3>Consolidation (wks 4/8/12)</h3><p class="small">${CONSOL} Applied automatically from your start date.</p></details>
  <details class="card" style="display:block"><summary>Quick versions (30-min · hotel · bodyweight · 20-min · busy gym)</summary>${VERSIONS.map(v=>`<h3>${v[0]}</h3>${v[1]}`).join('')}</details>`;
 }
@@ -635,6 +684,7 @@ function homeView(){
  <div class="card"><h2>Can’t make the gym today?</h2>
  <p class="small">None of these advance your rotation — <b>${nxS.title.split('—')[0].trim()}</b> stays queued for your next gym visit. Pick by how you feel:</p></div>
  ${HOMEOPTS.map((o,i)=>`<div class="card"><h3>${o.n}</h3><p class="small">${o.d}</p><button class="btn2" onclick="logHome(${i})">✓ Done — log it</button></div>`).join('')}
+ ${cardioCard()}
  <div class="card"><p class="dim small">Rule: Mon–Thu never goes to zero. 15 minutes of anything keeps the habit alive — the habit is worth more than any single session.</p></div>`;
 }
 
@@ -699,7 +749,7 @@ function foodView(){
 /* ---- DATA ---- */
 function dataView(){
  const dk=todayKey(),m=metrics(),tm=m[dk]||{};
- const fields=[['rhr','Resting HR','52'],['hrv','HRV ms','45'],['sleep','Sleep h','7.2'],['energy','Energy 1–5','3'],['wt','Weight kg','86.0'],['waist','Waist cm','92'],['steps','Steps','9500'],['vo2','VO₂ max','40']];
+ const fields=[['rhr','Resting HR','52'],['hrv','HRV ms','45'],['sleep','Sleep h','7.2'],['energy','Energy 1–5','3'],['wt','Weight kg','86.0'],['waist','Waist cm','92'],['steps','Steps','9500'],['vo2','VO₂ max','40'],['move','Move kcal','620'],['exmin','Exercise min','32']];
  const days=Object.keys(m).sort().reverse().slice(0,14);
  const bl=k=>baseline(k,dk);
  return `
@@ -718,7 +768,7 @@ function dataView(){
    <li>Open URLs → <span style="color:var(--acc)">https://themaltesir.github.io/index.html/?rhr=</span>[1]<span style="color:var(--acc)">&hrv=</span>[2]<span style="color:var(--acc)">&sleep=</span>[3]</li>
    <li>Automation → Time of Day 08:00 → Run without asking</li>
   </ol>
-  <p class="dim small">Also accepted: <b>&wt=</b> (weight, Mon/Thu) · <b>&waist=</b> · <b>&steps=</b> (yesterday’s step count) · <b>&vo2=</b> (VO₂ max) · <b>&energy=</b>. A 1-minute Breathe session on the Watch each morning guarantees a fresh HRV sample.</p></details>
+  <p class="dim small">Also accepted: <b>&wt=</b> (weight, Mon/Thu) · <b>&waist=</b> · <b>&steps=</b> · <b>&vo2=</b> · <b>&energy=</b> · rings: <b>&move=</b> (Active Energy, sum today) · <b>&exmin=</b> (Exercise Minutes, sum today) · <b>&stand=</b>. Run the shortcut any time of day — later runs simply update today’s numbers. A 1-minute Breathe session on the Watch each morning guarantees a fresh HRV sample.</p></details>
  <div class="card"><h2>History</h2><table><tr><th>Date</th><th>RHR</th><th>HRV</th><th>Slp</th><th>E</th><th>Wt</th><th>Waist</th></tr>
  ${days.map(d=>`<tr><td>${dayName(d)} ${d.slice(5)}</td><td>${m[d].rhr??''}</td><td>${m[d].hrv??''}</td><td>${m[d].sleep??''}</td><td>${m[d].energy??''}</td><td>${m[d].wt??''}</td><td>${m[d].waist??''}</td></tr>`).join('')}</table>
  ${days.length?'':'<p class="dim small">No entries yet.</p>'}</div>
@@ -806,7 +856,7 @@ function beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)
  if(!src)return;
  const q=new URLSearchParams(src);
  const dk=(q.get('d')||todayKey()).slice(0,10);let got=[];
- [['rhr',30,120],['hrv',5,250],['sleep',0,16],['energy',1,5],['wt',40,200],['waist',50,200],['steps',0,100000],['vo2',10,80]].forEach(([k,lo,hi])=>{
+ [['rhr',30,120],['hrv',5,250],['sleep',0,16],['energy',1,5],['wt',40,200],['waist',50,200],['steps',0,100000],['vo2',10,80],['move',0,4000],['exmin',0,600],['stand',0,24]].forEach(([k,lo,hi])=>{
   const v=parseFloat(q.get(k));
   if(!isNaN(v)&&v>=lo&&v<=hi){saveMetric(dk,k,String(Math.round(v*10)/10));got.push(k.toUpperCase()+' '+(Math.round(v*10)/10))}
  });
@@ -816,6 +866,12 @@ function beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)
 
 /* Ask iOS/browser to protect localStorage from eviction */
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+/* Stale-tab guard: any old Safari tab re-reads storage the moment it's viewed again */
+try{
+ window.addEventListener('pageshow',()=>render());
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)render()});
+ window.addEventListener('storage',()=>render());
+}catch(e){}
 
 /* ---- ROOT ---- */
 function render(){
