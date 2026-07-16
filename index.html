@@ -99,7 +99,7 @@ hr{border:none;border-top:1px solid var(--line);margin:8px 0}
 <nav id="nav"></nav>
 
 <script>
-const VERSION='3.3';
+const VERSION='3.4';
 /* ============ STORAGE / PROFILE ============ */
 const S={
  get(k,d){try{const v=localStorage.getItem('r43_'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
@@ -118,10 +118,11 @@ function toggleTog(){S.set('tog',!S.get('tog',false));render()}
 function cfg(){return S.get('cfg',{wt:86,wtHer:64,mode:'recomp',start:'',wake:'07:30'})}
 function setCfg(k,v){const c=cfg();c[k]=v;S.set('cfg',c);render()}
 function myWt(){return prof==='her'?(cfg().wtHer||64):(cfg().wt||86)}
+function progDays(){const c=cfg();if(!c.start)return 0;return Math.max(0,Math.floor((new Date(todayKey()+'T12:00')-new Date(c.start+'T12:00'))/864e5))}
+function cycleNum(){const c=cfg();if(!c.start)return 1;return Math.floor(progDays()/84)+1}
 function weekNum(){
  const c=cfg(); if(!c.start) return 1;
- const d=Math.floor((new Date(todayKey()+'T12:00')-new Date(c.start+'T12:00'))/864e5);
- return Math.min(12,Math.max(1,Math.floor(d/7)+1));
+ return Math.min(12,Math.max(1,Math.floor((progDays()%84)/7)+1));
 }
 function curBlock(){const w=weekNum();return w<=4?'b1':w<=8?'b2':'b3'}
 function blockNum(){return{b1:1,b2:2,b3:3}[curBlock()]}
@@ -230,6 +231,32 @@ function mySessions(){return prof==='her'?SESSIONS_HER:SESSIONS}
 function myRot(){return prof==='her'?ROT_HER:ROT}
 const PAIR={upA:'hup',loA:'hlo1',upB:'hlo2',eng:'heng'};
 
+/* ============ HOLIDAY FULL-BODY (both profiles) ============ */
+const HOLFULL=[
+ {id:'fbA',title:'Holiday Full-Body A',dur:'45 min',lower:true,
+  warm:'5 min any cardio · 10 squats · arm circles · ramp-ups',
+  work:[
+   {t:'main',pool:['DB Goblet Squat','Leg Press','Smith Squat','Bulgarian Split Squat'],cue:'Full depth, controlled'},
+   {t:'acc',pool:['Flat DB Bench Press','Machine Chest Press','Push-up (elevate feet if easy)'],cue:'Full stretch, no bounce'},
+   {t:'acc',pool:['1-Arm DB Row','Seated Cable Row','Machine Row'],cue:'1s squeeze at chest'},
+   {t:'ss',pool:['DB RDL + DB Lateral Raise','Leg Curl + Cable Lateral Raise'],cue:'Hinge, then delts'},
+   {t:'ss',pool:['DB Curl + Bench Dips','Cable Curl + Rope Pressdown'],cue:'Arms to finish'},
+   {t:'iso',pool:['Plank 3×45s','Dead Bug ×12'],cue:'Core — skip if short on time'}],
+  fin:{name:'',desc:'',swaps:''}},
+ {id:'fbB',title:'Holiday Full-Body B',dur:'45 min',lower:true,
+  warm:'5 min any cardio · 10 hinges · band pull-aparts · ramp-ups',
+  work:[
+   {t:'main',pool:['DB RDL','Trap-Bar Deadlift','Smith RDL'],cue:'Hips back, hamstrings load'},
+   {t:'acc',pool:['Incline DB Press','Machine Shoulder Press','Pike Push-up'],cue:'Press up and back'},
+   {t:'acc',pool:['Lat Pulldown','Assisted Pull-up','Band Pulldown'],cue:'Elbows to hips'},
+   {t:'ss',pool:['Walking Lunge + Face Pull','Step-Up + Rear-Delt Raise'],cue:'Legs + posture pair'},
+   {t:'ss',pool:['Hammer Curl + Overhead Extension','Incline Curl + Close-Grip Push-up'],cue:'Stretch-position arms'},
+   {t:'iso',pool:['Side Plank 3×30s/side','Hanging Knee Raise'],cue:'Core'}],
+  fin:{name:'',desc:'',swaps:''}}];
+function findSess(id){return mySessions().find(s=>s.id===id)||HOLFULL.find(s=>s.id===id)}
+function holNext(){const f=hist().find(x=>x.id==='fbA'||x.id==='fbB');return f&&f.id==='fbA'?'fbB':'fbA'}
+function logHoliday(){pushHist('home',P(),'Holiday circuit');go('today')}
+
 /* ============ HEALTH METRICS / AUTO-READINESS (Brian's watch) ============ */
 function metrics(){return S.get('mx',{})}
 function saveMetric(dk,k,v){const m=metrics();m[dk]=m[dk]||{};if(v==='')delete m[dk][k];else m[dk][k]=parseFloat(v);S.set('mx',m)}
@@ -264,7 +291,7 @@ function hist(){return S.get(P()+'hist',[])}
 function pushHist(id,pfx,name){const h=S.get(pfx+'hist',[]);h.unshift(Object.assign({id,d:todayKey()},name?{n:name}:{}));S.set(pfx+'hist',h.slice(0,400))}
 function logSession(id){pushHist(id,P());render()}
 function logHome(i){pushHist('home',P(),HOMEOPTS[i].n.split(' ·')[0]);go('today')}
-function doneTogether(sid){pushHist(sid,'');pushHist(PAIR[sid],'her_');go('today')}
+function doneTogether(sid){pushHist(sid,'');pushHist(PAIR[sid]||sid,'her_');go('today')}
 function undoLast(){const h=hist();h.shift();S.set(P()+'hist',h);render()}
 function lastRotEntry(){return hist().find(x=>myRot().includes(x.id))}
 function nextSession(){
@@ -282,7 +309,7 @@ function nextSession(){
 function doneToday(){return hist().filter(x=>x.d===todayKey())}
 function weekSessions(){
  const now=new Date(todayKey()+'T12:00');const mon=new Date(now);mon.setDate(now.getDate()-((now.getDay()+6)%7));
- return hist().filter(x=>new Date(x.d+'T12:00')>=mon&&myRot().includes(x.id)).length;
+ return hist().filter(x=>new Date(x.d+'T12:00')>=mon&&(myRot().includes(x.id)||x.id==='fbA'||x.id==='fbB')).length;
 }
 
 /* ============ SET LOGGING & LOAD SUGGESTION (keyed by exercise name) ============ */
@@ -291,13 +318,50 @@ function setLog(name,pfx){return S.get(slKey(name,pfx),null)}
 function saveSet(name,si,field,val,pfx){
  const key=slKey(name,pfx);let o=S.get(key,null);const tk=todayKey();
  if(!o)o={d:tk,sets:[],prev:null};
- if(o.d!==tk){o={d:tk,sets:[],prev:{d:o.d,sets:o.sets}}}
- o.sets[si]=o.sets[si]||{};o.sets[si][field]=val;S.set(key,o);
+ if(o.d!==tk){
+  const hk='slh_'+(pfx??P())+slug(name),hh=S.get(hk,[]);
+  if(o.sets.some(s=>s&&(s.w||s.r))){hh.unshift({d:o.d,sets:o.sets});S.set(hk,hh.slice(0,12))}
+  o={d:tk,sets:[],prev:{d:o.d,sets:o.sets}};
+ }
+ o.n=name;o.sets[si]=o.sets[si]||{};o.sets[si][field]=val;S.set(key,o);
  const st=o.sets[si],w=parseFloat(st.w||0),r=parseFloat(st.r||0);
  if(w>0&&r>0&&r<=15){
   const e1=Math.round(w*(1+r/30)*10)/10,pk='pr_'+(pfx??P())+slug(name),pr=S.get(pk,null);
   if(!pr||e1>pr.e1)S.set(pk,{n:name,e1,w,r,d:tk});
  }
+}
+function exLog(pfx){
+ const out=[],base='r43_sl_'+pfx;
+ for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);
+  if(!k||!k.startsWith(base))continue;
+  if(pfx===''&&k.startsWith('r43_sl_her_'))continue;
+  try{const o=JSON.parse(localStorage.getItem(k));
+   if(o&&o.d&&o.sets&&(o.sets.some(s=>s&&(s.w||s.r))||(o.prev&&o.prev.sets&&o.prev.sets.some(s=>s&&(s.w||s.r)))))out.push([k.slice(base.length),o])
+  }catch(e){}}
+ return out.sort((a,b)=>b[1].d<a[1].d?-1:1);
+}
+function schemeFor(nameSlug,pfx){
+ const list=pfx==='her_'?SESSIONS_HER:SESSIONS;
+ for(const s of list.concat(HOLFULL))for(const w of s.work)for(const p of w.pool)if(slug(p)===nameSlug)return{t:w.t,lower:s.lower};
+ return{t:'acc',lower:false};
+}
+function logbook(){
+ const fmt=ss=>ss.filter(s=>s&&(s.w||s.r)).map(s=>(s.w||'?')+'×'+(s.r||'?')).join(' · ');
+ return `<details class="card" style="display:block"><summary>📖 Full logbook — Brian & Clare</summary>
+ ${[['','Brian','var(--acc)'],['her_','Clare','var(--pink)']].map(([pfx,label,col])=>{
+  const rows=exLog(pfx).slice(0,20);
+  return `<h3 style="color:${col}">${label}</h3>`+(rows.length?rows.map(([sl,o])=>{
+   const name=o.n||sl.replace(/-/g,' ');
+   const sc=schemeFor(sl,pfx),sch=BLOCKS[curBlock()].sch[sc.t];
+   const sg=suggest(name,sch,sc.lower,pfx);
+   const older=S.get('slh_'+pfx+sl,[]).slice(0,2);
+   return `<div style="margin-bottom:9px"><b class="small">${name}</b><br>
+   <span class="dim small">${dayName(o.d)} ${o.d.slice(5)}: ${fmt(o.sets)||'—'}</span>
+   ${o.prev&&o.prev.sets&&o.prev.sets.some(s=>s&&(s.w||s.r))?`<br><span class="dim small">${dayName(o.prev.d)} ${o.prev.d.slice(5)}: ${fmt(o.prev.sets)}</span>`:''}
+   ${older.map(h=>`<br><span class="dim small">${dayName(h.d)} ${h.d.slice(5)}: ${fmt(h.sets)}</span>`).join('')}
+   <br><span class="small" style="color:var(--pur);font-weight:600">${sg.main}</span></div>`;
+  }).join(''):'<p class="dim small">No lifts logged yet.</p>');
+ }).join('<hr>')}</details>`;
 }
 function prList(){
  const out=[],pf='r43_pr_'+P();
@@ -400,7 +464,11 @@ const RECIPES=[
  {n:'Cold prawn poke bowl',k:520,p:36,c:65,f:12,tags:['hot'],d:'150g prawns + 150g cold rice + edamame + cucumber + soy-lime'},
  {n:'Whey-berry smoothie',k:300,p:31,c:38,f:3,tags:['quick','hot','train'],d:'1 scoop whey + banana + 100g frozen berries + 200ml milk'},
  {n:'Chicken halloumi salad',k:540,p:52,c:12,f:32,tags:['rest','hot'],d:'150g chicken + 60g halloumi + big salad + olive oil'},
- {n:'Yoghurt dessert',k:280,p:29,c:22,f:9,tags:['quick'],d:'250g Greek yoghurt 0% + dark-choc square + 15g almonds'}];
+ {n:'Yoghurt dessert',k:280,p:29,c:22,f:9,tags:['quick'],d:'250g Greek yoghurt 0% + dark-choc square + 15g almonds'},
+ {n:'Protein oats',k:420,p:36,c:48,f:8,tags:['train','quick'],d:'60g oats + 1 scoop whey stirred in after cooking + berries'},
+ {n:'Tuna pasta',k:650,p:46,c:78,f:14,tags:['train','quick'],d:'150g cooked pasta + 2 tins tuna + tomato sauce + olives'},
+ {n:'Air-fryer chicken + veg',k:460,p:52,c:22,f:16,tags:['rest','quick'],d:'200g chicken thighs + big tray of peppers/courgette, 18 min'},
+ {n:'Chicken pita pockets',k:520,p:42,c:52,f:14,tags:['train','hot'],d:'150g chicken + pita + tzatziki + tomato-cucumber salad'}];
 function recipesFor(day,rem){
  const c=ctx();
  const want=day.type==='drink'?'drink':c.hot?'hot':(day.type==='train'?'train':'rest');
@@ -422,6 +490,9 @@ function aiPrompt(){
  try{document.execCommand('copy');el('aiMsg').textContent='Copied ✓ — paste into ChatGPT / Claude'}catch(e){el('aiMsg').textContent=txt}
  document.body.removeChild(ta);
 }
+/* Water tracker */
+function waterKey(){return P()+'wtr_'+foodDate}
+function addWater(n){S.set(waterKey(),Math.max(0,S.get(waterKey(),0)+n));render()}
 /* Context (holiday / hot climate) */
 function ctx(){return S.get('ctx',{hol:false,hot:false})}
 function setCtx(k){const c=ctx();c[k]=!c[k];S.set('ctx',c);render()}
@@ -429,7 +500,7 @@ const IDEAS={
  train:['Burrito bowl: rice + 200g chicken + beans + salsa','Salmon, potatoes, greens','Steak, rice, roasted peppers','Pasta + 5% turkey mince ragu','Pre: oats + whey · Post: chicken wrap'],
  rest:['3-egg omelette + big salad','Greek yoghurt bowl: berries, almonds, whey stirred in','Chicken salad, olive oil, skip the starch','Cottage cheese + tuna plate + crackers','Prawn stir-fry, light on noodles'],
  drink:['Before drinks: 50g protein meal — steak or chicken + veg','Out: grills, tapas meats, fish — skip bread basket & dessert','Between: water 1-per-2 drinks','Bed: Greek yoghurt + electrolyte sachet','Morning after: eggs + smoked salmon + fruit + salted avocado toast'],
- hol:['Hotel breakfast: 3 eggs + fruit, walk past the pastries','Lunch: grilled fish/meat + salad, local veg','Bag snacks: biltong, nuts, protein bars from home','One indulgent meal per day — make it dinner, enjoy it fully','12k+ steps = holiday cardio, no gym guilt'],
+ hol:['Hotel breakfast: 3 eggs + fruit, walk past the pastries','Buffet rule: first plate all protein + veg, then one fun plate','Lunch: grilled fish/meat + salad, local veg','Bag snacks: biltong, nuts, protein bars from home','One indulgent meal per day — make it dinner, enjoy it fully','12k+ steps = holiday cardio, no gym guilt','Gelato beats hotel dessert buffet — pick the best, skip the rest'],
  hot:['Cold proteins: prawn/chicken salads, poke bowls','Watermelon + feta + salted nuts (fluid + sodium in one)','Whey + frozen berry + milk smoothies','Gazpacho / cold soups','Grilled over fried · salt food more than feels normal']
 };
 const HOTCARD=`<div class="card"><h2>Hot-climate protocol (35–45°C)</h2>
@@ -476,6 +547,7 @@ const PROGRESSION=[
  ['Load targets','The purple line under each exercise computes your weight: hit the top of the rep range on all sets → it adds 2.5 kg (upper) / 5 kg (lower) next time. Otherwise: same weight, beat the reps.'],
  ['RIR honesty','RIR 2 = two clean reps left, no grinding. Film a top set occasionally — if bar speed never slows, go heavier.'],
  ['Variety engine','Each block auto-selects a different exercise per slot. The 🔀 button cycles alternatives any time; your logs follow the exercise, not the slot.'],
+ ['12-week cycles','After week 12 a new cycle starts automatically: every slot rotates to a fresh movement from its pool, blocks restart at Foundation, and first-week targets come back conservative. New stimulus, no boredom, joints get a change of angle.'],
  ['Auto-deload','Data entries drive amber/red days automatically. Two ambers running → treat the week as consolidation.'],
  ['Missed sessions','Rotation-based — nothing is “missed”. 7+ day gap → −10% one session. 14+ → restart block.']];
 const VERSIONS=[
@@ -548,7 +620,7 @@ function rhythmCard(){
 function weekReview(){
  const alc=weekAlc(),mineWk=weekSessions();
  const now=new Date(todayKey()+'T12:00'),mon=new Date(now);mon.setDate(now.getDate()-((now.getDay()+6)%7));
- const cw=S.get('her_hist',[]).filter(x=>new Date(x.d+'T12:00')>=mon&&ROT_HER.includes(x.id)).length;
+ const cw=S.get('her_hist',[]).filter(x=>new Date(x.d+'T12:00')>=mon&&(ROT_HER.includes(x.id)||x.id==='fbA'||x.id==='fbB')).length;
  const m=metrics(),ks=Object.keys(m).filter(d=>m[d].wt!=null).sort().slice(-8);
  const wtT=ks.length>=2?Math.round((m[ks[ks.length-1]].wt-m[ks[0]].wt)*10)/10:null;
  const wk4=[3,2,1,0].map(off=>{const st=new Date(mon);st.setDate(st.getDate()-7*off);const en=new Date(st);en.setDate(en.getDate()+7);
@@ -564,33 +636,43 @@ function todayView(){
  const rd=readiness(),nx=nextSession(),nxS=mySessions().find(s=>s.id===nx.id),done=doneToday();
  const b=BLOCKS[curBlock()],wk=weekNum();
  const lb=S.get('lastBk',''),bkOld=!lb||Math.floor((new Date(todayKey()+'T12:00')-new Date(lb+'T12:00'))/864e5)>=7;
+ const c2=ctx();
+ const newCycle=cfg().start&&cycleNum()>1&&progDays()%84<7;
  return `
+ ${!cfg().start?`<div class="banner a">📅 Set your programme start date in More — weeks, blocks and the 12-week exercise cycles all run from it.</div>`:''}
+ ${newCycle?`<div class="banner g"><b>New 12-week cycle #${cycleNum()}.</b> Every exercise slot has rotated to a fresh movement. Week 1: take −10% on loads and re-groove — the app’s targets already know.</div>`:''}
  ${bkOld&&hist().length>3?`<div class="banner n">💾 Weekly habit: More → Copy backup into Notes. Protects both profiles.</div>`:''}
+ ${c2.hol?`<div class="card" style="border-color:var(--amb)"><h2>✈️ Holiday mode</h2>
+ <p class="small">Rotation paused — your normal programme waits at home, no sessions “missed”. While away, 2–3× a week, either:</p>
+ <button class="btn" onclick="openSess('${holNext()}')">Hotel gym → ${holNext()==='fbA'?'Full-Body A':'Full-Body B'} · 45 min</button>
+ <div style="height:7px"></div>
+ <button class="btn2" style="width:100%" onclick="logHoliday()">No gym → 25-min room circuit done ✓</button>
+ <p class="dim small" style="margin-top:7px">Room circuit: 5 rounds — 10 slow push-ups · 15 squats · 10/leg split squats · 10 table rows or Y-raises · 30s plank. Plus 8k+ steps daily. Works for you and Clare — switch profiles to log hers.</p></div>`:''}
  <div class="banner ${rd.st}"><b>${READLINE[rd.st]}</b> <span class="small dim">${rd.reasons.join(' · ')}</span></div>
  ${rd.manual&&rd.st==='n'?`<div class="card">${manualReadyChips()}</div>`:''}
  ${nx.note?`<div class="banner a">${nx.note}</div>`:''}
  ${isConsol()?`<div class="banner n"><b>Week ${wk} = consolidation.</b> ${CONSOL}</div>`:''}
  <div class="card">
-  ${done.length?`<p class="small" style="color:var(--grn);margin-bottom:6px">✓ Done today: ${done.map(x=>x.id==='home'?('Home'+(x.n?': '+x.n:'')):(mySessions().find(s=>s.id===x.id)||{title:x.id}).title.split('—')[0]).join(', ')}</p>`:''}
+  ${done.length?`<p class="small" style="color:var(--grn);margin-bottom:6px">✓ Done today: ${done.map(x=>x.id==='home'?('Home'+(x.n?': '+x.n:'')):(findSess(x.id)||{title:x.id}).title.split('—')[0]).join(', ')}</p>`:''}
   <button class="btn ${prof==='her'?'pinkbg':''}" onclick="openSess('${nx.id}')">Next: ${nxS.title} · ${nxS.dur}</button>
   <div class="row" style="margin-top:8px"><button class="btn2" onclick="go('home')">🏠 Can’t make the gym → home options</button></div>
   <details><summary class="small dim">Log a session I already did</summary>
    <div class="row">${mySessions().map(s=>`<button class="btn2" onclick="logSession('${s.id}')">✓ ${s.title.split(' —')[0]}</button>`).join('')}</div>
-   ${hist().length?`<p class="dim small" style="margin-top:6px">Last: ${(mySessions().find(s=>s.id===hist()[0].id)||{title:'Home'}).title.split('—')[0]} ${dayName(hist()[0].d)} ${hist()[0].d.slice(5)} · <span style="color:var(--red)" onclick="undoLast()">undo</span> · ${weekSessions()}/4 this week</p>`:''}
+   ${hist().length?`<p class="dim small" style="margin-top:6px">Last: ${(findSess(hist()[0].id)||{title:'Home'}).title.split('—')[0]} ${dayName(hist()[0].d)} ${hist()[0].d.slice(5)} · <span style="color:var(--red)" onclick="undoLast()">undo</span> · ${weekSessions()}/4 this week</p>`:''}
   </details>
  </div>
  ${rhythmCard()}
  ${weekReview()}
- <div class="card"><span class="chip on">Wk ${wk} · ${b.name}</span>${(metrics()[todayKey()]||{}).steps?`<span class="chip">👣 ${metrics()[todayKey()].steps}</span>`:''}${(metrics()[todayKey()]||{}).move?`<span class="chip">🔥 ${metrics()[todayKey()].move} kcal</span>`:''}${(metrics()[todayKey()]||{}).exmin?`<span class="chip">💍 ${metrics()[todayKey()].exmin} min</span>`:''}
+ <div class="card"><span class="chip on">${cycleNum()>1?'Cy'+cycleNum()+' · ':''}Wk ${wk} · ${b.name}</span><span class="chip ${c2.hol?'on':''}" onclick="setCtx('hol')">✈️ Holiday</span>${(metrics()[todayKey()]||{}).steps?`<span class="chip">👣 ${metrics()[todayKey()].steps}</span>`:''}${(metrics()[todayKey()]||{}).move?`<span class="chip">🔥 ${metrics()[todayKey()].move} kcal</span>`:''}${(metrics()[todayKey()]||{}).exmin?`<span class="chip">💍 ${metrics()[todayKey()].exmin} min</span>`:''}
  <span class="chip">${targets(fday(todayKey()).type).p}g protein</span><span class="chip">${cfg().mode==='recomp'?'8k+':'10k+'} steps</span><span class="chip">No caffeine post-14:00</span>${defType(todayKey())==='drink'?'<span class="chip">🍷 protein before drinks · water 1-per-2 · electrolytes at bed</span>':''}
  <p class="dim small" style="margin-top:6px">${b.goal}</p></div>`;
 }
 
 /* ---- TRAIN ---- */
 function openSess(id){openSession=id;tab='train';S.set('tab','train');render();window.scrollTo(0,0)}
-function swKey(sid,i,pfx){return 'swap_'+(pfx??P())+curBlock()+'_'+sid+'_'+i}
-function sessOf(sid,pfx){return((pfx??P())==='her_'?SESSIONS_HER:SESSIONS).find(s=>s.id===sid)}
-function chosenEx(sess,i,pfx){const ex=sess.work[i];return S.get(swKey(sess.id,i,pfx),ex.pool[(blockNum()-1+i)%ex.pool.length])}
+function swKey(sid,i,pfx){return 'swap_'+(pfx??P())+'c'+cycleNum()+'_'+curBlock()+'_'+sid+'_'+i}
+function sessOf(sid,pfx){return((pfx??P())==='her_'?SESSIONS_HER:SESSIONS).find(s=>s.id===sid)||HOLFULL.find(s=>s.id===sid)}
+function chosenEx(sess,i,pfx){const ex=sess.work[i];return S.get(swKey(sess.id,i,pfx),ex.pool[(blockNum()-1+i+cycleNum()-1)%ex.pool.length])}
 function doSwap(sid,i,val,pfx){S.set(swKey(sid,i,pfx),val);render()}
 function shuffleEx(sid,i,pfx){
  const sess=sessOf(sid,pfx);const ex=sess.work[i];
@@ -642,7 +724,7 @@ function exCard(sess,ex,i,pfx){
 function sessView(sess){
  const rd=readiness(),pfx=P();
  const tog=prof==='me'&&S.get('tog',false);
- const herS=tog?SESSIONS_HER.find(s=>s.id===PAIR[sess.id]):null;
+ const herS=tog?(SESSIONS_HER.find(s=>s.id===PAIR[sess.id])||((sess.id==='fbA'||sess.id==='fbB')?sess:null)):null;
  return `<div style="display:flex;gap:8px;align-items:center"><button class="btn2" onclick="openSession=null;render()">← Sessions</button>
  ${prof==='me'?`<span class="chip ${tog?'on':''}" onclick="toggleTog()">👫 Train together</span>`:''}</div>
  <div class="banner ${rd.st}" style="margin-top:8px">${READLINE[rd.st]}</div>
@@ -664,12 +746,14 @@ function sessView(sess){
  :`<button class="btn ${prof==='her'?'pinkbg':''}" onclick="logSession('${sess.id}')">✓ Session done</button>`}`;
 }
 function trainView(){
- if(openSession){const s=mySessions().find(x=>x.id===openSession);if(s)return sessView(s)}
+ if(openSession){const s=findSess(openSession);if(s)return sessView(s)}
  const nx=nextSession();
  return `<div class="card"><span class="chip on">Wk ${weekNum()} · ${BLOCKS[curBlock()].wks}</span> <span class="chip">${prof==='her'?'Clare’s programme':'Brian'}</span>
  <p class="dim small" style="margin-top:4px">Exercises rotate automatically each block. 🔀 shuffles any slot. Logs follow the exercise.</p></div>
  ${mySessions().map(s=>`<div class="card" onclick="openSess('${s.id}')" style="cursor:pointer"><b>${s.title}</b> <span class="dim small">· ${s.dur} ${s.id===nx.id?'· <span style="color:var(--grn)">next</span>':''} ›</span></div>`).join('')}
- <details class="card" style="display:block"><summary>History</summary>${hist().slice(0,12).map(h=>`<p class="small" style="margin-bottom:3px">${dayName(h.d)} ${h.d.slice(5)} — ${h.id==='home'?('Home'+(h.n?': '+h.n:'')):(mySessions().find(s=>s.id===h.id)||{title:h.id}).title.split('—')[0]}</p>`).join('')||'<p class="dim small">Nothing yet.</p>'}</details>
+ ${ctx().hol?HOLFULL.map(s=>`<div class="card" onclick="openSess('${s.id}')" style="cursor:pointer;border-color:var(--amb)"><b>✈️ ${s.title}</b> <span class="dim small">· ${s.dur} ›</span></div>`).join(''):''}
+ <details class="card" style="display:block"><summary>History</summary>${hist().slice(0,12).map(h=>`<p class="small" style="margin-bottom:3px">${dayName(h.d)} ${h.d.slice(5)} — ${h.id==='home'?('Home'+(h.n?': '+h.n:'')):(findSess(h.id)||{title:h.id}).title.split('—')[0]}</p>`).join('')||'<p class="dim small">Nothing yet.</p>'}</details>
+ ${logbook()}
  <details class="card" style="display:block"><summary>🏆 Personal records (est. 1RM)</summary>
  ${prList().length?`<table><tr><th>Lift</th><th>Best set</th><th>e1RM</th></tr>${prList().map(p=>`<tr><td>${p.n}</td><td>${p.w} kg × ${p.r}</td><td><b>${p.e1} kg</b></td></tr>`).join('')}</table>`:'<p class="dim small">Log some sets — records build themselves.</p>'}</details>
  <details class="card" style="display:block"><summary>Rules (progression · deload · misses)</summary>${PROGRESSION.map(p=>`<h3>${p[0]}</h3><p class="small">${p[1]}</p>`).join('')}<h3>Consolidation (wks 4/8/12)</h3><p class="small">${CONSOL} Applied automatically from your start date.</p></details>
@@ -722,7 +806,10 @@ function foodView(){
   <div style="margin-top:7px">${[['train','Training'],['rest','Rest'],['drink','Drinking']].map(x=>`<span class="chip ${day.type===x[0]?'on':''}" onclick="setDayType('${x[0]}')">${x[1]}</span>`).join('')}
   <span class="chip ${c.hol?'on':''}" onclick="setCtx('hol')">✈️ Holiday</span><span class="chip ${c.hot?'on':''}" onclick="setCtx('hot')">🔥 Hot</span></div>
   <div class="grid2" style="margin-top:9px">${kpi('kcal',tot.k,t.kcal,true)}${kpi('protein g',tot.p,t.p,false)}</div>
-  <div class="grid2" style="margin-top:7px">${kpi('carbs g',tot.c,t.c,true)}${kpi('fat g',tot.f,t.f,true)}</div></div>
+  <div class="grid2" style="margin-top:7px">${kpi('carbs g',tot.c,t.c,true)}${kpi('fat g',tot.f,t.f,true)}</div>
+  <div style="display:flex;align-items:center;gap:8px;margin-top:9px"><span class="small">💧 Water: <b>${S.get(waterKey(),0)}</b>/8+ glasses</span>
+  <button class="btn2" style="padding:4px 12px" onclick="addWater(1)">+</button><button class="btn2" style="padding:4px 12px" onclick="addWater(-1)">−</button>
+  ${day.type==='drink'||c.hot?'<span class="dim small">target higher today</span>':''}</div></div>
  <div class="card"><h2>Add food</h2>
   <input type="text" placeholder="Search… (chicken, pint, kebab)" value="${foodQ}" oninput="foodQ=this.value;fres()">
   <div id="fres">${fresHTML()}</div>
@@ -736,6 +823,12 @@ function foodView(){
  <button class="btn2" style="width:100%;margin-top:4px" onclick="aiPrompt()">🤖 Copy AI recipe prompt (with today’s remaining macros)</button>
  <p class="dim small" id="aiMsg" style="margin-top:4px"></p></div>
  <div class="card"><h2>What to eat — ideas for today</h2>${ideaBlocks}</div>
+ <details class="card" style="display:block"><summary>Nutrition basics — the rules that matter</summary>
+ <h3>Protein anchoring</h3><p class="small">Build every meal around 30–50g protein first; everything else is negotiable. 4 feeds beats 2. Hardest habit, biggest payoff.</p>
+ <h3>Fibre</h3><p class="small">25–35g/day (veg, fruit, oats, beans) — satiety, digestion, and it blunts the drinking-day damage.</p>
+ <h3>80/20</h3><p class="small">If 80% of the week is on-plan, the 20% (wine, pastizzi, dessert) costs you nothing but time. Perfection isn’t the plan; the average is.</p>
+ <h3>Eating out playbook</h3><p class="small">Order the grill section · protein double-up (add prawns/chicken) · sauce on the side · skip the bread basket, keep the wine if it’s a drink day · dessert shared or skipped.</p>
+ <h3>Supermarket speed-list</h3><p class="small">Kwark/skyr · eggs · chicken thighs · 5% mince · tins of tuna · frozen veg + berries · oats · rice · olive oil · rice cakes · dark chocolate. That basket covers 90% of the week.</p></details>
  ${c.hot?HOTCARD:''}
  <div class="card"><h2>Week’s alcohol</h2><p><b style="color:${alcW>1500?'var(--red)':alcW>700?'var(--amb)':'var(--grn)'}">${alcW} kcal</b> <span class="dim small">Mon–today. Every 700 kcal shaved ≈ 0.1 kg fat that never arrives.</span></p></div>
  <details class="card" style="display:block"><summary>Timing, hydration, weekend rules, monthly adjustments</summary>
@@ -758,6 +851,12 @@ function dataView(){
   <div class="grid3">${fields.map(f=>`<div><label>${f[1]}</label><input type="number" inputmode="decimal" placeholder="${f[2]}" value="${tm[f[0]]??''}" oninput="saveMetric('${dk}','${f[0]}',this.value)" onchange="render()"></div>`).join('')}</div>
   <p class="dim small" style="margin-top:4px;color:var(--grn)">Saves as you type — no button needed.</p>
   <p class="dim small" style="margin-top:7px">Baselines: RHR ${bl('rhr')??'—'} · HRV ${bl('hrv')??'—'} · auto-readiness activates after 3 days of entries.</p></div>
+ <div class="card"><h2>Sync doctor</h2>
+  <p class="small">Last sync: <b>${S.get('lastSync','')||'never'}</b></p>
+  <p class="small">Today’s auto data: RHR ${tm.rhr??'—'} · HRV ${tm.hrv??'—'} · Sleep ${tm.sleep??'—'}</p>
+  <div class="row"><button class="btn2" onclick="location.href=location.pathname+'?test=1'">1. Test the link</button>
+  <button class="btn2" onclick="window.open('shortcuts://','_blank')">2. Open Shortcuts</button></div>
+  <p class="dim small" style="margin-top:7px"><b>Make it automatic:</b> Shortcuts app → <b>Automation</b> tab → + → <b>Time of Day</b> → 07:45, Daily → <b>Run Immediately</b> (turn OFF “Notify When Run”) → choose “Sync Recomp43 3”. The Watch must have synced overnight data first, so 07:45+ beats earlier times. If HRV stays “—”: wear the Watch to bed or do a 1-min Mindfulness/Breathe session on waking.</p></div>
  <details class="card" style="display:block"><summary>Shortcut auto-sync setup (incl. the HRV answer)</summary>
   <p class="small"><b>HRV:</b> your Watch does record it — in Health it’s “Heart Rate Variability” (SDNN), logged a few times a day automatically (more if you use the Mindfulness app for 1 min). In Shortcuts: Find Health Samples → type <b>Heart Rate Variability</b> → latest 1. If it returns nothing that day, skip it — readiness runs fine on RHR + sleep + energy.</p>
   <ol class="small" style="padding-left:18px">
@@ -818,7 +917,7 @@ function moreView(){
   <div><label>Clare weight (kg)</label><input type="number" value="${c.wtHer||64}" onchange="setCfg('wtHer',parseFloat(this.value)||64)"></div></div>
   <label>Goal mode</label>${Object.keys(MODES).map(k=>`<span class="chip ${c.mode===k?'on':''}" onclick="setCfg('mode','${k}')">${MODES[k].n}</span>`).join('')}
   <label>Programme start (a Monday)</label><input type="date" value="${c.start}" onchange="setCfg('start',this.value)">
-  <p class="dim small">Week ${weekNum()} · ${BLOCKS[curBlock()].name}${isConsol()?' · consolidation':''} · v${VERSION}</p></div>
+  <p class="dim small">Cycle ${cycleNum()} · Week ${weekNum()} · ${BLOCKS[curBlock()].name}${isConsol()?' · consolidation':''} · v${VERSION}</p></div>
  ${EDGE}
  <details class="card" style="display:block"><summary>Backup & restore (your data lives on this phone)</summary>
   <p class="dim small">Copy the text into Notes weekly. Restore by pasting it back and tapping Restore.</p>
@@ -855,6 +954,12 @@ function beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)
  const src=(location.search&&location.search.length>1)?location.search:(location.hash&&location.hash.indexOf('=')>-1?'?'+location.hash.slice(1):'');
  if(!src)return;
  const q=new URLSearchParams(src);
+ if(q.get('test')){
+  S.set('lastSync','Test ping '+todayKey()+' — the link into the app works ✓ (now check the shortcut/automation)');
+  tab='data';S.set('tab','data');
+  try{history.replaceState(null,'',location.pathname)}catch(e){}
+  return;
+ }
  const dk=(q.get('d')||todayKey()).slice(0,10);let got=[];
  [['rhr',30,120],['hrv',5,250],['sleep',0,16],['energy',1,5],['wt',40,200],['waist',50,200],['steps',0,100000],['vo2',10,80],['move',0,4000],['exmin',0,600],['stand',0,24]].forEach(([k,lo,hi])=>{
   const v=parseFloat(q.get(k));
@@ -876,7 +981,7 @@ try{
 /* ---- ROOT ---- */
 function render(){
  nav();pswitch();
- el('hdrSub2').textContent='Wk '+weekNum()+' · '+BLOCKS[curBlock()].name+(isConsol()?' · consol.':'')+' · '+MODES[cfg().mode].n+(prof==='her'?' · Clare':'');
+ el('hdrSub2').textContent=(cycleNum()>1?'Cy'+cycleNum()+' · ':'')+'Wk '+weekNum()+' · '+BLOCKS[curBlock()].name+(isConsol()?' · consol.':'')+' · '+MODES[cfg().mode].n+(prof==='her'?' · Clare':'');
  const views={today:todayView,train:trainView,home:homeView,food:foodView,data:dataView,more:moreView};
  el('main').innerHTML=(views[tab]||todayView)();
 }
