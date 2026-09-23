@@ -112,7 +112,8 @@ hr{border:none;border-top:1px solid var(--line);margin:10px 0}
 <nav id="nav"></nav>
 
 <script>
-const VERSION='4.0';
+const VERSION='4.1';
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* ============ STORAGE / PROFILE ============ */
 const S={
  get(k,d){try{const v=localStorage.getItem('r43_'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
@@ -150,96 +151,112 @@ function isConsol(){return weekNum()%4===0}
 /* ============ PERIODISATION ============ */
 const BLOCKS={
  b1:{name:'Block 1 · Foundation',wks:'Wks 1–4',
-  sch:{main:{sets:4,lo:6,hi:8,rir:2,rest:'2–3 min',note:'3s eccentric'},acc:{sets:3,lo:8,hi:12,rir:1,rest:'60–90s',note:'controlled'},ss:{sets:3,lo:10,hi:15,rir:1,rest:'60s after pair',note:'superset'},iso:{sets:2,lo:12,hi:15,rir:0,rest:'45s',note:''}},
-  goal:'Technique, full range, slow eccentrics. Zone 2 base on Engine day.'},
+  sch:{main:{sets:4,lo:8,hi:10,rir:2,rest:'2–3 min',note:'3s lowering'},acc:{sets:3,lo:10,hi:12,rir:1,rest:'60–90s',note:'controlled'},ss:{sets:3,lo:10,hi:15,rir:1,rest:'60s after pair',note:''},iso:{sets:2,lo:12,hi:15,rir:1,rest:'45s',note:''}},
+  goal:'Technique, full range, slow lowering. Zone 2 on two non-lifting days.'},
  b2:{name:'Block 2 · Intensification',wks:'Wks 5–8',
-  sch:{main:{sets:5,lo:4,hi:6,rir:2,rest:'3 min',note:'drive up fast'},acc:{sets:3,lo:6,hi:10,rir:1,rest:'90s',note:''},ss:{sets:3,lo:8,hi:12,rir:1,rest:'60s',note:'last set = drop set'},iso:{sets:2,lo:10,hi:12,rir:0,rest:'45s',note:'+drop set final'}},
-  goal:'Heavier, more rest, explosive intent. Engine alternates Z2 / 4×4 intervals.'},
+  sch:{main:{sets:4,lo:6,hi:8,rir:2,rest:'2–3 min',note:'drive up fast, exhale'},acc:{sets:3,lo:8,hi:10,rir:1,rest:'90s',note:''},ss:{sets:3,lo:8,hi:12,rir:1,rest:'60s after pair',note:''},iso:{sets:2,lo:10,hi:12,rir:0,rest:'45s',note:'drop set on the last set'}},
+  goal:'Heavier (never below 6 reps), more rest. Add one 4×4 interval session a week.'},
  b3:{name:'Block 3 · Definition',wks:'Wks 9–12',
-  sch:{main:{sets:4,lo:8,hi:10,rir:1,rest:'2 min',note:'1s stretch pause'},acc:{sets:3,lo:10,hi:15,rir:1,rest:'60s',note:''},ss:{sets:3,lo:12,hi:15,rir:0,rest:'45s',note:'superset'},iso:{sets:3,lo:15,hi:20,rir:0,rest:'30s',note:'chase the pump'}},
+  sch:{main:{sets:3,lo:10,hi:12,rir:2,rest:'2 min',note:'1s stretch pause'},acc:{sets:3,lo:10,hi:15,rir:1,rest:'60s',note:''},ss:{sets:3,lo:12,hi:15,rir:0,rest:'45s after pair',note:''},iso:{sets:3,lo:15,hi:20,rir:0,rest:'30s',note:'chase the pump'}},
   goal:'Density, stretch pauses, weekly intervals. The visible-definition block.'}
 };
 const schTxt=(s)=>`${s.lo}–${s.hi} reps · RIR ${s.rir} · rest ${s.rest}${s.note?' · '+s.note:''}`;
 const CONSOL='Consolidation: −1 set everywhere, RIR 3, no finishers, same loads.';
 
-/* ============ SESSIONS (Brian) ============ */
-const ROT=['upA','loA','upB','eng'];
+/* ============ SESSIONS (Brian) — Upper/Lower rotation: every muscle ~2×/week at 3–4 sessions ============ */
+const ROT=['upA','loA','upB','loB'];
 const SESSIONS=[
  {id:'upA',title:'Upper A — Chest & Back',dur:'55 min',lower:false,
-  warm:'3 min row/bike · band pull-aparts ×15 · cat-cow ×8 · 2 ramp-up sets of first lift',
+  warm:'3 min row/bike · band pull-aparts ×15 · cat-cow ×8 · 2 ramp-up sets of the first lift',
   work:[
-   {t:'main',pool:['Flat DB Bench Press','Barbell Bench Press','Machine Chest Press','Weighted Dip','Smith Bench Press','Floor Press'],cue:'Full stretch, no bounce'},
-   {t:'acc',pool:['Chest-Supported Row','Seated Cable Row','T-Bar Row','1-Arm DB Row','Machine Row','Barbell Row'],cue:'1s pause at chest'},
-   {t:'acc',pool:['Incline Machine Press','Incline DB Press','Low-to-High Cable Fly','Pec Deck','Weighted Push-up','Incline Smith Press'],cue:'Upper chest, 30–45°'},
-   {t:'acc',pool:['Lat Pulldown','Pull-up','Neutral-Grip Pulldown','Straight-Arm Pulldown','1-Arm Cable Pulldown','Chin-up'],cue:'Elbows down, chest tall'},
-   {t:'ss',pool:['Cable Lateral Raise + Face Pull','DB Lateral Raise + Reverse Pec Deck','Machine Lateral Raise + Cable Rear-Delt Fly'],cue:'Light, perfect reps'}],
+   {t:'main',pool:['Flat DB Bench Press','Barbell Bench Press','Machine Chest Press','Smith Bench Press','Weighted Dip'],cue:'Full stretch at the bottom, no bounce; exhale through the press'},
+   {t:'acc',pool:['Chest-Supported Row','Seated Cable Row','T-Bar Row','1-Arm DB Row','Machine Row'],cue:'Let the shoulder blades stretch forward, 1s squeeze'},
+   {t:'acc',pool:['Incline DB Press','Incline Machine Press','Incline Smith Press','Low-to-High Cable Fly'],cue:'30° incline — upper chest'},
+   {t:'acc',pool:['Lat Pulldown','Pull-up','Neutral-Grip Pulldown','1-Arm Cable Pulldown','Chin-up'],cue:'Full stretch at the top, elbows to hips'},
+   {t:'ss',pool:['Cable Lateral Raise + Face Pull','DB Lateral Raise + DB Rear-Delt Raise','Cable Y-Raise + Cable Rear-Delt Fly'],st:'one cable stack, or one pair of dumbbells',cue:'Light, perfect reps'},
+   {t:'iso',pool:['Cable Overhead Triceps Extension','Seated DB Overhead Extension','Cross-Body Cable Extension'],cue:'Overhead position grows the triceps most. Optional if past 55 min'}],
   fin:{name:'Bike sprints',desc:'6 × 20s hard / 40s easy',swaps:'Rower / ski erg'}},
- {id:'loA',title:'Lower A — Squat & Hinge',dur:'55 min',lower:true,
-  warm:'3 min incline walk · 10 squats · 10 hinges · world’s greatest stretch ×3/side · ramp-ups',
+ {id:'loA',title:'Lower A — Squat focus',dur:'55 min',lower:true,
+  warm:'3 min incline walk · 10 bodyweight squats · world’s greatest stretch ×3/side · ramp-ups',
   work:[
-   {t:'main',pool:['Barbell or Smith Squat','Leg Press','Hack Squat','Trap-Bar Deadlift','Front Squat','Heels-Elevated Goblet Squat','Belt Squat'],cue:'Depth over load'},
-   {t:'acc',pool:['Romanian Deadlift','DB RDL','45° Back Extension','Hip Thrust','Cable Pull-Through','Good Morning (light)'],cue:'Hips back, hamstrings load'},
-   {t:'acc',pool:['Bulgarian Split Squat','Walking Lunge','Smith Reverse Lunge','Step-Up','Leg Extension','Single-Leg Press'],cue:'Torso forward = more glute'},
-   {t:'acc',pool:['Seated Leg Curl','Lying Leg Curl','Nordic Negatives','Swiss-Ball Curl','Glute-Ham Raise'],cue:'Seated beats lying'},
-   {t:'ss',pool:['Standing Calf Raise + Cable Crunch','Leg-Press Calves + Hanging Knee Raise','Seated Calf Raise + Ab-Wheel Rollout'],cue:'2s stretch pause on calves'},
-   {t:'iso',pool:['Leg Extension','Adductor Machine','Sissy Squat','Abductor Machine'],cue:'Optional — skip if over 55 min'}],
-  fin:{name:'None — density day',desc:'Optional 5-min incline-walk cooldown.',swaps:''}},
- {id:'upB',title:'Upper B — Shoulders & Arms',dur:'55 min',lower:false,
+   {t:'main',pool:['Barbell or Smith Squat','Hack Squat','Leg Press','Belt Squat','Front Squat'],cue:'Depth over load; exhale on the way up, no breath-holding grinds'},
+   {t:'acc',pool:['DB RDL','45° Back Extension','Cable Pull-Through','Good Morning (light)'],cue:'Hips back, feel the hamstring stretch'},
+   {t:'acc',pool:['Bulgarian Split Squat','Walking Lunge','Smith Reverse Lunge','Deficit Reverse Lunge'],cue:'Long stride + slight forward lean = more glute'},
+   {t:'acc',pool:['Seated Leg Curl','Nordic Negatives','Lying Leg Curl'],cue:'Seated beats lying for hamstring growth'},
+   {t:'ss',pool:['Standing Calf Raise + Dead Bug','Leg-Press Calf Raise + Plank','Seated Calf Raise + Ab-Wheel Rollout'],st:'core on the floor beside the calf machine',cue:'2s pause at the bottom of every calf rep'}],
+  fin:{name:'',desc:'',swaps:''}},
+ {id:'upB',title:'Upper B — Shoulders, Back & Arms',dur:'55 min',lower:false,
   warm:'3 min row · band dislocates ×10 · scap pull-ups ×8 · ramp-ups',
   work:[
-   {t:'main',pool:['Seated DB Shoulder Press','Machine Shoulder Press','Barbell OHP','Arnold Press','Landmine Press','Smith OHP'],cue:'No lower-back arch'},
-   {t:'acc',pool:['Pull-up','Weighted Pull-up','Neutral-Grip Pulldown','Meadows Row','Machine Pulldown','Assisted Pull-up'],cue:'Full hang to chin over'},
-   {t:'acc',pool:['Cable Fly','Pec Deck','Incline Cable Fly','DB Fly','Deficit Push-up AMRAP'],cue:'1s squeeze, wide stretch'},
-   {t:'ss',pool:['EZ-Bar Curl + Rope Pressdown','DB Curl + Bench Dips','Cable Curl + Skullcrusher'],cue:'Elbows pinned'},
-   {t:'ss',pool:['Incline DB Curl + Overhead Rope Extension','Hammer Curl + Close-Grip Push-up','Preacher Curl + JM Press'],cue:'Train the stretch'},
-   {t:'iso',pool:['Reverse Pec Deck','Face Pull','Cable Rear-Delt Fly','Bent-Over Rear-Delt Raise'],cue:'Rear delts = 3D shoulders'},
-   {t:'iso',pool:['DB Shrug','Farmer Carry 3×40m','Cable Shrug','Behind-Back Smith Shrug'],cue:'Optional traps/grip'}],
-  fin:{name:'8-min EMOM',desc:'Odd: 12 KB swings · even: 8 push-ups',swaps:'Rower 8×100m'}},
- {id:'eng',title:'Engine — Conditioning & Core',dur:'50 min',lower:false,
+   {t:'main',pool:['Seated DB Shoulder Press','Machine Shoulder Press','Barbell OHP','Landmine Press','Smith OHP'],cue:'Ribs down, no lower-back arch; exhale through the press'},
+   {t:'acc',pool:['Pull-up','Weighted Pull-up','Neutral-Grip Pulldown','Meadows Row','Assisted Pull-up'],cue:'Full hang to chin over'},
+   {t:'acc',pool:['Cable Fly','Pec Deck','Deficit Push-up','Machine Chest Press'],cue:'Wide stretch, 1s squeeze'},
+   {t:'ss',pool:['EZ-Bar Curl + EZ-Bar Skullcrusher','Rope Hammer Curl + Rope Pressdown','DB Curl + Bench Dips'],st:'same bar and bench, same cable and rope, or same bench',cue:'Elbows pinned'},
+   {t:'ss',pool:['Incline DB Curl + Seated DB Overhead Extension','Cable Bayesian Curl + Cable Overhead Extension','Hammer Curl + Close-Grip Push-up'],st:'same bench and dumbbells, or same cable',cue:'Train the stretched position'},
+   {t:'iso',pool:['Reverse Pec Deck','Face Pull','Cable Rear-Delt Fly','Bent-Over Rear-Delt Raise'],cue:'Rear delts = 3D shoulders'}],
+  fin:{name:'8-min EMOM',desc:'Odd minutes: 12 KB swings · even: 8 push-ups',swaps:'Rower 8×100m'}},
+ {id:'loB',title:'Lower B — Hinge focus',dur:'55 min',lower:true,
+  warm:'3 min bike · glute bridges ×12 · 10 hip hinges · ramp-ups',
+  work:[
+   {t:'main',pool:['Trap-Bar Deadlift','Romanian Deadlift','Barbell Hip Thrust','Smith RDL'],cue:'Brace, exhale through the hard part; stop 2 reps before form slips'},
+   {t:'acc',pool:['Leg Press','Hack Squat','Pendulum Squat','Smith Squat'],cue:'Full depth, 2s lowering'},
+   {t:'acc',pool:['Seated Leg Curl','Lying Leg Curl','Nordic Negatives'],cue:'Hamstrings twice a week'},
+   {t:'acc',pool:['Leg Extension','Reverse Nordic','Sissy Squat'],cue:'Slow lowering, squeeze at the top'},
+   {t:'ss',pool:['Seated Calf Raise + Ab-Wheel Rollout','Standing Calf Raise + Dead Bug','Leg-Press Calf Raise + Plank'],st:'core on the floor beside the calf machine',cue:'Calves twice a week, full stretch'},
+   {t:'iso',pool:['Adductor Machine','Abductor Machine','Cable Hip Abduction'],cue:'Optional. Skip if past 55 min'}],
+  fin:{name:'Cool-down',desc:'Optional 5–10 min incline walk',swaps:''}},
+ {id:'eng',title:'Extra — Conditioning & Core',dur:'40 min',lower:false,extra:true,
   warm:'5 min easy',
   work:[
    {t:'main',pool:['Zone 2 — 35 min','Norwegian 4×4 (green days, Blocks 2–3)','Rower — 6×500m (90s rest)','Battle ropes — 10×30s on/30s off','Assault bike — 5×2 min hard/2 easy','Ski erg — 8×250m','Incline treadmill — 30 min @10–12%'],cue:'Z2: 106–124 bpm, conversational. Intervals: RPE 8, finish able to repeat'},
    {t:'ss',pool:['Core Circuit ×3'],cue:'Dead bug ×10 · side plank 30s/side · Pallof ×12'},
    {t:'iso',pool:['Mobility — 8 min'],cue:'Couch stretch · 90/90 · t-spine · hamstring floss'}],
-  fin:{name:'Hangover rule',desc:'Drank last night? Still train — RPE 5 cap, Z2 only, electrolytes first.',swaps:''}}
+  fin:{name:'Hangover rule',desc:'Drank last night? Still move — RPE 5 cap, Z2 only, electrolytes first.',swaps:''}}
 ];
 
-/* ============ SESSIONS (Her — glute/lower-biased, evidence-based for her goals) ============ */
-const ROT_HER=['hlo1','hup','hlo2','heng'];
+/* ============ SESSIONS (Clare) — glute/leg/arm priority, Upper/Lower rotation ============ */
+const ROT_HER=['hlo1','hup','hlo2','hup2'];
 const SESSIONS_HER=[
  {id:'hlo1',title:'Lower A — Glutes & Hamstrings',dur:'50 min',lower:true,
   warm:'3 min incline walk · glute bridges ×12 · 10 hinges · monster walks ×10/side · ramp-ups',
   work:[
-   {t:'main',pool:['Barbell Hip Thrust','Machine Hip Thrust','KAS Glute Bridge','Smith Hip Thrust'],cue:'Ribs down, full lockout, 1s squeeze'},
+   {t:'main',pool:['Barbell Hip Thrust','Machine Hip Thrust','Smith Hip Thrust','B-Stance Hip Thrust'],cue:'Ribs down, full lockout, 1s squeeze'},
    {t:'acc',pool:['Romanian Deadlift','DB RDL','45° Back Extension','Cable Pull-Through'],cue:'Stretch the hamstrings, soft knees'},
    {t:'acc',pool:['Bulgarian Split Squat','Reverse Lunge','Step-Up','Walking Lunge'],cue:'Long stride = glute bias'},
-   {t:'acc',pool:['Hip Abduction Machine','Cable Hip Abduction','Banded Side Steps'],cue:'Lean slightly forward, slow reps'},
-   {t:'ss',pool:['Seated Leg Curl + Standing Calf Raise','Lying Leg Curl + Seated Calf Raise'],cue:'Full range both'},
-   {t:'iso',pool:['Cable Crunch','Dead Bug ×12','Pallof Press'],cue:'Core finisher'}],
+   {t:'acc',pool:['Seated Leg Curl','Lying Leg Curl'],cue:'Seated beats lying'},
+   {t:'iso',pool:['Hip Abduction Machine','Cable Hip Abduction','Banded Side Steps'],cue:'Lean slightly forward, slow reps'},
+   {t:'ss',pool:['Standing Calf Raise + Dead Bug','Seated Calf Raise + Plank'],st:'core on the floor beside the calf machine',cue:'Full range on both'}],
   fin:{name:'Optional glute burnout',desc:'Banded glute bridge ×25 + pulses ×15, 2 rounds',swaps:''}},
- {id:'hup',title:'Upper — Push & Pull',dur:'50 min',lower:false,
+ {id:'hup',title:'Upper A — Push, Pull & Arms',dur:'50 min',lower:false,
   warm:'3 min row · band pull-aparts ×15 · arm circles · ramp-ups',
   work:[
    {t:'main',pool:['Machine Chest Press','Flat DB Bench Press','Incline DB Press','Push-up'],cue:'Full range, controlled'},
    {t:'acc',pool:['Lat Pulldown','Assisted Pull-up','Neutral-Grip Pulldown'],cue:'Elbows down, chest tall'},
-   {t:'acc',pool:['Seated Cable Row','Machine Row','1-Arm DB Row'],cue:'Squeeze shoulder blades'},
-   {t:'ss',pool:['Seated DB Shoulder Press + Lateral Raise','Machine Shoulder Press + Cable Lateral Raise'],cue:'Delts love volume'},
-   {t:'ss',pool:['Cable Curl + Rope Pressdown','DB Curl + Overhead Extension'],cue:'No swinging'},
-   {t:'iso',pool:['Face Pull','Reverse Pec Deck','Rear-Delt Raise'],cue:'Posture + shoulder health'}],
+   {t:'acc',pool:['Seated Cable Row','Chest-Supported DB Row','1-Arm DB Row'],cue:'Squeeze the shoulder blades'},
+   {t:'ss',pool:['Seated DB Shoulder Press + DB Lateral Raise','Cable Lateral Raise + Face Pull'],st:'same dumbbells, or same cable',cue:'Delts love volume'},
+   {t:'ss',pool:['Rope Hammer Curl + Rope Pressdown','DB Curl + Seated DB Overhead Extension'],st:'same cable and rope, or same bench',cue:'No swinging'}],
   fin:{name:'Finisher',desc:'2 min plank accumulation (break as needed)',swaps:''}},
- {id:'hlo2',title:'Lower B — Quads & Shape',dur:'50 min',lower:true,
+ {id:'hlo2',title:'Lower B — Quads & Glutes',dur:'50 min',lower:true,
   warm:'3 min bike · 10 squats · leg swings ×10/side · ramp-ups',
   work:[
-   {t:'main',pool:['Leg Press','Smith Squat','Goblet Squat','Hack Squat'],cue:'Full depth, knees track toes'},
-   {t:'acc',pool:['Leg Extension','Sissy Squat (assisted)'],cue:'2s squeeze at top'},
-   {t:'acc',pool:['Curtsy Lunge','Single-Leg Press','Reverse Lunge'],cue:'Slow eccentric'},
+   {t:'main',pool:['Leg Press','Smith Squat','Hack Squat','Goblet Squat'],cue:'Full depth, knees track toes'},
+   {t:'acc',pool:['Leg Extension','Assisted Sissy Squat'],cue:'2s squeeze at the top'},
+   {t:'acc',pool:['Curtsy Lunge','Single-Leg Press','Reverse Lunge'],cue:'Slow lowering'},
    {t:'acc',pool:['Cable Kickback','Glute Kickback Machine','Single-Leg Hip Thrust'],cue:'Squeeze, don’t swing'},
-   {t:'ss',pool:['Incline DB Press + Lat Pulldown','Machine Chest Press + Seated Cable Row','Push-up + 1-Arm DB Row'],cue:'Upper body 2×/week — short and sharp'},
-   {t:'ss',pool:['Adductor + Abductor Machines','Banded Side Steps + Sumo Squat Hold'],cue:'Inner + outer pair'},
-   {t:'ss',pool:['Standing Calf Raise + Hanging Knee Raise','Seated Calf Raise + Cable Crunch'],cue:'Calves + core'},
-   {t:'iso',pool:['Cable Curl + Rope Pressdown (light)','DB Curl 21s','Bench Dips + Hammer Curl'],cue:'Optional arm finisher — skip if over 50 min'}],
+   {t:'ss',pool:['Adductor + Abductor Machines','Banded Side Steps + Sumo Squat Hold'],st:'same machine, or same band',cue:'Inner + outer thigh'},
+   {t:'ss',pool:['Seated Calf Raise + Dead Bug','Standing Calf Raise + Plank'],st:'core on the floor beside the calf machine',cue:'Calves + core'}],
   fin:{name:'Optional',desc:'10-min incline walk',swaps:''}},
- {id:'heng',title:'Engine — Conditioning & Core',dur:'45 min',lower:false,
+ {id:'hup2',title:'Upper B — Back, Shoulders, Arms + Glute pump',dur:'50 min',lower:false,
+  warm:'3 min row · band pull-aparts ×15 · glute bridges ×12 · ramp-ups',
+  work:[
+   {t:'main',pool:['Lat Pulldown','Assisted Pull-up','Neutral-Grip Pulldown'],cue:'Full stretch at the top'},
+   {t:'acc',pool:['Seated DB Shoulder Press','Machine Shoulder Press','Landmine Press'],cue:'Ribs down'},
+   {t:'acc',pool:['Chest-Supported DB Row','Seated Cable Row','Machine Row'],cue:'Pause at the squeeze'},
+   {t:'ss',pool:['Incline DB Curl + Seated DB Overhead Extension','Cable Bayesian Curl + Cable Overhead Extension'],st:'same bench and dumbbells, or same cable',cue:'Arms trained in the stretch grow best'},
+   {t:'ss',pool:['DB Lateral Raise + DB Rear-Delt Raise','Push-up + Smith Inverted Row'],st:'same dumbbells, or same Smith bar',cue:'Shoulder shape + posture'},
+   {t:'iso',pool:['Cable Kickback','Glute Kickback Machine','Banded Glute Bridge'],cue:'Glute pump — third glute session of the week'}],
+  fin:{name:'',desc:'',swaps:''}},
+ {id:'heng',title:'Extra — Conditioning & Core',dur:'40 min',lower:false,extra:true,
   warm:'5 min easy',
   work:[
    {t:'main',pool:['Zone 2 — 30 min','Intervals: 1 min brisk / 2 min easy ×8','Rower — 5×400m easy-hard','Battle ropes — 8×20s on/40s off','Stair climber — 20 min','Incline treadmill — 25 min'],cue:'Conversational pace for Z2; intervals leave 2 reps in the tank'},
@@ -247,9 +264,10 @@ const SESSIONS_HER=[
    {t:'iso',pool:['Mobility — 8 min'],cue:'Hip flexor · 90/90 · figure-4 · child’s pose'}],
   fin:{name:'',desc:'',swaps:''}}
 ];
+
 function mySessions(){return prof==='her'?SESSIONS_HER:SESSIONS}
 function myRot(){return prof==='her'?ROT_HER:ROT}
-const PAIR={upA:'hup',loA:'hlo1',upB:'hlo2',eng:'heng'};
+const PAIR={upA:'hup',loA:'hlo1',upB:'hup2',loB:'hlo2',eng:'heng'};
 
 /* ============ HOLIDAY FULL-BODY (both profiles) ============ */
 const HOLFULL=[
@@ -259,8 +277,8 @@ const HOLFULL=[
    {t:'main',pool:['DB Goblet Squat','Leg Press','Smith Squat','Bulgarian Split Squat'],cue:'Full depth, controlled'},
    {t:'acc',pool:['Flat DB Bench Press','Machine Chest Press','Push-up (elevate feet if easy)'],cue:'Full stretch, no bounce'},
    {t:'acc',pool:['1-Arm DB Row','Seated Cable Row','Machine Row'],cue:'1s squeeze at chest'},
-   {t:'ss',pool:['DB RDL + DB Lateral Raise','Leg Curl + Cable Lateral Raise'],cue:'Hinge, then delts'},
-   {t:'ss',pool:['DB Curl + Bench Dips','Cable Curl + Rope Pressdown'],cue:'Arms to finish'},
+   {t:'ss',pool:['DB RDL + DB Lateral Raise','Cable Pull-Through + Cable Lateral Raise'],st:'same dumbbells, or same cable',cue:'Hinge, then delts'},
+   {t:'ss',pool:['DB Curl + Bench Dips','Rope Hammer Curl + Rope Pressdown'],st:'same bench, or same cable and rope',cue:'Arms to finish'},
    {t:'iso',pool:['Plank 3×45s','Dead Bug ×12'],cue:'Core — skip if short on time'}],
   fin:{name:'',desc:'',swaps:''}},
  {id:'fbB',title:'Holiday Full-Body B',dur:'45 min',lower:true,
@@ -269,8 +287,8 @@ const HOLFULL=[
    {t:'main',pool:['DB RDL','Trap-Bar Deadlift','Smith RDL'],cue:'Hips back, hamstrings load'},
    {t:'acc',pool:['Incline DB Press','Machine Shoulder Press','Pike Push-up'],cue:'Press up and back'},
    {t:'acc',pool:['Lat Pulldown','Assisted Pull-up','Band Pulldown'],cue:'Elbows to hips'},
-   {t:'ss',pool:['Walking Lunge + Face Pull','Step-Up + Rear-Delt Raise'],cue:'Legs + posture pair'},
-   {t:'ss',pool:['Hammer Curl + Overhead Extension','Incline Curl + Close-Grip Push-up'],cue:'Stretch-position arms'},
+   {t:'ss',pool:['DB Walking Lunge + DB Rear-Delt Raise','Step-Up + DB Rear-Delt Raise'],st:'same dumbbells',cue:'Legs + posture pair'},
+   {t:'ss',pool:['Hammer Curl + Seated DB Overhead Extension','Incline DB Curl + Close-Grip Push-up'],st:'same bench and dumbbells',cue:'Stretch-position arms'},
    {t:'iso',pool:['Side Plank 3×30s/side','Hanging Knee Raise'],cue:'Core'}],
   fin:{name:'',desc:'',swaps:''}}];
 function findSess(id){return mySessions().find(s=>s.id===id)||HOLFULL.find(s=>s.id===id)}
@@ -278,8 +296,9 @@ function holNext(){const f=hist().find(x=>x.id==='fbA'||x.id==='fbB');return f&&
 function logHoliday(){pushHist('home',P(),'Holiday circuit');go('today')}
 
 /* ============ HEALTH METRICS / AUTO-READINESS (Brian's watch) ============ */
-function metrics(){return S.get('mx',{})}
-function saveMetric(dk,k,v){const m=metrics();m[dk]=m[dk]||{};if(v==='')delete m[dk][k];else m[dk][k]=parseFloat(v);S.set('mx',m)}
+function mxKey(pfx){return (pfx??P())+'mx'}
+function metrics(pfx){return S.get(mxKey(pfx),{})}
+function saveMetric(dk,k,v,pfx){const m=metrics(pfx);m[dk]=m[dk]||{};if(v===''||isNaN(parseFloat(v)))delete m[dk][k];else m[dk][k]=parseFloat(v);S.set(mxKey(pfx),m)}
 function baseline(key,excl){
  const m=metrics();const ks=Object.keys(m).filter(d=>d!==excl&&m[d][key]!=null).sort().slice(-14);
  if(ks.length<3)return null;
@@ -293,7 +312,7 @@ function readiness(){
   const sc=mr.s+mr.e+mr.m;
   return{st:sc>=5?'g':sc>=3?'a':'r',reasons:['Check-in: sleep '+['<6h','6–7h','7h+'][mr.s]+' · energy '+['flat','ok','good'][mr.e]+' · '+['rough','some','fresh'][mr.m]],manual:true};
  }
- if(prof==='me'){
+ {
   const m=metrics()[dk]||{};
   const bR=baseline('rhr',dk),bH=baseline('hrv',dk);
   if(m.rhr!=null&&bR!=null){dataUsed=true;if(m.rhr>=bR+5){flags++;reasons.push('RHR '+m.rhr+' vs '+bR+' baseline')}}
@@ -422,9 +441,10 @@ function howTo(name){window.open('https://www.youtube.com/results?search_query='
 
 /* ============ NUTRITION ============ */
 const MODES={recomp:{d:350,n:'Recomp'},cut:{d:500,n:'Cut'},hard:{d:650,n:'Hard cut'}};
+function myMode(){const c=cfg(),m=prof==='her'?(c.modeHer||'recomp'):(c.mode||'recomp');return MODES[m]?m:'recomp'}
 function targets(dayType){
  const wt=myWt(),mult=prof==='her'?29:30.8,pmult=prof==='her'?1.8:2.1;
- const maint=Math.round(wt*mult),def=MODES[cfg().mode].d;
+ const maint=Math.round(wt*mult),def=Math.round(MODES[myMode()].d*(prof==='her'?0.75:1));
  let kcal,fat;
  if(dayType==='drink'){kcal=maint-def-450;fat=Math.round(wt*0.6)}
  else if(dayType==='rest'){kcal=maint-def-150;fat=Math.round(wt*0.75)}
@@ -569,7 +589,10 @@ const PROGRESSION=[
  ['Variety engine','Three layers: each 4-week block shifts every slot to a new movement; within a block the A/B setting alternates two movements per slot each visit (Medium, default); and every 12 weeks the whole cycle rotates. The 🔀 button overrides any slot; logs follow the exercise, not the slot.'],
  ['12-week cycles','After week 12 a new cycle starts automatically: every slot rotates to a fresh movement from its pool, blocks restart at Foundation, and first-week targets come back conservative. New stimulus, no boredom, joints get a change of angle.'],
  ['Auto-deload','Data entries drive amber/red days automatically. Two ambers running → treat the week as consolidation.'],
- ['Missed sessions','Rotation-based — nothing is “missed”. 7+ day gap → −10% one session. 14+ → restart block.']];
+ ['Missed sessions','Rotation-based — nothing is “missed”. 7+ day gap → −10% one session. 14+ → restart block.'],
+ ['Frequency','Upper/Lower rotation: at 3–4 sessions a week every muscle is trained roughly twice weekly, the evidence-based sweet spot. Conditioning is an optional extra, never a rotation slot.'],
+ ['Paired sets','Every pair sits at one station — one bench, one cable, one set of dumbbells. Busy gym? More → Paired exercises → Straight sets.'],
+ ['Rep floor','Main lifts never drop below 6 reps and always leave 2 in reserve. Muscle growth is similar from 6 to 30 reps when sets are hard; near-maximal grinding adds joint and blood-pressure stress for no extra size.']];
 const VERSIONS=[
  ['30-minute gym','<p class="small">Main lift as prescribed → first two accessories as a superset ×3 → done. Skip isolation + finisher.</p>'],
  ['Hotel / holiday','<p class="small">Hotel gym: run your session with DB swaps (🔀 every slot has one). No gym: Home tab circuits 3×/wk + 8k steps. Maintenance is a win.</p>'],
@@ -577,27 +600,29 @@ const VERSIONS=[
  ['Only 20 minutes','<p class="small">Giant circuit ×4, 60s rest: DB press ×8 · DB row ×10/side · goblet squat ×12 · DB RDL ×12 · 30s plank.</p>'],
  ['Busy gym','<p class="small">Every slot has machine/cable/DB options (🔀). Nuclear: one bench + one pair of DBs, whole session there. Main lift first, accessory order free.</p>']];
 const EDGE_TIMELINE=`<div class="card"><h2>Daily stack — when to take what</h2><div class="tl">
-<div><b>On waking</b> — 500 ml water (+ electrolytes if trained hard, drank, or it’s hot)</div>
-<div><b>Breakfast</b> — creatine 5 g · vitamin D3 2–4k IU · fish oil 1–2 g (both need food fat)</div>
-<div><b>Wake +60–90 min</b> — first coffee. Tired week? Rhodiola 200–400 mg here</div>
-<div><b>45 min pre-training</b> — caffeine 100–200 mg (only if before 14:00) · citrulline 6–8 g</div>
-<div><b>14:00</b> — caffeine cutoff, no exceptions</div>
-<div><b>Evening meal</b> — magnesium glycinate 300 mg · ashwagandha 300–600 mg (cycle 8–12 wks, never on drinking nights)</div>
-<div><b>Drinking nights</b> — electrolytes + water before bed; skip ashwagandha</div></div>
-<p class="dim small">Clare: identical minus citrulline unless she wants it; creatine 3–5 g equally proven for women.</p></div>`;
+<div><b>On waking</b> — 500 ml water (+ electrolytes if hot, trained hard, or drank last night)</div>
+<div><b>Breakfast</b> — creatine 3–5 g · vitamin D3 1,000–2,000 IU (with food) · omega-3 1–2 g EPA+DHA only if oily fish is under twice a week</div>
+<div><b>45 min pre-training</b> — caffeine ~3 mg/kg (200–250 mg) if before 14:00</div>
+<div><b>14:00</b> — caffeine cutoff</div>
+<div><b>Evening (optional)</b> — magnesium glycinate 200–300 mg if the diet is light on nuts, seeds, greens and whole grains</div>
+<div><b>Drinking nights</b> — 500 ml water + electrolytes before bed, protein-rich snack</div></div>
+<p class="dim small">Clare: the same core three (creatine, D3, omega-3 if little oily fish). Iron and calcium from food first — see Food → Daily essentials.</p></div>`;
 const EDGE=`
 ${EDGE_TIMELINE}
-<details class="card" style="display:block"><summary>Full supplement guide — what works, what doesn’t</summary>
-<h3>Worth it</h3><table><tr><td>Creatine monohydrate</td><td>5 g daily, never cycle. Most proven supplement in existence</td></tr>
-<tr><td>Whey/protein</td><td>Cheapest route to your protein target</td></tr>
-<tr><td>Vitamin D3</td><td>2–4k IU; GP test ideal</td></tr><tr><td>Magnesium glycinate</td><td>200–400 mg evening; alcohol depletes it</td></tr>
-<tr><td>Fish oil</td><td>1–2 g EPA+DHA</td></tr><tr><td>Caffeine</td><td>Best legal performance aid; the 14:00 cutoff protects sleep</td></tr>
-<tr><td>Citrulline malate</td><td>6–8 g pre — pump/endurance, decent evidence</td></tr>
-<tr><td>Rhodiola</td><td>Best-evidenced adaptogen for fatigue/sharpness</td></tr>
-<tr><td>Ashwagandha KSM-66</td><td>Moderate evidence: stress/sleep/small strength. Stop if you feel flat</td></tr>
-<tr><td>Electrolytes</td><td>Drinking nights, hot climates, hard sessions</td></tr></table>
-<h3>Skip</h3><p class="small">BCAAs · T-boosters (pointless on TRT) · fat burners · glutamine · ZMA claims · pre-workout blends · greens powders as veg · collagen for muscle.</p>
-<h3>TRT notes (for your prescriber)</h3><p class="small">Fortnightly injections → peak-trough swings; flat week-2 days are a known pattern — many clinicians split weekly. Bloods: haematocrit/FBC, oestradiol, PSA, GGT/ALT (alcohol + TRT both load the liver).</p></details>
+<details class="card" style="display:block"><summary>Supplement evidence — keep, maybe, skip</summary>
+<h3>Strong evidence — keep</h3><table>
+<tr><td>Creatine monohydrate</td><td>3–5 g daily, any time, no cycling. More strength and lean mass; safe long-term; equally useful for women</td></tr>
+<tr><td>Protein powder</td><td>A convenience for hitting the protein target — nothing more</td></tr>
+<tr><td>Caffeine</td><td>~3 mg/kg pre-training; the 14:00 cutoff protects sleep</td></tr>
+<tr><td>Vitamin D3</td><td>UK minimum 400 IU (10 µg) daily; 1,000–2,000 IU is a sensible dose; stay under 4,000 IU without a blood level</td></tr></table>
+<h3>Situational — maybe</h3><table>
+<tr><td>Omega-3</td><td>Only if oily fish is under twice a week</td></tr>
+<tr><td>Psyllium husk</td><td>5–10 g in a large glass of water if fibre falls short of 30 g — fullness and digestion</td></tr>
+<tr><td>Electrolytes</td><td>Heat, heavy sweating, drinking nights</td></tr>
+<tr><td>Magnesium</td><td>Only if dietary intake is low; the sleep evidence is weak</td></tr>
+<tr><td>Citrulline</td><td>6–8 g pre-training — small effect, optional</td></tr></table>
+<h3>Skip</h3><p class="small">No herb reliably reduces belly fat. Ashwagandha is removed: liver-injury reports, and alongside regular alcohol and TRT the risk outweighs a small benefit. Also skip green-tea extract (liver), fat burners, testosterone boosters (pointless on TRT), berberine (drug interactions), rhodiola (inconsistent evidence), BCAAs, apple-cider vinegar and greens powders.</p>
+<h3>TRT notes</h3><p class="small">Fortnightly injections produce peak–trough swings; flat week-2 days are a known pattern. Bloods worth tracking: haematocrit/FBC, oestradiol, PSA, lipids, GGT/ALT (alcohol and TRT both load the liver).</p></details>
 <details class="card" style="display:block"><summary>Fatigue triage + yearly bloods</summary>
 <table><tr><td>Tired AM, fine by noon</td><td>Sleep timing → light + caffeine protocol</td></tr>
 <tr><td>Wrecked Mon–Tue</td><td>Weekend alcohol/sleep → hydration + Sunday-night protocol</td></tr>
@@ -605,7 +630,7 @@ ${EDGE_TIMELINE}
 <tr><td>Flat + low mood wk 2 post-injection</td><td>TRT trough → log, discuss interval</td></tr>
 <tr><td>2+ wks tired despite sleep</td><td>Consolidation week + GP bloods</td></tr></table>
 <p class="small">Yearly: testosterone (total/free, timed) · oestradiol · haematocrit · PSA · GGT/ALT · lipids · HbA1c · ferritin · D · TSH · hs-CRP.</p></details>`;
-const ROADMAP=[['1','Baseline: log all loads, waist+weight, Watch baselines'],['2–3','Double progression, nail tempo'],['4','Consolidation + photos/waist review'],['5–7','Heavy 4–6s, drop sets, first 4×4s, new exercise variants'],['8','Consolidation + mid-point review'],['9–11','Definition: density + stretch pauses, tightest adherence'],['12','Consolidation + full reassessment, roll blocks forward']];
+const ROADMAP=[['1','Baseline: log all loads, waist+weight, Watch baselines'],['2–3','Double progression, nail tempo'],['4','Consolidation + photos/waist review'],['5–7','Heavier 6–8s, drop sets, first 4×4s, new exercise variants'],['8','Consolidation + mid-point review'],['9–11','Definition: density + stretch pauses, tightest adherence'],['12','Consolidation + full reassessment, roll blocks forward']];
 const HEALTHDATA=[['Resting HR','≥ baseline+5 → amber (auto)'],['HRV','≤80% baseline → amber; 2 triggers → red (auto)'],['Sleep','<6.5h → amber (auto)'],['Energy','≤2/5 → amber (auto)'],['VO₂ max','Aim +2–3 in 12 wks; stalled → add Z2'],['Steps','Floor 8–10k (10–12k cutting)'],['Weight','Mon & Thu AM only — weekend readings are noise'],['HR recovery','<25 bpm/min → bias Z2 over intervals']];
 
 /* ============ RENDER ============ */
@@ -648,7 +673,7 @@ function weekReview(){
  return `<details class="card" style="display:block"><summary>Week so far — Brian ${mineWk}/4 · Clare ${cw}/4</summary>
  <p class="small">Alcohol: <b style="color:${alc>1500?'var(--red)':alc>700?'var(--amb)':'var(--grn)'}">${alc} kcal</b> ${alc>1500?'— heavy week; food discipline Mon–Thu carries it':alc>700?'— the usual pattern; plan holds':'— light week, recomp loves this'}</p>
  <div class="small" style="margin-top:6px">Lifting sessions <b>${mineWk}/4</b></div><div class="bar"><i style="width:${Math.min(100,mineWk*25)}%"></i></div>
- <div class="small" style="margin-top:8px">Zone-2 / conditioning <b>${weekCardio()}/120 min</b> <span class="dim">(Brian ${weekCardio('')} · Clare ${weekCardio('her_')})</span></div><div class="bar"><i style="width:${Math.min(100,Math.round(weekCardio()/1.2))}%"></i></div>
+ <div class="small" style="margin-top:8px">Aerobic — Zone 2, intervals, brisk walks <b>${weekCardio()}/150 min</b> <span class="dim">(Brian ${weekCardio('')} · Clare ${weekCardio('her_')})</span></div><div class="bar"><i style="width:${Math.min(100,Math.round(weekCardio()/1.5))}%"></i></div>
  <p class="small" style="margin-top:8px">Last 4 weeks (sessions): ${wk4.join(' · ')}</p>
  ${wtT!=null?`<p class="small">Weight trend: ${wtT>0?'+':''}${wtT} kg over last entries</p>`:''}
  <p class="dim small">Consistency beats intensity — 4/4 weeks stack up; heroic one-offs don’t.</p></details>`;
@@ -677,7 +702,7 @@ function todayView(){
  <div class="card hero">
   ${done.length?`<p class="small" style="color:var(--grn);margin-bottom:6px">✓ Done today: ${done.map(x=>x.id==='home'?('Home'+(x.n?': '+x.n:'')):(findSess(x.id)||{title:x.id}).title.split('—')[0]).join(', ')}</p>`:''}
   <button class="btn ${prof==='her'?'pinkbg':''}" onclick="openSess('${nx.id}')">Next: ${nxS.title} · ${nxS.dur}</button>
-  <div class="row" style="margin-top:8px"><button class="btn2" onclick="go('home')">🏠 Can’t make the gym → home options</button></div>
+  <div class="row" style="margin-top:8px"><button class="btn2" onclick="go('home')">Can’t make the gym → home options</button><button class="btn2" onclick="openSess('${prof==='her'?'heng':'eng'}')">Extra conditioning</button></div>
   <details><summary class="small dim">Log a session I already did</summary>
    <div class="row">${mySessions().map(s=>`<button class="btn2" onclick="logSession('${s.id}')">✓ ${s.title.split(' —')[0]}</button>`).join('')}</div>
    ${hist().length?`<p class="dim small" style="margin-top:6px">Last: ${(findSess(hist()[0].id)||{title:'Home'}).title.split('—')[0]} ${dayName(hist()[0].d)} ${hist()[0].d.slice(5)} · <span style="color:var(--red)" onclick="undoLast()">undo</span> · ${weekSessions()}/4 this week</p>`:''}
@@ -685,8 +710,9 @@ function todayView(){
  </div>
  ${rhythmCard()}
  ${weekReview()}
+ ${(()=>{const pc=progressCard();return pc.includes('banner a')?pc:''})()}
  <div class="card"><span class="chip on">${cycleNum()>1?'Cy'+cycleNum()+' · ':''}Wk ${wk} · ${b.name}</span><span class="chip ${c2.hol?'on':''}" onclick="setCtx('hol')">✈️ Holiday</span>${(metrics()[todayKey()]||{}).steps?`<span class="chip">👣 ${metrics()[todayKey()].steps}</span>`:''}${(metrics()[todayKey()]||{}).move?`<span class="chip">🔥 ${metrics()[todayKey()].move} kcal</span>`:''}${(metrics()[todayKey()]||{}).exmin?`<span class="chip">💍 ${metrics()[todayKey()].exmin} min</span>`:''}
- <span class="chip">${targets(fday(todayKey()).type).p}g protein</span><span class="chip">${cfg().mode==='recomp'?'8k+':'10k+'} steps</span><span class="chip">No caffeine post-14:00</span>${defType(todayKey())==='drink'?'<span class="chip">🍷 protein before drinks · water 1-per-2 · electrolytes at bed</span>':''}
+ <span class="chip">${targets(fday(todayKey()).type).p}g protein</span><span class="chip">${myMode()==='recomp'?'8k+':'10k+'} steps</span><span class="chip">No caffeine post-14:00</span>${defType(todayKey())==='drink'?'<span class="chip">🍷 protein before drinks · water 1-per-2 · electrolytes at bed</span>':''}
  <p class="dim small" style="margin-top:6px">${b.goal}</p></div>`;
 }
 
@@ -703,7 +729,9 @@ function visits(sess,pfx){
 function chosenEx(sess,i,pfx){
  const ex=sess.work[i],v=cfg().variety||'med';
  const shift=v==='low'?0:v==='high'?visits(sess,pfx):(visits(sess,pfx)%2);
- return S.get(swKey(sess.id,i,pfx),ex.pool[(blockNum()-1+i+cycleNum()-1+shift)%ex.pool.length]);
+ const def=ex.pool[(blockNum()-1+i+cycleNum()-1+shift)%ex.pool.length];
+ const sw=S.get(swKey(sess.id,i,pfx),null);
+ return (sw&&ex.pool.includes(sw))?sw:def;
 }
 function doSwap(sid,i,val,pfx){S.set(swKey(sid,i,pfx),val);render()}
 function shuffleEx(sid,i,pfx){
@@ -715,6 +743,13 @@ function exCard(sess,ex,i,pfx){
  const chosen=chosenEx(sess,i,pfx);
  const sch=BLOCKS[curBlock()].sch[ex.t],n=adjSets(sch.sets);
  const parts=(ex.t==='ss'&&chosen.includes(' + '))?chosen.split(' + '):[chosen];
+ const straight=parts.length>1&&cfg().ssMode==='straight';
+ const tagTxt=ex.t==='main'?'Main':ex.t==='acc'?'Accessory':ex.t==='iso'?'Isolation':parts.length>1?(straight?'Straight sets':'Paired set'):'Circuit';
+ const trim=n<sch.sets?' <span style="color:var(--amb)">(trimmed)</span>':'';
+ const schemeTxt=parts.length<2?`${n} × ${schTxt(sch)}${trim}`
+  :straight?`${n} sets of each — all of ${esc(parts[0])} first, then ${esc(parts[1])} · ${sch.lo}–${sch.hi} reps · RIR ${sch.rir} · rest 60–90s${trim}`
+  :`${n} rounds — A then B back-to-back · ${sch.lo}–${sch.hi} reps · RIR ${sch.rir} · rest ${sch.rest}${trim}`;
+ const stTxt=(parts.length>1&&!straight&&ex.st)?`<div class="cue">Station: ${ex.st}</div>`:'';
  const pink=pfx==='her_'&&prof!=='her';
  let nlog=0;
  const logBlocks=parts.map(pt=>{
@@ -740,10 +775,10 @@ function exCard(sess,ex,i,pfx){
  }).join('');
  return `<div class="ex"${pink?' style="border-color:#592f42"':''}>
   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px"><div>
-  <span class="tag ${ex.t}">${ex.t==='main'?'Main':ex.t==='acc'?'Accessory':ex.t==='ss'?'Superset':'Isolation'}</span>${pink?' <span class="tag" style="background:#3a2030;color:var(--pink)">Clare</span>':''}
+  <span class="tag ${ex.t}">${tagTxt}</span>${pink?' <span class="tag" style="background:#3a2030;color:var(--pink)">Clare</span>':''}
   <div class="name">${chosen}</div>
-  <div class="scheme">${n} × ${schTxt(sch)}${n<sch.sets?' <span style="color:var(--amb)">(trimmed)</span>':''}</div>
-  <div class="cue">${ex.cue}</div>
+  <div class="scheme">${schemeTxt}</div>
+  <div class="cue">${ex.cue}</div>${stTxt}
   ${suggs}
   </div><div style="display:flex;flex-direction:column;gap:5px;flex:none">
   <button class="btn2" style="padding:6px 10px" onclick="shuffleEx('${sess.id}',${i},'${pfx}')">🔀</button>
@@ -782,7 +817,7 @@ function trainView(){
  const nx=nextSession();
  return `<div class="card"><span class="chip on">Wk ${weekNum()} · ${BLOCKS[curBlock()].wks}</span> <span class="chip">${prof==='her'?'Clare’s programme':'Brian'}</span>
  <p class="dim small" style="margin-top:4px">Exercises rotate automatically each block. 🔀 shuffles any slot. Logs follow the exercise.</p></div>
- ${mySessions().map(s=>`<div class="card" onclick="openSess('${s.id}')" style="cursor:pointer"><b>${s.title}</b> <span class="dim small">· ${s.dur} ${s.id===nx.id?'· <span style="color:var(--grn)">next</span>':''} ›</span></div>`).join('')}
+ ${mySessions().map(s=>`<div class="card" onclick="openSess('${s.id}')" style="cursor:pointer${s.extra?';opacity:.85':''}"><b>${s.title}</b> <span class="dim small">· ${s.dur}${s.extra?' · optional extra, not in rotation':''} ${s.id===nx.id?'· <span style="color:var(--grn)">next</span>':''} ›</span></div>`).join('')}
  ${ctx().hol?HOLFULL.map(s=>`<div class="card" onclick="openSess('${s.id}')" style="cursor:pointer;border-color:var(--amb)"><b>✈️ ${s.title}</b> <span class="dim small">· ${s.dur} ›</span></div>`).join(''):''}
  <details class="card" style="display:block"><summary>History</summary>${hist().slice(0,12).map(h=>`<p class="small" style="margin-bottom:3px">${dayName(h.d)} ${h.d.slice(5)} — ${h.id==='home'?('Home'+(h.n?': '+h.n:'')):(findSess(h.id)||{title:h.id}).title.split('—')[0]}</p>`).join('')||'<p class="dim small">Nothing yet.</p>'}</details>
  ${logbook()}
@@ -817,6 +852,70 @@ function ideasFor(day){
  ks.push(day.type==='drink'?'drink':(doneToday().length||day.type==='train')?'train':'rest');
  return ks;
 }
+/* ---- Weekly energy budget: fat loss follows the weekly total ---- */
+function weekDates(){const now=new Date(todayKey()+'T12:00'),mon=new Date(now);mon.setDate(now.getDate()-((now.getDay()+6)%7));return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return todayKey(d)})}
+function weekBudget(){
+ const ds=weekDates(),tk=todayKey(),f=flog();
+ let budget=0,used=0,usedAlc=0,toDate=0,missing=0;
+ ds.forEach(dk=>{const day=f[dk]||{type:defType(dk),items:[]},t=targets(day.type).kcal;budget+=t;
+  if(dk<=tk){toDate+=t;used+=day.items.reduce((a,it)=>a+(it.k||0),0);usedAlc+=day.items.filter(it=>it.a).reduce((a,it)=>a+(it.k||0),0);if(dk<tk&&!day.items.length)missing++}});
+ const daysLeft=ds.filter(d=>d>tk).length;
+ return{budget,used,usedAlc,toDate,missing,daysLeft,remaining:budget-used,perDay:daysLeft?Math.round((budget-used)/daysLeft):0};
+}
+function budgetCard(){
+ const w=weekBudget(),pct=Math.min(100,Math.round(100*w.used/Math.max(1,w.budget)));
+ const line=w.remaining<0?`Already <b>${-w.remaining}</b> kcal over for the week. Return to normal daily targets — crash-dieting to compensate costs muscle.`
+  :w.daysLeft?`<b>${w.remaining}</b> kcal left over ${w.daysLeft} day${w.daysLeft>1?'s':''} → about <b>${w.perDay}</b> kcal/day finishes the week on target.`
+  :`Week closes <b>${w.remaining}</b> kcal under budget.`;
+ return `<div class="card"><h2>This week’s energy budget</h2>
+ <div class="small"><b>${w.used}</b> of ${w.budget} kcal (Mon–today)</div><div class="bar"><i class="${w.used>w.budget?'over':''}" style="width:${pct}%"></i></div>
+ <p class="small" style="margin-top:8px">${line}</p>
+ <p class="dim small">Alcohol this week: ${w.usedAlc} kcal (≈${Math.round(w.usedAlc/75)} units). Fat loss follows the weekly total, not single days — a tighter Mon–Thu can fund the weekend.${w.missing?` <b style="color:var(--amb)">${w.missing} earlier day${w.missing>1?'s':''} this week with nothing logged</b> — those count as zero, so the true total is higher.`:''}</p></div>`;
+}
+/* ---- Progress check: 7-day average vs 2–4 weeks ago ---- */
+function trendDelta(key){
+ const m=metrics(),now=new Date(todayKey()+'T12:00');
+ const pts=Object.keys(m).filter(d=>m[d][key]!=null).map(d=>[(now-new Date(d+'T12:00'))/864e5,m[d][key]]);
+ const rec=pts.filter(p=>p[0]>=0&&p[0]<=7).map(p=>p[1]),old=pts.filter(p=>p[0]>=14&&p[0]<=28).map(p=>p[1]);
+ if(!rec.length||!old.length)return null;
+ const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+ return Math.round((avg(rec)-avg(old))*10)/10;
+}
+function progressCard(){
+ const dw=trendDelta('wt'),dz=trendDelta('waist'),bits=[];
+ if(dw!=null)bits.push('weight '+(dw>0?'+':'')+dw+' kg');
+ if(dz!=null)bits.push('waist '+(dz>0?'+':'')+dz+' cm');
+ const b=bits.length?' ('+bits.join(', ')+' vs 2–4 weeks ago)':'';
+ let cls='n',msg;
+ if(dw==null&&dz==null)msg='Activates once there are weigh-ins this week and from 2–4 weeks ago (Mon & Thu mornings), plus a weekly waist measurement at the navel. During recomposition the waist tells the truth; the scale often doesn’t.';
+ else if(dz!=null&&dz<=-1){cls='g';msg='Fat is coming off'+b+'.'+(dw!=null&&dw>-0.3?' Weight holding while the waist drops is textbook recomposition.':'')+' Change nothing.'}
+ else if(dw!=null&&dw<-0.025*myWt()){cls='a';msg='Dropping faster than ~1% a week'+b+'. Add ~150 kcal/day (carbs around training) to protect muscle.'}
+ else if((dw==null||dw>-0.3)&&(dz==null||dz>-0.5)){cls='a';msg='Flat for about three weeks'+b+'. Next step: 150–200 kcal/day less on Mon–Thu from carbs or fats (never protein) — or halve one evening’s drinks, which does the same. Training stays unchanged.'}
+ else{cls='g';msg='Trending down'+b+'. On track.'}
+ return `<div class="banner ${cls}"><b>Progress check:</b> ${msg}</div>`;
+}
+function whtr(){
+ const m=metrics(),ks=Object.keys(m).filter(d=>m[d].waist!=null).sort();
+ const h=prof==='her'?(cfg().htHer||165):(cfg().ht||180);
+ if(!ks.length)return `<p class="dim small">Log the waist weekly (navel height, relaxed, after breathing out) — waist-to-height is the best simple marker of belly fat. Target: under ${Math.round(h/2)} cm.</p>`;
+ const w=m[ks[ks.length-1]].waist,r=w/h;
+ return `<p class="small">Waist-to-height <b style="color:${r<0.5?'var(--grn)':r<0.6?'var(--amb)':'var(--red)'}">${r.toFixed(2)}</b> · target under 0.50 = waist under ${Math.round(h/2)} cm (now ${w} cm)</p>`;
+}
+function essentialsCard(){
+ const her=prof==='her',t=targets('train'),r=targets('rest');
+ const rows=[
+  ['Energy',t.kcal+' kcal training days · '+r.kcal+' rest days'],
+  ['Protein',t.p+' g/day — four feeds of ~'+Math.round(t.p/4)+' g'],
+  ['Fibre','30 g+/day — veg, fruit, oats, beans, lentils, wholegrains'],
+  ['Fruit & veg','5–7+ portions; half the plate at lunch and dinner'],
+  ['Oily fish','2 portions a week — salmon, mackerel, sardines, trout'],
+  ['Water',(her?'2–2.5 L':'2.5–3 L')+' (+0.5 L per training hour; more in heat or after drinking)'],
+  ['Salt','Under 6 g/day, unless sweating heavily in heat'],
+  ['Alcohol','UK low-risk guideline: 14 units/week or fewer, spread over 3+ days'],
+  ['Sleep','7+ hours — short sleep shifts weight loss from fat to muscle']];
+ if(her)rows.splice(5,0,['Iron','14.8 mg/day — red meat, lentils, fortified cereal; pair with vitamin C'],['Calcium','700 mg/day — kwark, yoghurt, milk, fortified alternatives']);
+ return `<details class="card" style="display:block"><summary>Daily essentials — ${her?'Clare':'Brian'}</summary><table>${rows.map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('')}</table></details>`;
+}
 function ring(label,v,tg,inv){
  const pct=Math.min(1,tg?v/tg:0),r=26,c=2*Math.PI*r,off=c*(1-pct);
  const col=inv?(v>tg?'var(--red)':'var(--acc)'):(v>=tg?'var(--grn)':'var(--acc)');
@@ -846,6 +945,8 @@ function foodView(){
   <div style="display:flex;align-items:center;gap:8px;margin-top:9px"><span class="small">💧 Water: <b>${S.get(waterKey(),0)}</b>/8+ glasses</span>
   <button class="btn2" style="padding:4px 12px" onclick="addWater(1)">+</button><button class="btn2" style="padding:4px 12px" onclick="addWater(-1)">−</button>
   ${day.type==='drink'||c.hot?'<span class="dim small">target higher today</span>':''}</div></div>
+ ${budgetCard()}
+ ${progressCard()}
  <div class="card"><h2>Add food</h2>
   <input type="text" placeholder="Search… (chicken, pint, kebab)" value="${foodQ}" oninput="foodQ=this.value;fres()">
   <div id="fres">${fresHTML()}</div>
@@ -853,7 +954,7 @@ function foodView(){
    <input type="text" id="cf_n" placeholder="Name"><div class="grid2" style="margin-top:6px"><input type="number" id="cf_k" placeholder="kcal"><input type="number" id="cf_p" placeholder="protein g"></div>
    <div class="grid2" style="margin-top:6px"><input type="number" id="cf_c" placeholder="carbs g"><input type="number" id="cf_f" placeholder="fat g"></div>
    <div style="margin-top:7px"><button class="btn2" onclick="addCustom()">Add</button></div></details></div>
- <div class="card">${day.items.map((it,i)=>`<div class="fentry"><span>${it.a?'🍷 ':''}${it.n}</span><span class="dim small">${it.k} · ${it.p}P <button class="btn3" onclick="delFood(${i})">×</button></span></div>`).join('')||'<p class="dim small">Nothing logged yet.</p>'}</div>
+ <div class="card">${day.items.map((it,i)=>`<div class="fentry"><span>${it.a?'🍷 ':''}${esc(it.n)}</span><span class="dim small">${it.k} · ${it.p}P <button class="btn3" onclick="delFood(${i})">×</button></span></div>`).join('')||'<p class="dim small">Nothing logged yet.</p>'}</div>
  <div class="card"><h2>Recipes for what’s left today</h2>
  ${recipesFor(day,{k:Math.max(0,t.kcal-tot.k),p:Math.max(0,t.p-tot.p)}).map(r=>`<div class="ex"><div style="display:flex;justify-content:space-between;gap:6px;align-items:center"><div><div class="name" style="font-size:13.5px">${r.n}</div><div class="dim small">${r.k} kcal · ${r.p}P ${r.c}C ${r.f}F — ${r.d}</div></div><button class="btn2" style="flex:none" onclick="addRecipe('${r.n}')">+ Log</button></div></div>`).join('')}
  <button class="btn2" style="width:100%;margin-top:4px" onclick="aiPrompt()">🤖 Copy AI recipe prompt (with today’s remaining macros)</button>
@@ -864,7 +965,9 @@ function foodView(){
  <h3>Fibre</h3><p class="small">25–35g/day (veg, fruit, oats, beans) — satiety, digestion, and it blunts the drinking-day damage.</p>
  <h3>80/20</h3><p class="small">If 80% of the week is on-plan, the 20% (wine, pastizzi, dessert) costs you nothing but time. Perfection isn’t the plan; the average is.</p>
  <h3>Eating out playbook</h3><p class="small">Order the grill section · protein double-up (add prawns/chicken) · sauce on the side · skip the bread basket, keep the wine if it’s a drink day · dessert shared or skipped.</p>
- <h3>Supermarket speed-list</h3><p class="small">Kwark/skyr · eggs · chicken thighs · 5% mince · tins of tuna · frozen veg + berries · oats · rice · olive oil · rice cakes · dark chocolate. That basket covers 90% of the week.</p></details>
+ <h3>Supermarket speed-list</h3><p class="small">Kwark/skyr · eggs · chicken thighs · 5% mince · tins of tuna · frozen veg + berries · oats · rice · olive oil · rice cakes · dark chocolate. That basket covers 90% of the week.</p>
+ <h3>Belly fat — what actually shifts it</h3><p class="small">In order of impact: a weekly energy deficit (the budget card above) · alcohol, which adds energy and pauses fat burning while it is cleared · protein at every meal · fibre 30 g+ · 150+ minutes of aerobic work a week on top of lifting · 7+ hours of sleep. Crunches do not burn belly fat — the waist shrinks when total body fat does.</p></details>
+ ${essentialsCard()}
  ${c.hot?HOTCARD:''}
  <div class="card"><h2>Week’s alcohol</h2><p><b style="color:${alcW>1500?'var(--red)':alcW>700?'var(--amb)':'var(--grn)'}">${alcW} kcal</b> <span class="dim small">Mon–today. Every 700 kcal shaved ≈ 0.1 kg fat that never arrives.</span></p></div>
  <details class="card" style="display:block"><summary>Timing, hydration, weekend rules, monthly adjustments</summary>
@@ -886,8 +989,10 @@ function dataView(){
  <div class="card"><h2>This morning</h2>
   <div class="grid3">${fields.map(f=>`<div><label>${f[1]}</label><input type="number" inputmode="decimal" placeholder="${f[2]}" value="${tm[f[0]]??''}" oninput="saveMetric('${dk}','${f[0]}',this.value)" onchange="render()"></div>`).join('')}</div>
   <p class="dim small" style="margin-top:4px;color:var(--grn)">Saves as you type — no button needed.</p>
-  <p class="dim small" style="margin-top:7px">Baselines: RHR ${bl('rhr')??'—'} · HRV ${bl('hrv')??'—'} · auto-readiness activates after 3 days of entries.</p></div>
- <div class="card"><h2>Sync doctor</h2>
+  <p class="dim small" style="margin-top:7px">Baselines: RHR ${bl('rhr')??'—'} · HRV ${bl('hrv')??'—'} · auto-readiness activates after 3 days of entries.</p>
+  ${whtr()}</div>
+ ${progressCard()}
+ ${prof==='me'?`<div class="card"><h2>Sync doctor</h2>
   <p class="small">Last sync: <b>${S.get('lastSync','')||'never'}</b></p>
   <p class="small">Today’s auto data: RHR ${tm.rhr??'—'} · HRV ${tm.hrv??'—'} · Sleep ${tm.sleep??'—'}</p>
   <div class="row"><button class="btn2" onclick="location.href=location.pathname+'?test=1'">1. Test the link</button>
@@ -903,7 +1008,7 @@ function dataView(){
    <li>Open URLs → <span style="color:var(--acc)">https://themaltesir.github.io/index.html/?rhr=</span>[1]<span style="color:var(--acc)">&hrv=</span>[2]<span style="color:var(--acc)">&sleep=</span>[3]</li>
    <li>Automation → Time of Day 08:00 → Run without asking</li>
   </ol>
-  <p class="dim small">Also accepted: <b>&wt=</b> (weight, Mon/Thu) · <b>&waist=</b> · <b>&steps=</b> · <b>&vo2=</b> · <b>&energy=</b> · rings: <b>&move=</b> (Active Energy, sum today) · <b>&exmin=</b> (Exercise Minutes, sum today) · <b>&stand=</b>. Run the shortcut any time of day — later runs simply update today’s numbers. A 1-minute Breathe session on the Watch each morning guarantees a fresh HRV sample.</p></details>
+  <p class="dim small">Also accepted: <b>&wt=</b> (weight, Mon/Thu) · <b>&waist=</b> · <b>&steps=</b> · <b>&vo2=</b> · <b>&energy=</b> · rings: <b>&move=</b> (Active Energy, sum today) · <b>&exmin=</b> (Exercise Minutes, sum today) · <b>&stand=</b>. Run the shortcut any time of day — later runs simply update today’s numbers. A 1-minute Breathe session on the Watch each morning guarantees a fresh HRV sample.</p></details>`:`<div class="card"><p class="dim small">Clare’s numbers are stored separately from Brian’s. Enter weight and waist weekly; RHR, HRV and sleep are optional and, when entered, drive her readiness too.</p></div>`}
  <div class="card"><h2>History</h2><table><tr><th>Date</th><th>RHR</th><th>HRV</th><th>Slp</th><th>E</th><th>Wt</th><th>Waist</th></tr>
  ${days.map(d=>`<tr><td>${dayName(d)} ${d.slice(5)}</td><td>${m[d].rhr??''}</td><td>${m[d].hrv??''}</td><td>${m[d].sleep??''}</td><td>${m[d].energy??''}</td><td>${m[d].wt??''}</td><td>${m[d].waist??''}</td></tr>`).join('')}</table>
  ${days.length?'':'<p class="dim small">No entries yet.</p>'}</div>
@@ -951,9 +1056,13 @@ function moreView(){
  <div class="card"><h2>Settings</h2>
   <div class="grid2"><div><label>Brian weight (kg)</label><input type="number" value="${c.wt}" onchange="setCfg('wt',parseFloat(this.value)||86)"></div>
   <div><label>Clare weight (kg)</label><input type="number" value="${c.wtHer||64}" onchange="setCfg('wtHer',parseFloat(this.value)||64)"></div></div>
-  <label>Goal mode</label>${Object.keys(MODES).map(k=>`<span class="chip ${c.mode===k?'on':''}" onclick="setCfg('mode','${k}')">${MODES[k].n}</span>`).join('')}
+  <label>Goal mode — ${prof==='her'?'Clare':'Brian'} (switch profile to set the other)</label>${Object.keys(MODES).map(k=>`<span class="chip ${myMode()===k?'on':''}" onclick="setCfg('${prof==='her'?'modeHer':'mode'}','${k}')">${MODES[k].n} −${Math.round(MODES[k].d*(prof==='her'?0.75:1))}</span>`).join('')}
   <label>Exercise variety</label>${[['low','Low — same lifts all block'],['med','Medium — A/B alternate each visit'],['high','High — new pick every visit']].map(v=>`<span class="chip ${(c.variety||'med')===v[0]?'on':''}" onclick="setCfg('variety','${v[0]}')">${v[1]}</span>`).join('')}
   <p class="dim small">Medium is the evidence sweet spot: two movements per slot alternate, each still progresses. Manual 🔀 picks stay fixed until the block changes.</p>
+  <label>Paired exercises</label>${[['pair','Paired — same station, back-to-back'],['straight','Straight sets — busy gym']].map(v=>`<span class="chip ${(c.ssMode||'pair')===v[0]?'on':''}" onclick="setCfg('ssMode','${v[0]}')">${v[1]}</span>`).join('')}
+  <p class="dim small">Every pair is built at one station (one bench, one cable, one set of dumbbells). Straight sets take ~5 min longer per session; results are the same.</p>
+  <div class="grid2"><div><label>Brian height (cm)</label><input type="number" value="${c.ht||180}" onchange="setCfg('ht',parseFloat(this.value)||180)"></div>
+  <div><label>Clare height (cm)</label><input type="number" value="${c.htHer||165}" onchange="setCfg('htHer',parseFloat(this.value)||165)"></div></div>
   <label>Programme start (a Monday)</label><input type="date" value="${c.start}" onchange="setCfg('start',this.value)">
   <p class="dim small">Cycle ${cycleNum()} · Week ${weekNum()} · ${BLOCKS[curBlock()].name}${isConsol()?' · consolidation':''} · v${VERSION}</p></div>
  ${EDGE}
@@ -1001,9 +1110,9 @@ function beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)
  const dk=(q.get('d')||todayKey()).slice(0,10);let got=[];
  [['rhr',30,120],['hrv',5,250],['sleep',0,16],['energy',1,5],['wt',40,200],['waist',50,200],['steps',0,100000],['vo2',10,80],['move',0,4000],['exmin',0,600],['stand',0,24]].forEach(([k,lo,hi])=>{
   const v=parseFloat(q.get(k));
-  if(!isNaN(v)&&v>=lo&&v<=hi){saveMetric(dk,k,String(Math.round(v*10)/10));got.push(k.toUpperCase()+' '+(Math.round(v*10)/10))}
+  if(!isNaN(v)&&v>=lo&&v<=hi){saveMetric(dk,k,String(Math.round(v*10)/10),'');got.push(k.toUpperCase()+' '+(Math.round(v*10)/10))}
  });
- if(got.length){S.set('lastSync',dk+' — '+got.join(' · '));tab='today';S.set('tab','today');
+ if(got.length){S.set('lastSync',dk+' — '+got.join(' · '));tab='today';S.set('tab','today');prof='me';S.set('prof','me');
   try{history.replaceState(null,'',location.pathname)}catch(e){}}
 }catch(e){}})();
 
@@ -1021,7 +1130,7 @@ function render(){
  ensureStart();
  try{document.body.classList.toggle('her',prof==='her')}catch(e){}
  nav();pswitch();
- el('hdrSub2').textContent=(cycleNum()>1?'Cy'+cycleNum()+' · ':'')+'Wk '+weekNum()+' · '+BLOCKS[curBlock()].name+(isConsol()?' · consol.':'')+' · '+MODES[cfg().mode].n+(prof==='her'?' · Clare':'');
+ el('hdrSub2').textContent=(cycleNum()>1?'Cy'+cycleNum()+' · ':'')+'Wk '+weekNum()+' · '+BLOCKS[curBlock()].name+(isConsol()?' · consol.':'')+' · '+MODES[myMode()].n+(prof==='her'?' · Clare':'');
  const views={today:todayView,train:trainView,home:homeView,food:foodView,data:dataView,more:moreView};
  el('main').innerHTML=(views[tab]||todayView)();
 }
