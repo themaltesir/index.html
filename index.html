@@ -117,7 +117,7 @@ body.insess .timer .box{font-size:21px;padding:5px 5px 5px 16px}
 .row>*{flex:1}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .grid2>*,.grid3>*,.grid4>*{min-width:0}
-input[type=date],input[type=time]{min-width:0;max-width:100%;-webkit-appearance:none;appearance:none}
+input[type=date],input[type=time]{min-width:0;max-width:100%}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 details{margin-bottom:6px}
@@ -201,6 +201,14 @@ details.howto summary{padding:3px 0;font-weight:600}
 details.howto summary::after{font-size:16px}
 .sessbar .nx{font-size:13px;font-weight:800;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 .sessbar .meta .dim{font-size:11.5px}
+.ck{display:flex;align-items:center;gap:10px;padding:12px 14px}
+.ck .dot{width:12px;height:12px;border-radius:50%;flex:none;background:var(--dim)}
+.ck .dot.g{background:var(--grn)}.ck .dot.a{background:var(--amb)}.ck .dot.r{background:var(--red)}
+.ckrow{display:flex;align-items:center;gap:8px;margin:6px 0}
+.ckrow>span{width:52px;flex:none}
+.ckrow .chip{margin:0 4px 0 0}
+.filebtn{position:relative;overflow:hidden;text-align:center;display:inline-flex;align-items:center;justify-content:center}
+.filebtn input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
 </style>
 </head>
 <body>
@@ -214,7 +222,7 @@ details.howto summary::after{font-size:16px}
 <div class="toast" id="toast"></div>
 <nav id="nav"></nav>
 <script>
-const VERSION='6.0';
+const VERSION='6.1';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* ============ STORAGE / PROFILE ============ */
 const S={
@@ -291,7 +299,7 @@ const BLOCKS={
  b1:{name:'Block 1 · Foundation',wks:'Wks 1–4',pair:['B','P'],goal:'Groove technique on Build and Pump days. Zone 2 on two non-lifting days.'},
  b2:{name:'Block 2 · Strength',wks:'Wks 5–8',pair:['S','B'],goal:'Heavier: Strength and Build days, never below 6 reps. Add one 4×4 interval session a week.'},
  b3:{name:'Block 3 · Definition',wks:'Wks 9–12',pair:['S','P'],goal:'Full wave — one heavy and one pump day per muscle each week, burner finishers on.'}};
-const CONSOL='Consolidation week: 1 set fewer everywhere, 3 reps in reserve, no finishers. Lighter on purpose — it’s when the gains settle in.';
+const CONSOL='Light week: 1 set fewer, a little lighter — it’s when the gains settle in.';
 const MUSCLES=['Chest','Back','Shoulders','Biceps','Triceps','Quads','Glutes','Hamstrings','Calves','Abs'];
 /* Day type for a session on a date: weeks 1 (new cycle) and 4/8/12 are Build; otherwise the block's pair alternates by week */
 function dayType(sid,pfx,dk){
@@ -513,49 +521,33 @@ function eqOf(name){
  if(/Barbell|Smith|EZ-Bar/.test(name))return{eq:'bb',r:.6};return{eq:'mc',r:.4};
 }
 function regionOf(name){const m=EXM[name]||{};if(m.Glutes===1&&!m.Quads)return 'glute';if(m.Quads||m.Hamstrings||m.Calves||m.Glutes)return 'lower';if(m.Abs)return 'core';return 'upper'}
-/* ============ HEALTH METRICS / AUTO-READINESS (Watch data + morning check-in) ============ */
+/* ============ READINESS — 3-tap morning check-in + last night's drinks + illness ============
+   (Watch/Shortcut sync removed in v6.1: a web app can't read the Watch, and the Shortcut opened a separate
+   copy of the app's data. The check-in gives the same steer and changes today's weights directly.) */
 function mxKey(pfx){return (pfx??P())+'mx'}
 function metrics(pfx){return S.get(mxKey(pfx),{})}
 function saveMetric(dk,k,v,pfx){const m=metrics(pfx);m[dk]=m[dk]||{};if(v===''||v==null||isNaN(parseFloat(v)))delete m[dk][k];else m[dk][k]=parseFloat(v);S.set(mxKey(pfx),m);MEMO={}}
-function baseline(key,excl,pfx){
- const m=metrics(pfx);const ks=Object.keys(m).filter(d=>d!==excl&&m[d][key]!=null).sort().slice(-14);
- if(ks.length<3)return null;
- const vals=ks.map(d=>m[d][key]).sort((a,b)=>a-b);
- return vals[Math.floor(vals.length/2)];
-}
 function lastMetric(key,pfx,maxAge){const m=metrics(pfx),ks=Object.keys(m).filter(d=>m[d][key]!=null).sort();const d=ks[ks.length-1];if(!d||daysAgo(d)>(maxAge||9999))return null;return{d,v:m[d][key]}}
-/* Alcohol logged yesterday (food log) — weekend reality, not a judgement */
 function alcYesterday(pfx){const f=S.get((pfx??P())==='her_'?'flogH':'flog',{}),d=f[offDate(1)];return d?d.items.filter(i=>i.a).reduce((a,i)=>a+(i.k||0),0):0}
+function checkin(pfx){const r=S.get((pfx??P())+'ready',null);return r&&r.d===todayKey()&&r.s!=null&&r.e!=null&&r.m!=null?r:null}
 function readiness(pfx){
  pfx=pfx??P();
  return memo('rd'+pfx,()=>{
-  const dk=todayKey(),reasons=[];let flags=0,data=false;
-  const off=offOn(dk,pfx);if(off&&off.type==='sick')return{st:'r',reasons:['Marked as ill — rest and recover'],manual:false,flags:3};
-  const m=metrics(pfx)[dk]||{};
-  const bR=baseline('rhr',dk,pfx),bH=baseline('hrv',dk,pfx);
-  if(m.rhr!=null&&bR!=null){data=true;const d=m.rhr-bR;if(d>=8){flags+=2;reasons.push('Resting HR '+m.rhr+' (normal '+bR+', +'+d+')')}else if(d>=5){flags++;reasons.push('Resting HR '+m.rhr+' (normal '+bR+', +'+d+')')}}
-  if(m.hrv!=null&&bH!=null){data=true;const r=m.hrv/bH;if(r<=.7){flags+=2;reasons.push('HRV '+m.hrv+' ms (normal '+bH+')')}else if(r<=.8){flags++;reasons.push('HRV '+m.hrv+' ms (normal '+bH+')')}}
-  if(m.sleep!=null){data=true;if(m.sleep<5.5){flags+=2;reasons.push('Sleep '+m.sleep+' h')}else if(m.sleep<6.5){flags++;reasons.push('Sleep '+m.sleep+' h')}}
-  if(m.energy!=null){data=true;if(m.energy<=2){flags++;reasons.push('Energy '+m.energy+'/5')}}
-  const alc=alcYesterday(pfx);if(alc>=450){flags++;reasons.push('Drinks last night (~'+Math.round(alc/75)+' units)')}
-  const mr=S.get(pfx+'ready',null);
-  if(mr&&mr.d===dk&&mr.s!=null&&mr.e!=null&&mr.m!=null){
-   data=true;const sc=mr.s+mr.e+mr.m;
-   if(sc<=1)flags+=3;else if(sc<=2)flags+=2;else if(sc<=4)flags++;
-   reasons.push('Check-in: sleep '+['<6h','6–7h','7h+'][mr.s]+' · energy '+['flat','ok','good'][mr.e]+' · '+['sore','a bit sore','fresh'][mr.m]);
-  }
-  if(!data&&!flags)return{st:'n',reasons:['Three taps below tune today’s session'],manual:true,flags:0};
-  return{st:flags===0?'g':flags<=2?'a':'r',reasons:reasons.length?reasons:['All markers near your normal'],manual:false,flags};
+  const reasons=[];let flags=0;
+  const off=offOn(todayKey(),pfx);if(off&&off.type==='sick')return{st:'r',reasons:['ill'],flags:3};
+  const ci=checkin(pfx);
+  if(ci){const sc=ci.s+ci.e+ci.m;if(sc<=1)flags+=3;else if(sc<=2)flags+=2;else if(sc<=4)flags++;
+   if(ci.s===0)reasons.push('short sleep');if(ci.e===0)reasons.push('low energy');if(ci.m===0)reasons.push('sore')}
+  const alc=alcYesterday(pfx);if(alc>=450){flags++;reasons.push('drinks last night')}
+  if(!ci&&!flags)return{st:'n',reasons:[],flags:0};
+  return{st:flags===0?'g':flags<=2?'a':'r',reasons,flags};
  });
 }
-const READLINE={g:'GREEN — full session, chase the targets.',a:'AMBER — lighter today: 1 set fewer, weights −5%, no finisher.',r:'RED — recovery day: walk, mobility or a light pump. Shrink, don’t skip.',n:'No readiness data yet.'};
-/* Heart-rate zones from the Watch: max HR from age (Tanaka 208 − 0.7 × age); Zone 2 = 60–70% of heart-rate reserve (Karvonen) */
+/* Heart-rate zones from age (max HR = 208 − 0.7 × age). Zone 2 ≈ 65–75% of max — the talk test is the real check */
 function hrZones(pfx){
- const c=cfg(),ov=(pfx??P())==='her_'?+c.hrmaxHer:+c.hrmax,max=ov||Math.round(208-0.7*myAge(pfx)),rhr=baseline('rhr',null,pfx)||(lastMetric('rhr',pfx)||{}).v||null;
- const z2=rhr?[Math.round(rhr+.6*(max-rhr)),Math.round(rhr+.7*(max-rhr))]:[Math.round(.65*max),Math.round(.75*max)];
- return{max,rhr,z2,z4:[Math.round(.85*max),Math.round(.95*max)],src:rhr?'from your resting HR':'from age only — sync resting HR to personalise'};
+ const max=Math.round(208-0.7*myAge(pfx));
+ return{max,z2:[Math.round(.65*max),Math.round(.75*max)],z4:[Math.round(.85*max),Math.round(.95*max)]};
 }
-function vo2Class(v,pfx){const c=(pfx??P())==='her_'?[27,33,38]:[35,42,48];return v<c[0]?'low':v<c[1]?'average':v<c[2]?'good':'excellent'}
 /* ============ SCHEDULER — smart queue: the session you've gone longest without comes first ============ */
 function hist(){return S.get(P()+'hist',[])}
 function insertHist(id,pfx,d,name,auto){
@@ -641,13 +633,14 @@ function undoDone(sid){
  S.set(pfx+'jd',null);toast('Undone — not counted');render();
 }
 function sessStats(sid,pfx,d){
- const o=(S.get(actKey(pfx),{})[d]||{})[sid]||{};let sets=0,vol=0;const prs=new Set();
+ const o=(S.get(actKey(pfx),{})[d]||{})[sid]||{};let sets=0;const prs=new Set(),seen=new Set();let up=0;
  Object.keys(o).forEach(k=>{if(k==='_p')return;const p=k.lastIndexOf('|'),sl=k.slice(0,p),si=+k.slice(p+1);
   const L=S.get('sl_'+pfx+sl,null);if(!L)return;
   const arr=L.d===d?L.sets:(L.prev&&L.prev.d===d?L.prev.sets:null),s=arr&&arr[si];
-  if(lg(s)){sets++;if(['bb','db','one','mc'].includes(eqOf(L.n||'').eq))vol+=(parseFloat(s.w)||0)*(parseFloat(s.r)||0)}
+  if(lg(s))sets++;
+  if(!seen.has(sl)&&L.d===d&&L.prev){seen.add(sl);const now=recE1({sets:L.sets,m:L.m}),before=recE1(L.prev);if(now&&before&&now>before*1.005)up++}
   const pr=S.get('pr_'+pfx+sl,null);if(pr&&pr.d===d&&pr.was!=null)prs.add(sl)});
- return{sets,vol:Math.round(vol),prs:prs.size};
+ return{sets,up,prs:prs.size};
 }
 /* Weekly volume: planned (programme) vs done (logged sets) per muscle */
 function plannedVol(pfx){
@@ -734,9 +727,9 @@ function planFor(sess,pfx){
   const base=dayType(sess.id,pfx),rd=readiness(pfx),notes=[];let t=base,setAdj=0,loadF=1,rirAdj=0;
   if(isConsol()){setAdj=-1;rirAdj=1;notes.push(CONSOL)}
   const lr=lastRot(pfx),gap=lr?daysAgo(lr.d):0;
-  if(gap>=10&&t==='S'){t='B';notes.push('First session back after '+gap+' days — Build instead of Strength today.')}
-  if(rd.st==='r'){t='P';setAdj=-1;loadF=.9;notes.push('Red readiness → light pump session: weights −10%, 1 set fewer. A walk is a fine swap.')}
-  else if(rd.st==='a'){if(t==='S')t='B';setAdj=-1;loadF=.95;notes.push('Amber readiness → weights −5%, 1 set fewer, finisher off.')}
+  if(gap>=10&&t==='S'){t='B';notes.push('First session back after '+gap+' days — a Build day, not Strength.')}
+  if(rd.st==='r'){t='P';setAdj=-1;loadF=.9;notes.push('Recovery day (from your check-in): light weights, 1 set fewer — or swap it for a walk.')}
+  else if(rd.st==='a'){if(t==='S')t='B';setAdj=-1;loadF=.95;notes.push('Lighter today (from your check-in): weights −5%, 1 set fewer.')}
   return{t,base,setAdj,loadF,rirAdj,notes,rd};
  });
 }
@@ -1014,13 +1007,6 @@ function addWater(n){S.set(waterKey(),Math.max(0,S.get(waterKey(),0)+n));render(
 /* Context (holiday / hot climate) */
 function ctx(){return S.get('ctx',{hol:false,hot:false})}
 function setCtx(k){const c=ctx();c[k]=!c[k];S.set('ctx',c);render()}
-const IDEAS={
- train:['Burrito bowl: rice + 200g chicken + beans + salsa','Salmon, potatoes, greens','Steak, rice, roasted peppers','Pasta + 5% turkey mince ragu','Pre: oats + whey · Post: chicken wrap'],
- rest:['3-egg omelette + big salad','Greek yoghurt bowl: berries, almonds, whey stirred in','Chicken salad, olive oil, skip the starch','Cottage cheese + tuna plate + crackers','Prawn stir-fry, light on noodles'],
- drink:['Before drinks: 50g protein meal — steak or chicken + veg','Out: grills, tapas meats, fish — skip bread basket & dessert','Between: water 1-per-2 drinks','Bed: Greek yoghurt + electrolyte sachet','Morning after: eggs + smoked salmon + fruit + salted avocado toast'],
- hol:['Hotel breakfast: 3 eggs + fruit, walk past the pastries','Buffet rule: first plate all protein + veg, then one fun plate','Lunch: grilled fish/meat + salad, local veg','Bag snacks: biltong, nuts, protein bars from home','One indulgent meal per day — make it dinner, enjoy it fully','12k+ steps = holiday cardio, no gym guilt','Gelato beats hotel dessert buffet — pick the best, skip the rest'],
- hot:['Cold proteins: prawn/chicken salads, poke bowls','Watermelon + feta + salted nuts (fluid + sodium in one)','Whey + frozen berry + milk smoothies','Gazpacho / cold soups','Grilled over fried · salt food more than feels normal']
-};
 const HOTCARD=`<div class="card"><h2>Hot-climate protocol (35–45°C)</h2>
 <table>
 <tr><td>Wake</td><td>500 ml water + electrolyte sachet before anything else</td></tr>
@@ -1081,24 +1067,11 @@ const BURNERFIN=['Bike: 30s hard / 30s easy × 8','Incline walk: 8 min at 12–1
 
 /* ============ STATIC (collapsed) ============ */
 const PROGRESSION=[
- ['Your weights','Every set shows an exact weight. The app keeps an estimated max for each lift from what you actually logged. Hit every target → +2.5% next time. Fall short → it follows what you did. It never jumps more than about 5% in one go, and it rounds to real dumbbells, plates and stacks (set your gym’s steps in More).'],
- ['Heavy and light days','Each muscle gets two sessions a week — one heavier, one lighter. 💪 Strength 6–8 reps, ⚖️ Build 8–12, 🔥 Pump 12–20 with short rests. Mixing loads builds as much muscle as one rep range and more strength (Moesgaard 2022), is easier on joints at 43, and stops it getting boring.'],
- ['During the session','Tap ✓ after each set. If it was easy (3+ reps over target) the next set goes up a step; too hard (under the range) and it comes down. Did more or fewer reps than shown? Type them before ✓ — that’s how the app learns.'],
- ['Smart queue','The app always offers the session you’ve gone longest without. Did legs a day late, or swapped two days? Nothing is skipped — the queue reshuffles. Legs stay 48 h apart and upper/lower alternate on back-to-back days.'],
- ['Time off','Add holidays, illness or busy weeks in More → Time off. Shared time off pauses the programme clock so blocks resume where you stopped; your first session back is automatically lighter.'],
- ['Heart data','Resting HR, HRV, sleep and last night’s drinks set the day: green as planned; amber → weights −5% and 1 set fewer; red → light pump or a walk. Zone 2 and interval heart rates are worked out from your own resting HR.'],
- ['Athletic, not just big','Jumps, throws, sprints, carries, single-leg work and agility run through the week. Power fades faster than strength after 40 (Reid & Fielding 2012) — this keeps you quick, springy and hard to injure. The Athlete check (Data tab) measures it every 6 weeks.'],
- ['Logging','Forgot to tap Finish? With 3+ sets logged the app saves the workout for you the next day. Didn’t log at all? Tap “Already did it” on Today.'],
- ['Volume at 43','About 10–14 hard sets per muscle a week — inside the 10–20 range where growth happens (Schoenfeld 2017), without piling up fatigue.'],
- ['Rep floor','Main lifts never go below 6 reps and always leave 2 in reserve. Growth is similar from 6 to 30 reps when sets are hard (Schoenfeld 2017); near-maximal grinding adds joint and blood-pressure stress for no extra size.'],
- ['Paired sets','Every pair sits at one station — one bench, one cable, one set of dumbbells. Busy gym? More → Paired exercises → Straight sets.']];
-const VERSIONS=[
- ['30-minute gym','<p class="small">Main lift as prescribed → first two accessories as a superset ×3 → abs → done. Skip isolation + finisher.</p>'],
- ['Hotel / holiday','<p class="small">Add the trip in More → Time off: hotel gym → Full-Body A/B; no gym → room circuit. Maintenance is a win.</p>'],
- ['Bodyweight-only','<p class="small">5 rounds: 10 tempo push-ups · 15 squats · 10/leg split squats · 10 table rows or 15 prone Y-raises · 30s plank. ~25 min.</p>'],
- ['Only 20 minutes','<p class="small">Giant circuit ×4, 60s rest: DB press ×8 · DB row ×10/side · goblet squat ×12 · DB RDL ×12 · 30s plank.</p>'],
- ['Busy gym','<p class="small">Every slot has machine/cable/DB options (🔀). Nuclear: one bench + one pair of DBs, whole session there. Main lift first, accessory order free.</p>']];
-
+ ['Weights','Every set shows an exact weight. Hit all your reps → it goes up a small step next time; fall short → it follows what you did.'],
+ ['Heavy & light days','Each muscle gets one heavier and one lighter session a week: 💪 Strength 6–8 reps · ⚖️ Build 8–12 · 🔥 Pump 12–20.'],
+ ['Did more or fewer reps?','Type them before ✓ — that’s how the app learns. An easy set raises the next one.'],
+ ['Missed or swapped a day','Nothing is skipped: the session you’ve gone longest without is always next.'],
+ ['Morning check-in','Three taps. A rough morning (or drinks last night) makes the session lighter automatically.']];
 /* ============ YOUR DAY — supplements, herbs & teas, anchored to wake time ============ */
 function dayPlan(pfx){
  const w=cfg().wake||'07:30',[h,m]=w.split(':').map(Number);
@@ -1140,8 +1113,7 @@ const BENCH=[
  {k:'hang',n:'Dead hang',u:'sec',hi:1,how:'Hang from the pull-up bar, arms straight, until your grip goes.',why:'Grip strength tracks long-term health (Leong 2015).',g:[[45,75],[30,50]]},
  {k:'push',n:'Push-ups',u:'reps',hi:1,how:'Strict: body straight, chest to a fist’s height, no rest at the top.',why:'Men who managed 40+ had far fewer heart events than those under 10 (Yang 2019).',g:[[20,35],[10,20]]},
  {k:'bal',n:'One-leg stand, eyes closed',u:'sec',hi:1,how:'Hands on hips, one foot up, close your eyes; stop when you wobble off. Worse leg counts.',why:'Balance — failing a 10-second one-leg stand in mid-life is linked to higher mortality (Araujo 2022).',g:[[10,20],[10,20]]},
- {k:'sit',n:'Sit-to-rise',u:'/10',hi:1,how:'Sit cross-legged on the floor and stand without using your hands. Start at 10: −1 for each hand, knee or forearm used, −0.5 for a wobble.',why:'Strength + mobility — the score predicted survival in over-50s (Brito 2012).',g:[[8,10],[8,10]]},
- {k:'vo2',n:'VO₂ max (Watch)',u:'',hi:1,how:'Health app → Heart → Cardio Fitness. Needs outdoor walks or runs with the Watch.',why:'One of the strongest predictors of a long life (Mandsager 2018).',g:[[38,45],[30,36]]}];
+ {k:'sit',n:'Sit-to-rise',u:'/10',hi:1,how:'Sit cross-legged on the floor and stand without using your hands. Start at 10: −1 for each hand, knee or forearm used, −0.5 for a wobble.',why:'Strength + mobility — the score predicted survival in over-50s (Brito 2012).',g:[[8,10],[8,10]]}];
 
 const EDGE=`
 <details class="card" style="display:block"><summary>Supplement evidence — keep, maybe, skip</summary>
@@ -1165,9 +1137,6 @@ const EDGE=`
 <tr><td>Flat + low mood wk 2 post-injection</td><td>TRT trough → log, discuss interval</td></tr>
 <tr><td>2+ wks tired despite sleep</td><td>Consolidation week + GP bloods</td></tr></table>
 <p class="small">Yearly: testosterone (total/free, timed) · oestradiol · haematocrit · PSA · GGT/ALT · lipids · HbA1c · ferritin · D · TSH · hs-CRP.</p></details>`;
-const ROADMAP=[['1','Build days: the app calibrates every weight from your logs'],['2–3','Build + Pump days, nail tempo'],['4','Consolidation + waist and photo check'],['5–7','Strength + Build days: heavier 6–8s, first 4×4 intervals'],['8','Consolidation + Athlete check'],['9–11','Strength + Pump wave, burner finishers, tightest food weeks'],['12','Consolidation + full reassessment; new exercises next cycle']];
-const HEALTHDATA=[['Resting HR','+5 over your normal → amber; +8 → counts double'],['HRV','≤80% of normal → amber; ≤70% counts double'],['Sleep','<6.5 h → amber; <5.5 h counts double'],['Energy','≤2/5 → amber'],['Drinks last night','~6+ units logged → amber (weights −5%)'],['VO₂ max','Low/average → 2× Zone 2 + one 4×4 a week'],['Steps','8–10k floor (10–12k when cutting)'],['Weight','Mon & Thu mornings only — weekend readings are noise']];
-const WHATSNEW=['Exact weights for every set, for both of you — heavier Strength days, lighter Pump days, small real steps','Each set steers the next: easy → up, too hard → down','Time off planner: holidays, illness, busy weeks — the plan pauses and eases you back in','Heart data sets the day (resting HR, HRV, sleep, last night’s drinks) + personal heart-rate zones','Athletic work every week, an Athletic session and an Athlete check every 6 weeks','Belly plan: daily habits, burners that work, herbs & teas through the day, food swaps','Coach card on Today: what to do next, before you have to ask'];
 /* ============ COACH — proactive nudges, most important first ============ */
 function benchAll(pfx){return S.get((pfx??P())+'bench',{})}
 function benchLast(pfx){let d=null;Object.values(benchAll(pfx)).forEach(a=>a.forEach(x=>{if(!d||x.d>d)d=x.d}));return d}
@@ -1186,8 +1155,6 @@ function coachItems(){
   }
   const lr=lastRot(pfx);
   if(!off&&lr&&daysAgo(lr.d)>=10)add(85,'👋',`Welcome back — ${daysAgo(lr.d)} days since your last session. Weights are already eased off and today is a Build day.`);
-  if(rd.st==='r')add(80,'🟥','Recovery day: '+rd.reasons.join(' · ')+'. Light pump session or a walk — the app has already cut the weights.');
-  else if(rd.st==='a')add(80,'🟧','Lighter day: '+rd.reasons.join(' · ')+'. Weights −5% and 1 set fewer — already applied.');
   if(!off){
    const left=7-((dow+6)%7);
    if(wk>=4)add(30,'✅','4 sessions done this week. Rest, walk, or do the Athletic extra.',['Athletic',`openSess('${prof==='her'?'hath':'ath'}')`]);
@@ -1195,25 +1162,21 @@ function coachItems(){
   }
   const m=metrics(pfx)[tk]||{};
   if((dow===1||dow===4)&&m.wt==null&&hr<15)add(70,'⚖️','Weigh-in morning: after the loo, before food or drink.',['Log it',`go('data')`]);
-  const lw=lastMetric('waist',pfx);if(!lw||daysAgo(lw.d)>=7)add(55,'📏','Waist check due — tape at the navel, relaxed, after breathing out. It’s the number that shows belly fat going.',['Log it',`go('data')`]);
-  if(alcYesterday(pfx)>=450&&hr<15)add(68,'💧','Morning after: 500 ml water + electrolytes, eggs, then move — Zone 2 or the lighter session beats the sofa.');
-  if((dow===5||dow===6)&&hr>=12)add(50,'🍷','Drinks tonight? Eat 40–50 g protein before the first glass, water between drinks, electrolytes at bed. Light lager or spirit + diet mixer saves ~100 kcal a drink.');
+  const lw=lastMetric('waist',pfx);if(!lw||daysAgo(lw.d)>=7)add(55,'📏','Waist check due — tape at the navel, relaxed.',['Log it',`go('data')`]);
+  if(alcYesterday(pfx)>=450&&hr<15)add(68,'💧','Morning after: water + electrolytes, eggs, then move — today’s session is already lighter.');
+  if((dow===5||dow===6)&&hr>=12)add(50,'🍷','Drinks tonight? 40–50 g protein first, water between drinks.');
   if(hr>=16){const day=fday(tk),t=targets(day.type),pr=day.items.reduce((a,i)=>a+(i.p||0),0);if(day.items.length&&pr<t.p*0.7)add(65,'🥩',`${t.p-pr} g protein still to go — a kwark bowl (+48 g) or chicken wrap (+40 g) tonight.`,['Food',`go('food')`])}
-  if(hr>=17&&m.steps!=null&&m.steps<stepGoal())add(60,'👣',`${Math.round(m.steps).toLocaleString()} steps so far — a 20-minute walk after dinner adds ~2,500 and blunts the blood-sugar spike.`,['Log a walk',`quickCardio('Walk after a meal',20)`]);
   const stl=exLog(pfx).slice(0,15).find(([sl,o])=>o.n&&stalled(o.n,pfx));
   if(stl)add(45,'📉',`${stl[1].n} hasn’t moved in 3 sessions. Plateaus are normal — check sleep and protein first, or 🔀 swap it for a fresh variation next block.`);
   if(dow===0&&weekNum(addDays(tk,1))%4===0)add(35,'🧘','Next week is a consolidation week — lighter on purpose. It’s when the gains settle in.');
-  if(pfx==='her_'&&!lastMetric('rhr','her_',7))add(58,'⌚','Connect Clare’s Apple Watch so her sessions adapt to her heart data too.',['Set up',`go('data')`]);
-  const bl=benchLast(pfx);if(!bl||daysAgo(bl)>=42)add(42,'🏅','Athlete check due — 10 minutes: broad jump, dead hang, push-ups, one-leg balance. Shows whether you’re getting more athletic, not just bigger.',['Open',`go('data')`]);
-  const lb=S.get('lastBk','');if(hist().length>3&&(!lb||daysAgo(lb)>=7))add(20,'💾','Weekly backup: copy your data into Notes — it protects both profiles.',['Back up',`go('more')`]);
+  const bl=benchLast(pfx);if(!bl||daysAgo(bl)>=42)add(42,'🏅','Athlete check due (10 min) — shows you’re getting more athletic, not just bigger.',['Open',`go('data')`]);
+  const lb=S.get('lastBk','');if(hist().length>3&&(!lb||daysAgo(lb)>=7))add(20,'💾','Weekly backup: save a backup file — it protects both of you if this phone’s copy is ever lost.',['Back up',`backupFile()`]);
   return out.sort((a,b)=>b.p-a.p);
  });
 }
 function coachCard(){
- const it=coachItems();if(!it.length)return '';
- const row=x=>`<div class="ci"><span class="cic">${x.ic}</span><span class="small" style="flex:1">${x.t}</span>${x.act?`<button class="btn2 sm" onclick="${x.act[1]}">${esc(x.act[0])}</button>`:''}</div>`;
- return `<div class="card coach"><div class="eyebrow" style="margin-bottom:4px">Coach</div>${it.slice(0,3).map(row).join('')}
- ${it.length>3?`<details style="margin:0"><summary class="small dim">${it.length-3} more</summary>${it.slice(3).map(row).join('')}</details>`:''}</div>`;
+ const it=coachItems().slice(0,2);if(!it.length)return '';
+ return `<div class="card coach">${it.map(x=>`<div class="ci"><span class="cic">${x.ic}</span><span class="small" style="flex:1">${x.t}</span>${x.act?`<button class="btn2 sm" onclick="${x.act[1]}">${esc(x.act[0])}</button>`:''}</div>`).join('')}</div>`;
 }
 /* ============ RENDER ============ */
 const NAVS=[['today','☀️','Today'],['train','🏋️','Train'],['home','🏠','Home'],['food','🍳','Food'],['data','📈','Body'],['more','⚙️','More']];
@@ -1228,21 +1191,30 @@ function toggleInfo(uid){const b=el('info_'+uid);if(!b)return;b.classList.toggle
 function copyText(t){try{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Copied ✓')}catch(e){prompt('Copy this:',t)}}
 async function shareText(t){try{if(navigator.share){await navigator.share({text:t});return}}catch(e){return}copyText(t)}
 const restTxt=s=>s>=120?(s%60?(s/60).toFixed(1).replace('.0',''):s/60)+' min':s+'s';
-function isHol(){const o=offOn(todayKey());return ctx().hol||(!!o&&o.type==='holiday')}
+function isHol(){const o=offOn(todayKey());return !!o&&o.type==='holiday'}
 
 /* ---- TODAY ---- */
-function setReady(k,v){let r=S.get(P()+'ready',null);if(!r||r.d!==todayKey())r={d:todayKey()};r[k]=v;S.set(P()+'ready',r);render()}
-function manualReadyChips(){
+function setReady(k,v){let r=S.get(P()+'ready',null);if(!r||r.d!==todayKey())r={d:todayKey()};r[k]=v;S.set(P()+'ready',r);MEMO={};render()}
+function redoCheck(){S.set(P()+'ready',null);MEMO={};render()}
+/* The morning check-in IS the feedback loop: the answer changes today's weights straight away */
+function checkCard(){
+ const ci=checkin(),rd=readiness();
+ if(ci){const fx={g:'Full session — go for the targets',a:'Lighter today: weights −5%, 1 set fewer',r:'Recovery: light pump session or a walk'}[rd.st]||'';
+  return `<div class="card ck"><span class="dot ${rd.st}"></span><span class="small" style="flex:1"><b>${fx}</b>${rd.reasons.length?` <span class="dim">· ${rd.reasons.join(', ')}</span>`:''}</span><button class="linkbtn" onclick="redoCheck()">Redo</button></div>`}
  let r=S.get(P()+'ready',null);if(!r||r.d!==todayKey())r={};
- const q=(k,label,opts)=>`<div style="margin:4px 0"><span class="dim small">${label}</span><br>${opts.map((o,i)=>`<span class="chip ${r[k]===i?'on':''}" onclick="setReady('${k}',${i})">${o}</span>`).join('')}</div>`;
- return q('s','Sleep',['<6h','6–7h','7h+'])+q('e','Energy',['Flat','OK','Good'])+q('m','Soreness',['Rough','Some','Fresh']);
+ const q=(k,label,opts)=>`<div class="ckrow"><span class="dim small">${label}</span><div>${opts.map((o,i)=>`<span class="chip ${r[k]===i?'on':''}" onclick="setReady('${k}',${i})">${o}</span>`).join('')}</div></div>`;
+ return `<div class="card"><h2>Morning check-in</h2>${q('s','Sleep',['<6h','6–7h','7h+'])}${q('e','Energy',['Flat','OK','Good'])}${q('m','Body',['Sore','Bit stiff','Fresh'])}
+ ${rd.reasons.includes('drinks last night')?'<p class="dim small" style="margin-top:4px">Drinks logged last night — today is already a little lighter.</p>':''}</div>`;
 }
-function dayCard(){
- const w=cfg().wake||'07:30';
- return `<details class="card" style="display:block"><summary>🌿 Your day — supplements, herbs & teas (wake ${w})</summary>
- <div style="margin:6px 0"><label>Today's wake time</label><input type="time" value="${w}" onchange="setCfg('wake',this.value)" style="max-width:130px"></div>
- <div class="tl">${dayPlan().map(x=>`<div><b>${x[0]}</b> — ${x[1]}</div>`).join('')}</div>
- <p class="dim small">${HERB_AVOID}</p></details>`;
+/* Average change in estimated max across your lifts over the last 6 weeks */
+function strengthTrend(pfx){
+ pfx=pfx??P();
+ return memo('st|'+pfx,()=>{const cut=offDate(42),ch=[];
+  exLog(pfx).forEach(([sl,o])=>{if(!o.n||!EQ[o.n]||!['bb','db','one','mc'].includes(EQ[o.n][0]))return;
+   const recs=[];if(o.sets.some(lg))recs.push({d:o.d,sets:o.sets,m:o.m});S.get('slh_'+pfx+sl,[]).forEach(h=>{if(!recs.some(x=>x.d===h.d))recs.push(h)});
+   const w=recs.filter(x=>x.d>=cut).sort((a,b)=>a.d<b.d?-1:1);if(w.length<2)return;
+   const a=recE1(w[0]),b=recE1(w[w.length-1]);if(a&&b)ch.push(b/a-1)});
+  if(ch.length<3)return null;ch.sort((a,b)=>a-b);return{pct:Math.round(ch[Math.floor(ch.length/2)]*100),n:ch.length}});
 }
 function weekCard(){
  const ds=weekDates(),tk=todayKey(),hb=S.get('hist',[]),hc=S.get('her_hist',[]),cl=S.get('clog',[]).concat(S.get('her_clog',[]));
@@ -1251,37 +1223,38 @@ function weekCard(){
   const b=hb.some(x=>x.d===d&&isS(x,ROT)),c=hc.some(x=>x.d===d&&isS(x,ROT_HER)),
    o=hb.concat(hc).some(x=>x.d===d&&!isS(x,ROT)&&!isS(x,ROT_HER))||cl.some(x=>x.d===d),off=offOn(d);
   return `<div class="d${d===tk?' today':''}${d>tk?' fut':''}">${dayName(d)}<div class="dots">${off&&!b&&!c?`<span style="font-size:9px;line-height:8px">${OFFTYPES[off.type].ic}</span>`:''}${b?'<i style="background:#38bdf8"></i>':''}${c?'<i style="background:#f472b6"></i>':''}${o?'<i style="background:#4ade80"></i>':''}</div></div>`}).join('');
- const mine=weekSessions(),aer=weekCardio(),alc=weekAlc();
- const mon=ds[0],wk4=[3,2,1,0].map(off=>{const a=addDays(mon,-7*off),b=addDays(a,7);return hist().filter(x=>x.d>=a&&x.d<b&&(myRot().includes(x.id)||x.id==='fbA'||x.id==='fbB')).length});
- return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline"><h2 style="margin:0">This week</h2><span class="dim small">last 4 wks: ${wk4.join(' · ')}</span></div>
- <div class="wk" style="margin-top:10px">${strip}</div>
- <div class="legend"><span><i style="background:#38bdf8"></i>Brian ${weekSessions('')}/4</span><span><i style="background:#f472b6"></i>Clare ${weekSessions('her_')}/4</span><span><i style="background:#4ade80"></i>Cardio / home</span></div>
- <div class="small" style="margin-top:10px">Lifting <b>${mine}/4</b></div><div class="bar"><i style="width:${Math.min(100,mine*25)}%"></i></div>
- <div class="small" style="margin-top:8px">Aerobic — Zone 2, intervals, walks <b>${aer}/150 min</b></div><div class="bar"><i style="width:${Math.min(100,Math.round(aer/1.5))}%"></i></div>
- <p class="dim small" style="margin-top:8px">Belly habits today: <b style="color:var(--txt)">${habScore(tk)}/6</b> · Alcohol so far: <b style="color:${alc>1500?'var(--red)':alc>700?'var(--amb)':'var(--grn)'}">${alc} kcal</b></p></div>`;
+ const tr=strengthTrend();
+ return `<div class="card"><div class="wk">${strip}</div>
+ <p class="small" style="margin-top:10px">Lifting <b>${weekSessions()}/4</b> · Cardio <b>${weekCardio()}</b>/150 min${tr?` · Strength <b style="color:${tr.pct>=0?'var(--grn)':'var(--amb)'}">${tr.pct>0?'+':''}${tr.pct}%</b> <span class="dim">(6 wks)</span>`:''}</p>
+ <div class="legend"><span><i style="background:#38bdf8"></i>Brian</span><span><i style="background:#f472b6"></i>Clare</span><span><i style="background:#4ade80"></i>cardio / home</span></div></div>`;
 }
 function setPast(n,btn){pastOff=n;btn.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c===btn))}
-function endOff(id){const l=offList(),o=l.find(x=>x.id===id);if(!o)return;const y=offDate(1);if(o.from>y)S.set('off',l.filter(x=>x.id!==id));else{o.to=y;S.set('off',l)}toast('Welcome back — time off ended');render()}
+function endOff(id){const l=offList(),o=l.find(x=>x.id===id);if(!o)return;const y=offDate(1);if(o.from>y)S.set('off',l.filter(x=>x.id!==id));else{o.to=y;S.set('off',l)}MEMO={};toast('Welcome back — time off ended');render()}
 function offHero(off){
  const ic=OFFTYPES[off.type].ic;
  if(off.type==='holiday')return `<div class="card hero" style="border-color:var(--amb)"><div class="eyebrow" style="color:var(--amb)">${ic} Holiday until ${fmtD(off.to)}</div>
-  <div class="big">Enjoy it — keep it ticking over</div>
-  <p class="small">Programme paused, nothing counts as missed. 2–3 short sessions a week + 8k steps a day keeps everything you’ve built.</p>
-  ${off.gym!==false?`<button class="btn" onclick="openSess('${holNext()}')">Hotel gym → ${holNext()==='fbA'?'Full-Body A':'Full-Body B'} · 45 min</button><div style="height:8px"></div>`:''}
-  <button class="btn2" style="width:100%" onclick="logHoliday()">No gym → 25-min room circuit done ✓</button>
-  <p class="dim small" style="margin-top:8px">Room circuit: 5 rounds — 10 slow push-ups · 15 squats · 10/leg split squats · 10 table rows or Y-raises · 30s plank. Food: protein first at every buffet, one indulgent meal a day, water between drinks.</p>
-  <button class="linkbtn" onclick="endOff(${off.id})">I’m back early → end time off</button></div>`;
+  <div class="big">Keep it ticking over</div>
+  ${off.gym!==false?`<button class="btn" onclick="openSess('${holNext()}')">Hotel gym → ${holNext()==='fbA'?'Full-Body A':'Full-Body B'}</button><div style="height:8px"></div>`:''}
+  <button class="btn2" style="width:100%" onclick="logHoliday()">No gym → room circuit done ✓</button>
+  <p class="dim small" style="margin-top:8px">Room circuit: 5 rounds — 10 push-ups · 15 squats · 10/leg split squats · 30s plank. Plus 8k steps a day.</p>
+  <button class="linkbtn" onclick="endOff(${off.id})">Back early? End time off</button></div>`;
  if(off.type==='sick')return `<div class="card hero"><div class="eyebrow" style="color:var(--red)">${ic} Recovering until ${fmtD(off.to)}</div>
   <div class="big">Rest is the training today</div>
-  <p class="small">The neck rule: symptoms only above the neck (runny nose, sore throat)? A 20–30 min easy walk is fine. Fever, chest, stomach or aching body → full rest. Eat protein, drink plenty, sleep.</p>
+  <p class="small">Head cold only? A 20-minute walk is fine. Fever, chest or aching body → full rest.</p>
   <button class="btn2" style="width:100%" onclick="endOff(${off.id})">Feeling better → end time off</button></div>`;
- return `<div class="card hero"><div class="eyebrow">${ic} Busy until ${fmtD(off.to)}</div><div class="big">Minimum dose keeps the habit</div>
-  <p class="small">20 minutes of anything beats nothing — a home session, a brisk walk or the gym if a window opens.</p>
-  <div class="row"><button class="btn2" onclick="go('home')">🏠 Home options</button><button class="btn2" onclick="openSess('${nextSession().id}')">Gym anyway</button></div>
+ return `<div class="card hero"><div class="eyebrow">${ic} Busy until ${fmtD(off.to)}</div><div class="big">20 minutes keeps the habit</div>
+  <div class="row" style="margin-top:8px"><button class="btn2" onclick="go('home')">🏠 Home options</button><button class="btn2" onclick="openSess('${nextSession().id}')">Gym anyway</button></div>
   <button class="linkbtn" style="margin-top:8px" onclick="endOff(${off.id})">End time off</button></div>`;
 }
+/* No history on this phone/browser copy → most likely the data lives in the other copy (Home-Screen icon vs browser) */
+function freshCard(){
+ if(S.get('hist',[]).length||S.get('her_hist',[]).length||S.get('freshOk',false))return '';
+ return `<div class="card" style="border-color:var(--amb)"><h2>No history here yet</h2>
+ <p class="small">Used the app before? Your data is almost certainly in the other copy — the Home-Screen icon, Safari and Chrome each keep their own. Open the app the way you used to → More → <b>Save backup file</b>, then here: More → <b>Restore from file</b>.</p>
+ <div class="row" style="margin-top:8px"><button class="btn2" onclick="go('more')">Restore a backup</button><button class="btn2" onclick="S.set('freshOk',true);render()">I’m starting fresh</button></div></div>`;
+}
 function todayView(){
- const pfx=P(),tk=todayKey(),nx=nextSession(),nxS=sessOf(nx.id),plan=planFor(nxS,pfx),dt=DAYTYPE[plan.t],rd=plan.rd,b=BLOCKS[curBlock()],wk=weekNum(),off=offOn(tk,pfx);
+ const pfx=P(),tk=todayKey(),off=offOn(tk,pfx),nx=nextSession(),nxS=sessOf(nx.id),plan=planFor(nxS,pfx),dt=DAYTYPE[plan.t];
  const newCycle=cfg().start&&cycleNum()>1&&progDays()%84<7;
  const jd=S.get(pfx+'jd',null),done=rotDoneToday();
  const doneId=done?((jd&&jd.d===tk&&hasHist(jd.sid,pfx,tk))?jd.sid:done.id):null;
@@ -1291,53 +1264,31 @@ function todayView(){
   const st=sessStats(doneId,pfx,tk),ds=sessOf(doneId);
   hero=`<div class="card donecard pop"><div class="eyebrow" style="color:var(--grn)">Workout complete ✓</div>
   <div class="big">${esc(ds?ds.title:shortT(doneId))}</div>
-  ${st.sets?`<div class="stats"><div class="stat"><b>${st.sets}</b><span>sets</span></div><div class="stat"><b>${st.vol>=1000?(st.vol/1000).toFixed(1)+' t':st.vol+' kg'}</b><span>lifted</span></div><div class="stat"><b>${st.prs}</b><span>new bests</span></div></div>`:'<p class="small dim" style="margin:8px 0">Saved without set details — the queue still moves on.</p>'}
-  <p class="small">Next: <b>${esc(shortT(nx.id))}</b> — tomorrow or later. Today: walk, stretch, hit your protein.</p>
+  ${st.sets?`<div class="stats"><div class="stat"><b>${st.sets}</b><span>sets</span></div><div class="stat"><b>${st.up}</b><span>lifts up</span></div><div class="stat"><b>${st.prs}</b><span>new bests</span></div></div>`:''}
+  <p class="small">Next: <b>${esc(shortT(nx.id))}</b>, tomorrow or later.</p>
   <div class="row" style="margin-top:10px"><button class="btn2" onclick="openSess('${doneId}')">View sets</button><button class="btn2" onclick="undoDone('${doneId}')">Undo</button></div></div>`;
  }else if(prog){
   const ps=sessOf(prog);
-  hero=`<div class="card hero"><div class="eyebrow" style="color:var(--amb)">In progress</div><div class="big">${esc(ps.title)}</div>
-  <p class="small">${actCount(prog)} sets logged so far today.</p>
-  <button class="btn" style="margin-top:6px" onclick="openSess('${prog}')">Resume workout →</button>
-  <div style="height:8px"></div><button class="btn2" style="width:100%" onclick="finishSession('${prog}',0)">✓ Finished — save it</button>
-  <p class="dim small" style="margin-top:8px">Forget to tap Finish? With 3+ sets logged the app saves it for you tomorrow.</p></div>`;
+  hero=`<div class="card hero"><div class="eyebrow" style="color:var(--amb)">In progress · ${actCount(prog)} sets logged</div><div class="big">${esc(ps.title)}</div>
+  <button class="btn" style="margin-top:6px" onclick="openSess('${prog}')">Resume →</button>
+  <div style="height:8px"></div><button class="btn2" style="width:100%" onclick="finishSession('${prog}',0)">✓ Finished — save it</button></div>`;
  }else if(off){hero=offHero(off)}
  else{
-  hero=`<div class="card hero"><div class="eyebrow">${dt.ic} ${dt.n} · ≈ ${estMin(nxS,pfx)} min</div>
+  hero=`<div class="card hero"><div class="eyebrow">${dt.ic} ${dt.n} · ≈ ${estMin(nxS,pfx)} min${isConsol()?' · light week':''}</div>
   <div class="big">${esc(nxS.title)}</div>
-  <div class="mchips">${(nxS.focus||'').split(' · ').map(x=>`<span>${x}</span>`).join('')}</div>
-  <p class="small dim" style="margin-top:10px">${dt.d}${plan.t!==plan.base?' <span style="color:var(--amb)">(adjusted from '+DAYTYPE[plan.base].n+' — see Coach)</span>':''}</p>
-  ${nx.note?`<p class="small" style="color:var(--amb);margin-top:8px">${nx.note}</p>`:''}
-  <p class="small" style="margin-top:8px">🔥 Warm-up: ${esc(myWarm())}, then the session prep.</p>
-  <button class="btn ${prof==='her'?'pinkbg':''}" style="margin-top:12px" onclick="openSess('${nx.id}')">Start workout →</button>
-  <div class="row" style="margin-top:8px"><button class="btn2" onclick="logSessionOn('${nx.id}',todayKey())">✓ Already did it</button><button class="btn2" onclick="showSwap=!showSwap;render()">⇄ Do another</button></div>
-  ${showSwap?`<div class="qlist" style="margin-top:10px">${nx.q.map((id,i)=>`<div class="qi"><span class="qn">${i+1}</span><span style="flex:1"><b class="small">${esc(sessOf(id).title)}</b> <span class="dim small">${DAYTYPE[planFor(sessOf(id),pfx).t].ic}</span>${i===0?' <span class="badge">suggested</span>':''}</span><button class="btn2" style="flex:none" onclick="openSess('${id}')">Start</button></div>`).join('')}
-   <div class="row" style="margin-top:8px"><button class="btn2" onclick="go('home')">🏠 Home</button><button class="btn2" onclick="openSess('${prof==='her'?'heng':'eng'}')">🫀 Engine</button><button class="btn2" onclick="openSess('${prof==='her'?'hath':'ath'}')">⚡ Athletic</button></div>
-   <p class="dim small" style="margin-top:8px">Pick anything — nothing gets skipped. Whatever you don’t do today moves to the front of the queue.</p></div>`
-  :`<p class="dim small" style="margin-top:10px">Then: ${nx.q.slice(1).map(id=>esc(shortT(id))).join(' → ')}</p>`}</div>`;
+  ${nx.note?`<p class="small" style="color:var(--amb)">${nx.note}</p>`:''}
+  <button class="btn ${prof==='her'?'pinkbg':''}" style="margin-top:10px" onclick="openSess('${nx.id}')">Start →</button>
+  <div class="row" style="margin-top:8px"><button class="btn2" onclick="logSessionOn('${nx.id}',todayKey())">✓ Already did it</button><button class="btn2" onclick="showSwap=!showSwap;render()">⇄ Different session</button></div>
+  ${showSwap?`<div class="qlist" style="margin-top:10px">${nx.q.slice(1).concat([prof==='her'?'hath':'ath',prof==='her'?'heng':'eng']).map(id=>`<div class="qi"><span style="flex:1"><b class="small">${esc(sessOf(id).title)}</b></span><button class="btn2 sm" onclick="openSess('${id}')">Start</button></div>`).join('')}
+   <div class="qi"><span style="flex:1"><b class="small">Can’t get to the gym</b></span><button class="btn2 sm" onclick="go('home')">Home</button></div></div>`:''}</div>`;
  }
- const wn=S.get('seenV','')!==VERSION;
  return `
- ${wn?`<div class="card" style="border-color:var(--acc)"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">New in v${VERSION}</h2><button class="btn2 sm" onclick="S.set('seenV',VERSION);render()">Got it</button></div><ul class="small" style="margin-top:8px">${WHATSNEW.map(x=>`<li>${x}</li>`).join('')}</ul></div>`:''}
- ${S.get('autoStart','')?`<div class="banner n" onclick="S.set('autoStart','');render()">📅 Programme start set automatically to Mon ${S.get('autoStart','').slice(5)} (your first logged week). Change it in More · tap to dismiss</div>`:''}
- ${newCycle?`<div class="banner g"><b>New 12-week cycle #${cycleNum()}.</b> Every exercise slot has rotated to a fresh movement and this week is a Build week — the weights already know.</div>`:''}
+ ${freshCard()}
+ ${newCycle?`<div class="banner g">New 12-week cycle #${cycleNum()} — fresh exercises, Build week first.</div>`:''}
+ ${off||doneId?'':checkCard()}
  ${hero}
  ${coachCard()}
- ${off&&off.type==='sick'?'':`<div class="banner ${rd.st}"><b>${READLINE[rd.st]}</b> <span class="small dim">${rd.reasons.join(' · ')}</span></div>
- ${rd.st==='n'?`<div class="card"><h2>Morning check-in</h2><p class="dim small">Three taps and today’s session adapts — or sync your Watch (Body tab).</p>${manualReadyChips()}</div>`
- :`<details class="card" style="display:block"><summary>Morning check-in · adjust</summary>${manualReadyChips()}</details>`}`}
- ${isConsol()?`<div class="banner n"><b>Week ${wk} = consolidation.</b> ${CONSOL}</div>`:''}
- ${weekCard()}
- ${(()=>{const pc=progressCard();return pc.includes('banner a')?pc:''})()}
- <div class="card"><span class="chip on">${cycleNum()>1?'Cy'+cycleNum()+' · ':''}Wk ${wk} · ${b.name}</span><span class="chip" onclick="go('more');setTimeout(()=>{const e=el('offCard');if(e)e.scrollIntoView({block:'start'})},50)">🧳 Plan time off</span><span class="chip ${ctx().hol?'on':''}" onclick="setCtx('hol')">✈️ Holiday mode</span>${(metrics()[tk]||{}).steps?`<span class="chip">👣 ${metrics()[tk].steps}</span>`:''}${(metrics()[tk]||{}).move?`<span class="chip">🔥 ${metrics()[tk].move} kcal</span>`:''}
- <span class="chip">${targets(fday(tk).type).p} g protein</span><span class="chip">${(stepGoal()/1000)}k+ steps</span>
- <p class="dim small" style="margin-top:6px">${b.goal}</p></div>
- ${dayCard()}
- <details class="card" style="display:block"><summary>Log a workout from another day</summary>
-  <p class="dim small">Trained but didn’t use the app? Pick the day, then the session.</p>
-  <div>${[[0,'Today'],[1,'Yesterday'],[2,'2 days ago'],[3,'3 days ago']].map(([n,l])=>`<span class="chip ${pastOff===n?'on':''}" onclick="setPast(${n},this)">${l}</span>`).join('')}</div>
-  <div class="row" style="margin-top:8px">${mySessions().map(s=>`<button class="btn2" onclick="logSessionOn('${s.id}',offDate(pastOff))">✓ ${esc(s.short||s.title.split(' —')[0])}</button>`).join('')}</div>
- </details>`;
+ ${weekCard()}`;
 }
 
 /* ---- TRAIN ---- */
@@ -1389,15 +1340,14 @@ function exCard(sess,ex,i,pfx){
   else if(p.kind==='t')head=`${p.sets} × ${p.tr} s${p.w?' @ '+kg(p.w)+' kg/hand':''}`;
   else if(p.kind==='pwr')head=`${p.sets} × ${p.lo}–${p.hi} explosive`;
   else head=ex.n>1?`${ex.n} rounds`:'1 block';
-  const sub=p.kind==='pwr'?(p.tip||'Speed is the goal, not tiredness'):p.kind==='drill'?(ex.hr?(()=>{const z=hrZones(pfx);return 'Zone 2: '+z.z2[0]+'–'+z.z2[1]+' bpm · hard intervals: '+z.z4[0]+'–'+z.z4[1]+' bpm'})():''):`range ${p.lo}–${p.hi}${p.sec?' s':''}${p.rir!=null?' · '+p.rir+' in reserve':''} · rest ${restTxt(rest||p.rest)}`;
+  const sub=p.kind==='pwr'?(p.tip||'Speed is the goal, not tiredness'):p.kind==='drill'?(ex.hr?(()=>{const z=hrZones(pfx);return 'Zone 2: '+z.z2[0]+'–'+z.z2[1]+' bpm · hard intervals: '+z.z4[0]+'–'+z.z4[1]+' bpm'})():''):`range ${p.lo}–${p.hi}${p.sec?' s':''} · rest ${restTxt(rest||p.rest)}${p.first?' · first time — adjust after set 1':''}`;
   const ww=whyWeight(p,pfx);if(ww)infoW+=`<p><b>${paired?esc(pt)+' — w':'W'}hy this ${p.kind==='load'?'weight':'target'}:</b> ${ww}</p>`;
   const rec=lastRecord(pt,pfx),pr=S.get('pr_'+pfx+slug(pt),null);
   const extras=[];
-  if(p.kind==='load'&&p.first)extras.push('🧪 Starting estimate — set 1 tells the app if it’s right');
-  if(p.kind==='load'&&ex.t==='main'&&p.w>=4*p.step)extras.push('Warm-up sets: '+kg(rTo(p.w*.5,p.step))+'×8 → '+kg(rTo(p.w*.7,p.step))+'×5 → '+kg(rTo(p.w*.85,p.step))+'×3');
+  if(p.kind==='load'&&ex.t==='main'&&p.w>=4*p.step)extras.push('Warm-up: '+kg(rTo(p.w*.5,p.step))+'×8 → '+kg(rTo(p.w*.7,p.step))+'×5 → '+kg(rTo(p.w*.85,p.step))+'×3');
   if(p.kind==='load'){const pl=platesTxt(pt,p.w);if(pl)extras.push(pl)}
   if(rec&&p.kind!=='drill'&&p.kind!=='pwr')extras.push('Last ('+fmtD(rec.d)+'): '+rec.sets.filter(lg).map(s=>(s.w?kg(s.w):'bw')+'×'+(s.r||'✓')).join(' · '));
-  if(pr&&pr.w&&p.kind==='load')extras.push('🏆 Best '+pr.w+' kg × '+pr.r+(pr.d===todayKey()&&pr.was!=null?' — <b style="color:var(--grn)">new best today!</b>':''));
+  if(pr&&pr.w&&p.kind==='load'&&pr.d===todayKey()&&pr.was!=null)extras.push('<b style="color:var(--grn)">🏆 New best today: '+pr.w+' kg × '+pr.r+'</b>');
   const rowsHTML=rows.map((rw,si)=>{
    const s=cur[si]||{};
    if(p.kind==='drill')return `<div class="setrow drill${s.ok?' done':''}" data-x="${esc(label)}" data-si="${si}"><span class="sn">${si+1}</span><span class="dl">${ex.n>1?'Round '+(si+1):'Done'}</span>
@@ -1430,34 +1380,27 @@ function togPartner(sess){
  return tog?(SESSIONS_HER.find(s=>s.id===PAIR[sess.id])||((sess.id==='fbA'||sess.id==='fbB')?sess:null)):null;
 }
 function finisherCard(sess,plan){
- const skip=plan.rd.st==='a'||plan.rd.st==='r'||isConsol();
- if(plan.t==='P'&&!sess.extra){
-  const f=BURNERFIN[(weekNum()+(sess.grp||0))%BURNERFIN.length];
-  return `<div class="card"><h3 style="margin-top:0">🔥 Burner finisher — optional, 6–8 min</h3>${skip?'<p class="small" style="color:var(--amb)">Off today (readiness or consolidation week).</p>':`<p class="small">${f}</p><p class="dim small">Hard intervals cut belly and visceral fat (Maillard 2018). Only if you’re under 50 minutes.</p><button class="btn2" onclick="quickCardio('Burner finisher',8)">✓ Done — log 8 min</button>`}</div>`;
- }
+ if(plan.rd.st==='a'||plan.rd.st==='r'||isConsol())return '';
+ if(plan.t==='P'&&!sess.extra){const f=BURNERFIN[(weekNum()+(sess.grp||0))%BURNERFIN.length];
+  return `<div class="card"><div class="small"><b>🔥 Optional burner (6–8 min):</b> ${f}</div><button class="btn2 sm" style="margin-top:8px" onclick="quickCardio('Burner finisher',8)">✓ Done</button></div>`}
  if(!sess.fin.name)return '';
- return `<div class="card"><h3 style="margin-top:0">${sess.fin.opt?'Optional finisher':'Finisher'} — ${sess.fin.name}</h3>${skip&&sess.fin.swaps!==''?`<p class="small" style="color:var(--amb)">Off today (readiness or consolidation week).</p>`:`<p class="small">${sess.fin.desc}${sess.fin.swaps?` <span class="dim">· or ${sess.fin.swaps}</span>`:''}</p>${sess.fin.opt?'<p class="dim small">Only if you’re under 50 minutes — it’s a bonus, not the workout.</p>':''}`}</div>`;
+ return `<div class="card"><div class="small"><b>${sess.fin.opt?'Optional: ':''}${sess.fin.name}</b> — ${sess.fin.desc}</div></div>`;
 }
 function sessView(sess){
  const pfx=P(),plan=planFor(sess,pfx),herS=togPartner(sess),doneT=hasHist(sess.id,pfx,todayKey()),dt=DAYTYPE[plan.t];
  return `<div class="row" style="align-items:center;flex-wrap:nowrap"><button class="btn2" style="flex:none" onclick="closeSess()">← Back</button>
  ${prof==='me'?`<span class="chip ${S.get('tog',false)?'on':''}" style="flex:none;margin:0 0 0 auto" onclick="toggleTog()">👫 Train together</span>`:''}</div>
  ${doneT?`<div class="banner g" style="margin-top:10px">✓ Saved for today. Changes to sets still save.</div>`:''}
- <div class="card" style="margin-top:10px"><div class="eyebrow">${dt.ic} ${dt.n} · ≈ ${estMin(sess,pfx)} min · Wk ${weekNum()} · ${BLOCKS[curBlock()].name}</div>
+ <div class="card" style="margin-top:10px"><div class="eyebrow">${dt.ic} ${dt.n} · ≈ ${estMin(sess,pfx)} min</div>
  <div class="big" style="font-size:22px">${esc(sess.title)}</div>
- <p class="small dim">${dt.d}</p>
- ${plan.notes.map(n=>`<div class="banner ${plan.rd.st==='r'?'r':plan.rd.st==='a'?'a':'n'}" style="margin:8px 0">${n}</div>`).join('')}
- <div class="warm"><b>Warm-up</b><ol><li>${esc(myWarm())}</li><li>${sess.prep}</li><li>Ramp-up sets on the first lift (shown on its card)</li></ol></div>
- <p class="dim small" style="margin-top:8px">Weights are worked out for you. Tap <b style="color:var(--grn)">✓</b> after each set — it fills in the target if you didn’t type anything and starts the rest timer. Did more or fewer reps? Type them first.</p></div>
+ ${plan.notes.length?`<p class="small" style="color:var(--amb)">${plan.notes.join(' ')}</p>`:''}
+ <p class="small dim">Warm-up: ${esc(myWarm())} → ${sess.prep}</p></div>
  ${sess.work.map((ex,i)=>exCard(sess,ex,i,pfx)).join('')}
  ${finisherCard(sess,plan)}
  ${(sess.id==='eng'||sess.id==='heng')?cardioCard():''}
- ${herS?`<div class="card" style="border-color:var(--pink)"><h2 style="color:var(--pink)">Clare · ${esc(herS.title)}</h2>
- <p class="dim small">${DAYTYPE[planFor(herS,'her_').t].ic} ${DAYTYPE[planFor(herS,'her_').t].n} for Clare — her weights come from her own logs and her sets save to her profile.</p>
- ${planFor(herS,'her_').notes.map(n=>`<div class="banner n" style="margin:8px 0">${n}</div>`).join('')}
- <p class="small"><b>Warm-up:</b> ${esc(myWarm('her_'))} · ${herS.prep}</p></div>
+ ${herS?`<div class="card" style="border-color:var(--pink)"><h2 style="color:var(--pink);margin:0">Clare · ${esc(herS.title)}</h2>
+ <p class="dim small">${DAYTYPE[planFor(herS,'her_').t].ic} ${DAYTYPE[planFor(herS,'her_').t].n} · her own weights, saved to her profile</p></div>
  ${herS.work.map((ex,i)=>exCard(herS,ex,i,'her_')).join('')}`:''}
- <div class="card"><div class="dim small" style="margin-bottom:6px">Manual rest timer</div><div class="row">${[60,90,120,180].map(s=>`<button class="btn2" onclick="unlockAudio();startTimer(${s})">⏱ ${s<120?s+'s':(s/60)+'m'}</button>`).join('')}</div></div>
  ${herS?`<button class="btn" onclick="finishSession('${sess.id}',1)">✓ Finish — save both of us</button>
  <div style="height:8px"></div><button class="btn2" style="width:100%" onclick="finishSession('${sess.id}',0)">Save mine only</button>`
  :`<button class="btn ${prof==='her'?'pinkbg':''}" onclick="finishSession('${sess.id}',0)">✓ Finish workout</button>`}`;
@@ -1487,22 +1430,22 @@ function volCard(){
  const rows=MUSCLES.filter(k=>pl[k]||dn[k]).map(k=>{const p=Math.round(pl[k]||0),d=Math.round(dn[k]||0);
   return `<div class="vol"><span>${k}</span><div class="trk"><div class="zone" style="left:${pc(10)}%;width:${pc(10)}%"></div><div class="plan" style="width:${pc(p)}%"></div><div class="dn" style="width:${pc(d)}%"></div></div><span class="dim" style="text-align:right">${d}/${p}</span></div>`}).join('');
  return `<details class="card" style="display:block"><summary>📊 Weekly sets per muscle — ${WHO()}</summary>
- <p class="dim small">Colour = done this week · grey = this week’s plan at 4 sessions · green zone = 10–20 hard sets, where growth happens (Schoenfeld 2017). At 43, recovery is the limit — more isn’t better.</p>${rows}</details>`;
+ <p class="dim small">Colour = done · grey = plan · green zone = 10–20 sets a week.</p>${rows}</details>`;
 }
 function trainView(){
  if(openSession){const s=findSess(openSession);if(s)return sessView(s)}
  const pfx=P(),nx=nextSession(),order=nx.q.concat(mySessions().filter(s=>s.extra).map(s=>s.id)),h=hist();
- return `<div class="card"><span class="chip on">${cycleNum()>1?'Cy'+cycleNum()+' · ':''}Wk ${weekNum()} · ${BLOCKS[curBlock()].wks}</span> <span class="chip">${prof==='her'?'Clare’s programme':'Brian’s programme'}</span>
- <p class="dim small" style="margin-top:6px">In queue order, with today’s style for each. Do any of them — nothing gets skipped.</p></div>
- ${order.map(id=>{const s=sessOf(id),pl=planFor(s,pfx),d=DAYTYPE[pl.t];return `<div class="card sesscard" onclick="openSess('${s.id}')"${s.extra?' style="opacity:.9"':''}><div><b>${esc(s.title)}</b><div class="dim small">${d.ic} ${s.extra?'optional extra':d.n} · ≈ ${estMin(s,pfx)} min · ${s.focus||''}</div></div>${s.id===nx.id?'<span class="badge">next</span>':'<span class="dim">›</span>'}</div>`}).join('')}
- ${isHol()?HOLFULL.map(s=>`<div class="card sesscard" onclick="openSess('${s.id}')" style="border-color:var(--amb)"><b>✈️ ${s.title}</b><span class="dim small">≈ ${estMin(s,pfx)} min ›</span></div>`).join(''):''}
+ return `${order.map(id=>{const s=sessOf(id),d=DAYTYPE[planFor(s,pfx).t];return `<div class="card sesscard" onclick="openSess('${s.id}')"${s.extra?' style="opacity:.9"':''}><div><b>${esc(s.title)}</b><div class="dim small">${s.extra?'Optional extra':d.ic+' '+d.n} · ≈ ${estMin(s,pfx)} min</div></div>${s.id===nx.id?'<span class="badge">next</span>':'<span class="dim">›</span>'}</div>`}).join('')}
+ ${isHol()?HOLFULL.map(s=>`<div class="card sesscard" onclick="openSess('${s.id}')" style="border-color:var(--amb)"><b>✈️ ${s.title}</b><span class="dim small">›</span></div>`).join(''):''}
+ <details class="card" style="display:block"><summary>History</summary>${h.slice(0,20).map((x,i)=>`<div class="fentry"><span class="small">${fmtD(x.d)} — ${esc(histLabel(x))}${x.auto?' <span class="dim">(auto)</span>':''}</span><button class="btn3" aria-label="Remove" onclick="delHist(${i})">×</button></div>`).join('')||'<p class="dim small">Nothing yet.</p>'}
+  <h3>Log a workout you did without the app</h3>
+  <div>${[[0,'Today'],[1,'Yesterday'],[2,'2 days ago'],[3,'3 days ago']].map(([n,l])=>`<span class="chip ${pastOff===n?'on':''}" onclick="setPast(${n},this)">${l}</span>`).join('')}</div>
+  <div class="row" style="margin-top:8px">${mySessions().filter(s=>!s.extra).map(s=>`<button class="btn2" onclick="logSessionOn('${s.id}',offDate(pastOff))">✓ ${esc(s.short)}</button>`).join('')}</div></details>
  ${volCard()}
- <details class="card" style="display:block"><summary>History</summary>${h.slice(0,20).map((x,i)=>`<div class="fentry"><span class="small">${fmtD(x.d)} — ${esc(histLabel(x))}${x.auto?' <span class="dim">(auto-saved)</span>':''}</span><button class="btn3" aria-label="Remove" onclick="delHist(${i})">×</button></div>`).join('')||'<p class="dim small">Nothing yet.</p>'}</details>
  ${logbook()}
- <details class="card" style="display:block"><summary>🏆 Personal records (est. 1RM)</summary>
+ <details class="card" style="display:block"><summary>🏆 Personal records</summary>
  ${prList().length?`<table><tr><th>Lift</th><th>Best set</th><th>e1RM</th></tr>${prList().map(p=>`<tr><td>${esc(p.n)}</td><td>${p.w} kg × ${p.r}</td><td><b>${p.e1} kg</b></td></tr>`).join('')}</table>`:'<p class="dim small">Log some sets — records build themselves.</p>'}</details>
- <details class="card" style="display:block"><summary>How the programme works</summary>${PROGRESSION.map(p=>`<h3>${p[0]}</h3><p class="small">${p[1]}</p>`).join('')}<h3>Consolidation (wks 4/8/12)</h3><p class="small">${CONSOL}</p></details>
- <details class="card" style="display:block"><summary>Quick versions (30-min · hotel · bodyweight · 20-min · busy gym)</summary>${VERSIONS.map(v=>`<h3>${v[0]}</h3>${v[1]}`).join('')}</details>`;
+ <details class="card" style="display:block"><summary>How it works</summary>${PROGRESSION.map(p=>`<p class="small"><b>${p[0]}:</b> ${p[1]}</p>`).join('')}</details>`;
 }
 
 /* ---- HOME ---- */
@@ -1510,12 +1453,11 @@ function homeView(){
  const nx=nextSession(),z=hrZones();
  const dh=doneToday().filter(x=>x.id==='home');
  return `${dh.length?`<div class="banner g">✓ Logged today: ${dh.map(x=>esc(x.n||'Home session')).join(', ')}</div>`:''}
- <div class="card"><h2>Can’t make the gym today?</h2>
- <p class="small">None of these move your queue — <b>${esc(shortT(nx.id))}</b> stays first for your next gym visit. Pick by how you feel:</p>
+ <div class="card"><h2>Can’t make the gym?</h2>
+ <p class="small dim"><b>${esc(shortT(nx.id))}</b> stays first for your next gym visit.</p>
  <button class="btn2" style="width:100%;margin-top:4px" onclick="quickCardio('Walk after a meal',15)">🚶 Log a walk after a meal (15 min)</button></div>
  ${HOMEOPTS.map((o,i)=>`<div class="card"><h3 style="margin-top:0">${o.n}</h3><p class="small">${o.d.replace('{Z2}',z.z2[0]+'–'+z.z2[1]).replace('{Z4}',z.z4[0]+'–'+z.z4[1])}</p><button class="btn2" onclick="logHome(${i})">✓ Done — log it</button></div>`).join('')}
- ${cardioCard()}
- <div class="card"><p class="dim small">Rule: Mon–Thu never goes to zero. 15 minutes of anything keeps the habit alive — the habit is worth more than any single session.</p></div>`;
+ ${cardioCard()}`;
 }
 /* ---- FOOD ---- */
 function fresHTML(){
@@ -1523,13 +1465,6 @@ function fresHTML(){
  return results.map(([f,i])=>`<div class="fresult" onclick="addFood(${i})"><span>${f[0]}${f[6]?' 🍷':''}</span><span class="m">${f[2]} kcal · ${f[3]}P ${f[1]==='g'?'/100g':'/each'}</span></div>`).join('');
 }
 function fres(){el('fres').innerHTML=fresHTML()}
-function ideasFor(day){
- const c=ctx();let ks=[];
- if(c.hot)ks.push('hot');
- if(isHol())ks.push('hol');
- ks.push(day.type==='drink'?'drink':(doneToday().length||day.type==='train')?'train':'rest');
- return ks;
-}
 /* ---- Weekly energy budget: fat loss follows the weekly total ---- */
 function weekDates(){const now=new Date(todayKey()+'T12:00'),mon=new Date(now);mon.setDate(now.getDate()-((now.getDay()+6)%7));return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return todayKey(d)})}
 function weekBudget(){
@@ -1539,16 +1474,6 @@ function weekBudget(){
   if(dk<=tk){toDate+=t;used+=day.items.reduce((a,it)=>a+(it.k||0),0);usedAlc+=day.items.filter(it=>it.a).reduce((a,it)=>a+(it.k||0),0);if(dk<tk&&!day.items.length)missing++}});
  const daysLeft=ds.filter(d=>d>tk).length;
  return{budget,used,usedAlc,toDate,missing,daysLeft,remaining:budget-used,perDay:daysLeft?Math.round((budget-used)/daysLeft):0};
-}
-function budgetCard(){
- const w=weekBudget(),pct=Math.min(100,Math.round(100*w.used/Math.max(1,w.budget)));
- const line=w.remaining<0?`Already <b>${-w.remaining}</b> kcal over for the week. Return to normal daily targets — crash-dieting to compensate costs muscle.`
-  :w.daysLeft?`<b>${w.remaining}</b> kcal left over ${w.daysLeft} day${w.daysLeft>1?'s':''} → about <b>${w.perDay}</b> kcal/day finishes the week on target.`
-  :`Week closes <b>${w.remaining}</b> kcal under budget.`;
- return `<div class="card"><h2>This week’s energy budget</h2>
- <div class="small"><b>${w.used}</b> of ${w.budget} kcal (Mon–today)</div><div class="bar"><i class="${w.used>w.budget?'over':''}" style="width:${pct}%"></i></div>
- <p class="small" style="margin-top:8px">${line}</p>
- <p class="dim small">Alcohol this week: ${w.usedAlc} kcal (≈${Math.round(w.usedAlc/75)} units). Fat loss follows the weekly total, not single days — a tighter Mon–Thu can fund the weekend.${w.missing?` <b style="color:var(--amb)">${w.missing} earlier day${w.missing>1?'s':''} this week with nothing logged</b> — those count as zero, so the true total is higher.`:''}</p></div>`;
 }
 /* ---- Progress check: 7-day average vs 2–4 weeks ago ---- */
 function trendDelta(key){
@@ -1579,7 +1504,7 @@ function whtr(){
  const w=m[ks[ks.length-1]].waist,r=w/h;
  return `<p class="small">Waist-to-height <b style="color:${r<0.5?'var(--grn)':r<0.6?'var(--amb)':'var(--red)'}">${r.toFixed(2)}</b> · target under 0.50 = waist under ${Math.round(h/2)} cm (now ${w} cm)</p>`;
 }
-function essentialsCard(){
+function essentialsTable(){
  const her=prof==='her',t=targets('train'),r=targets('rest');
  const rows=[
   ['Energy',t.kcal+' kcal training days · '+r.kcal+' rest days'],
@@ -1592,7 +1517,7 @@ function essentialsCard(){
   ['Alcohol','UK low-risk guideline: 14 units/week or fewer, spread over 3+ days'],
   ['Sleep','7+ hours — short sleep shifts weight loss from fat to muscle']];
  if(her)rows.splice(5,0,['Iron','14.8 mg/day — red meat, lentils, fortified cereal; pair with vitamin C'],['Calcium','700 mg/day — kwark, yoghurt, milk, fortified alternatives']);
- return `<details class="card" style="display:block"><summary>Daily essentials — ${her?'Clare':'Brian'}</summary><table>${rows.map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('')}</table></details>`;
+ return `<table>${rows.map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join('')}</table>`;
 }
 function ring(label,v,tg,inv){
  const pct=Math.min(1,tg?v/tg:0),r=26,c=2*Math.PI*r,off=c*(1-pct);
@@ -1600,95 +1525,55 @@ function ring(label,v,tg,inv){
  return `<div class="ring"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="${r}" stroke="var(--line)" stroke-width="7" fill="none"/><circle cx="32" cy="32" r="${r}" stroke="${col}" stroke-width="7" fill="none" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" class="rv">${v}</text></svg><div class="rk">${label}<br><span style="color:var(--txt)">/ ${tg}</span></div></div>`;
 }
 function foodView(){
- const day=fday(foodDate),t=targets(day.type);
+ const day=fday(foodDate),t=targets(day.type),c=ctx(),w=weekBudget();
  const tot=day.items.reduce((a,it)=>({k:a.k+it.k,p:a.p+it.p,c:a.c+it.c,f:a.f+it.f}),{k:0,p:0,c:0,f:0});
- const alcW=weekAlc(),c=ctx();
- const kpi=(label,v,tg,inv)=>{
-  const pct=Math.min(100,Math.round(100*v/tg));
-  const cls=inv?(v>tg?'over':''):(v>=tg?'good':'');
-  return `<div class="kpi"><div class="v ${cls}">${v}<span class="dim" style="font-size:10px">/${tg}</span></div><div class="k">${label}</div><div class="bar"><i class="${inv&&v>tg?'over':''}" style="width:${pct}%"></i></div></div>`;
- };
- const ideaBlocks=ideasFor(day).map(k=>{
-  const title={train:'Trained today',rest:'Rest day',drink:'Drinking day',hol:'Holiday mode',hot:'Hot climate'}[k];
-  return `<h3>${title}</h3><ul class="small">${IDEAS[k].map(x=>`<li>${x}</li>`).join('')}</ul>`;
- }).join('');
  return `
  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center">
   <button class="btn2" onclick="shiftFoodDate(-1)">‹</button>
-  <b>${foodDate===todayKey()?'Today':fmtD(foodDate)} ${prof==='her'?'· Clare':''}</b>
+  <b>${foodDate===todayKey()?'Today':fmtD(foodDate)}${prof==='her'?' · Clare':''}</b>
   <button class="btn2" onclick="shiftFoodDate(1)">›</button></div>
-  <div style="margin-top:7px">${[['train','Training'],['rest','Rest'],['drink','Drinking']].map(x=>`<span class="chip ${day.type===x[0]?'on':''}" onclick="setDayType('${x[0]}')">${x[1]}</span>`).join('')}
-  <span class="chip ${isHol()?'on':''}" onclick="setCtx('hol')">✈️ Holiday</span><span class="chip ${c.hot?'on':''}" onclick="setCtx('hot')">🔥 Hot</span></div>
+  <div style="margin-top:7px">${[['train','Training'],['rest','Rest'],['drink','Drinking']].map(x=>`<span class="chip ${day.type===x[0]?'on':''}" onclick="setDayType('${x[0]}')">${x[1]}</span>`).join('')}<span class="chip ${c.hot?'on':''}" onclick="setCtx('hot')">🔥 Hot</span></div>
   <div class="grid4" style="margin-top:10px">${ring('kcal',tot.k,t.kcal,true)}${ring('protein',tot.p,t.p,false)}${ring('carbs',tot.c,t.c,true)}${ring('fat',tot.f,t.f,true)}</div>
-  <div style="display:flex;align-items:center;gap:8px;margin-top:9px"><span class="small">💧 Water: <b>${S.get(waterKey(),0)}</b>/8+ glasses</span>
-  <button class="btn2" style="padding:4px 12px" onclick="addWater(1)">+</button><button class="btn2" style="padding:4px 12px" onclick="addWater(-1)">−</button>
-  ${day.type==='drink'||c.hot?'<span class="dim small">target higher today</span>':''}</div></div>
- ${bellyCard()}
- ${budgetCard()}
- ${progressCard()}
+  <div style="display:flex;align-items:center;gap:8px;margin-top:9px"><span class="small" style="flex:1">💧 <b>${S.get(waterKey(),0)}</b>/8 glasses</span>
+  <button class="btn2 sm" onclick="addWater(1)">+</button><button class="btn2 sm" onclick="addWater(-1)">−</button></div>
+  ${w.missing?'':`<p class="dim small" style="margin-top:8px">Week: ${w.used.toLocaleString()} of ${w.budget.toLocaleString()} kcal${w.daysLeft&&w.remaining>0?` · ~${w.perDay.toLocaleString()}/day to finish on target`:w.remaining<0?' · over for the week — back to normal targets, no crash-dieting':''}${w.usedAlc?` · alcohol ${w.usedAlc} kcal`:''}</p>`}</div>
  <div class="card"><h2>Add food</h2>
   <input type="text" placeholder="Search… (chicken, pint, kebab)" value="${esc(foodQ)}" oninput="foodQ=this.value;fres()">
   <div id="fres">${fresHTML()}</div>
+  ${day.items.map((it,i)=>`<div class="fentry"><span>${it.a?'🍷 ':''}${esc(it.n)}</span><span class="dim small">${it.k} · ${it.p}P <button class="btn3" onclick="delFood(${i})">×</button></span></div>`).join('')}
   <details><summary class="small dim">Custom entry</summary>
    <input type="text" id="cf_n" placeholder="Name"><div class="grid2" style="margin-top:6px"><input type="number" id="cf_k" placeholder="kcal"><input type="number" id="cf_p" placeholder="protein g"></div>
    <div class="grid2" style="margin-top:6px"><input type="number" id="cf_c" placeholder="carbs g"><input type="number" id="cf_f" placeholder="fat g"></div>
    <div style="margin-top:7px"><button class="btn2" onclick="addCustom()">Add</button></div></details></div>
- <div class="card">${day.items.map((it,i)=>`<div class="fentry"><span>${it.a?'🍷 ':''}${esc(it.n)}</span><span class="dim small">${it.k} · ${it.p}P <button class="btn3" onclick="delFood(${i})">×</button></span></div>`).join('')||'<p class="dim small">Nothing logged yet.</p>'}</div>
- <div class="card"><h2>Recipes for what’s left today</h2>
- ${recipesFor(day,{k:Math.max(0,t.kcal-tot.k),p:Math.max(0,t.p-tot.p)}).map(r=>`<div class="ex"><div style="display:flex;justify-content:space-between;gap:6px;align-items:center"><div><div class="name" style="font-size:13.5px">${r.n}</div><div class="dim small">${r.k} kcal · ${r.p}P ${r.c}C ${r.f}F — ${r.d}</div></div><button class="btn2" style="flex:none" onclick="addRecipe('${r.n}')">+ Log</button></div></div>`).join('')}
- <button class="btn2" style="width:100%;margin-top:4px" onclick="aiPrompt()">🤖 Copy AI recipe prompt (with today’s remaining macros)</button>
+ ${bellyCard()}
+ <div class="card"><h2>Ideas for what’s left</h2>
+ ${recipesFor(day,{k:Math.max(0,t.kcal-tot.k),p:Math.max(0,t.p-tot.p)}).slice(0,3).map(r=>`<div class="fentry"><span class="small"><b>${r.n}</b><br><span class="dim">${r.k} kcal · ${r.p} g protein — ${r.d}</span></span><button class="btn2 sm" onclick="addRecipe('${jsq(r.n)}')">+ Log</button></div>`).join('')}
+ <button class="btn2" style="width:100%;margin-top:8px" onclick="aiPrompt()">🤖 Copy a recipe prompt for ChatGPT</button>
  <p class="dim small" id="aiMsg" style="margin-top:4px"></p></div>
- <div class="card"><h2>What to eat — ideas for today</h2>${ideaBlocks}</div>
- <details class="card" style="display:block"><summary>Nutrition basics — the rules that matter</summary>
- <h3>Protein anchoring</h3><p class="small">Build every meal around 30–50g protein first; everything else is negotiable. 4 feeds beats 2. Hardest habit, biggest payoff.</p>
- <h3>Fibre</h3><p class="small">25–35g/day (veg, fruit, oats, beans) — satiety, digestion, and it blunts the drinking-day damage.</p>
- <h3>80/20</h3><p class="small">If 80% of the week is on-plan, the 20% (wine, pastizzi, dessert) costs you nothing but time. Perfection isn’t the plan; the average is.</p>
- <h3>Eating out playbook</h3><p class="small">Order the grill section · protein double-up (add prawns/chicken) · sauce on the side · skip the bread basket, keep the wine if it’s a drink day · dessert shared or skipped.</p>
- <h3>Supermarket speed-list</h3><p class="small">Kwark/skyr · eggs · chicken thighs · 5% mince · tins of tuna · frozen veg + berries · oats · rice · olive oil · rice cakes · dark chocolate. That basket covers 90% of the week.</p>
- <h3>Belly fat — what actually shifts it</h3><p class="small">In order of impact: a weekly energy deficit (the budget card above) · alcohol, which adds energy and pauses fat burning while it is cleared · protein at every meal · fibre 30 g+ · 150+ minutes of aerobic work a week on top of lifting · 7+ hours of sleep. Crunches do not burn belly fat — the waist shrinks when total body fat does.</p></details>
- ${burnersCard()}
- ${herbsCard()}
- ${swapsCard()}
- ${essentialsCard()}
- ${c.hot?HOTCARD:''}
- <div class="card"><h2>Week’s alcohol</h2><p><b style="color:${alcW>1500?'var(--red)':alcW>700?'var(--amb)':'var(--grn)'}">${alcW} kcal</b> <span class="dim small">Mon–today. Every 700 kcal shaved ≈ 0.1 kg fat that never arrives.</span></p></div>
- <details class="card" style="display:block"><summary>Timing, hydration, weekend rules, monthly adjustments</summary>
- <h3>Timing</h3><ul class="small"><li>Pre-gym 60–90 min: carbs + protein</li><li>Post: 40 g protein + carbs within ~2h</li><li>4 protein feeds/day beats 2</li><li>Friday: 50 g protein before first drink</li><li>Drinking bedtime: water + electrolytes + yoghurt</li></ul>
- <h3>Hydration</h3><p class="small">2.5–3 L floor, +500 ml training. Drinking: 1 water per 2 drinks, electrolytes at bed + waking.</p>
- <h3>Weekend design</h3><p class="small">Lifting lives Mon–Thu · Fri rest + protein dinner · Sat hangover-proof Engine · Sun 8k steps + early night.</p>
- <h3>Monthly rules</h3><table><tr><td>Waist ↓, weight flat</td><td>Perfect — change nothing</td></tr><tr><td>Weight & waist ↑ 2wks</td><td>−150 kcal Mon–Thu carbs</td></tr><tr><td>Weight ↓ >0.7 kg/wk or lifts drop</td><td>+150–200 kcal carbs</td></tr><tr><td>Stalled 3+ wks</td><td>The drinks are the honest place to look</td></tr></table>
- <h3>Getting properly cut</h3><p class="small">Visible definition ≈ 12–15% BF, abs 10–12%. Recomp + current weekends: leaner in 12 wks, cut in ~a year. Cut mode + weekends halved: cut in 16–20 wks. Hard cut + current weekends: mathematically cancels — not offered.</p></details>`;
+ <details class="card" style="display:block"><summary>Guides — burners, herbs & teas, swaps</summary>
+  <h3>🔥 What actually burns belly fat</h3>${BURNERS_WORK.map(b=>`<p class="small"><b>${b[0]}</b> — ${b[1]}</p>`).join('')}
+  <p class="small"><b>⛔ Skip fat-burner pills.</b> ${BURNERS_SKIP}</p>
+  <h3>🌿 Your day — supplements, herbs & teas</h3>
+  <div style="margin:4px 0 8px"><label>Wake time</label><input type="time" value="${cfg().wake||'07:30'}" onchange="setCfg('wake',this.value)" style="max-width:130px"></div>
+  <div class="tl">${dayPlan().map(x=>`<div><b>${x[0]}</b> — ${x[1]}</div>`).join('')}</div>
+  <p class="dim small">${HERB_AVOID}</p>
+  <h3>🔁 Swaps — same life, fewer calories</h3><table>${SWAPS.map(x=>`<tr><td>${x[0]}</td><td>→ ${x[1]}</td><td style="color:var(--grn);white-space:nowrap">${x[2]}</td></tr>`).join('')}</table>
+  <h3>Daily targets — ${WHO()}</h3>${essentialsTable()}
+  ${c.hot?HOTCARD:''}</details>`;
 }
 function bellyCard(){
- const tk=todayKey(),h=prof==='her'?(+cfg().htHer||165):(+cfg().ht||180),lw=lastMetric('waist'),dz=trendDelta('waist'),fd=foodDate,auto=habAuto(fd),man=habDay(fd);
- return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><h2 style="margin:0">🎯 Belly plan</h2><span class="dim small">${lw?`waist ${lw.v} cm · goal under ${Math.round(h/2)}`:'log your waist in Body'}</span></div>
- ${dz!=null?`<p class="small" style="margin-top:6px">Waist ${dz<=0?'down':'up'} ${Math.abs(dz)} cm vs 2–4 weeks ago${dz<=-1?' — it’s working.':dz<0?' — moving the right way.':' — tighten the weekend and add steps.'}</p>`:''}
- <p class="dim small" style="margin-top:6px">Six habits that shrink the waist. Tap what you did ${fd===tk?'today':'on '+fmtD(fd)} — protein, steps and walks tick themselves from your logs.</p>
- <div class="habs">${HABITS.map(([k,ic,n])=>{const a=auto[k],on=a||man[k];return `<button class="hab${on?' on':''}" ${a?'disabled':''} onclick="togHab('${k}','${fd}')"><span class="hi">${ic}</span><span>${k==='steps'?(stepGoal()/1000)+'k steps':n}${a?' ✓ auto':''}</span></button>`}).join('')}</div>
+ const tk=todayKey(),h=prof==='her'?(+cfg().htHer||165):(+cfg().ht||180),lw=lastMetric('waist'),fd=foodDate,auto=habAuto(fd),man=habDay(fd);
+ return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><h2 style="margin:0">🎯 Belly habits</h2><span class="dim small">${lw?`waist ${lw.v} cm · goal < ${Math.round(h/2)}`:''}</span></div>
+ <div class="habs">${HABITS.map(([k,ic,n])=>{const a=auto[k],on=a||man[k];return `<button class="hab${on?' on':''}" ${a?'disabled':''} onclick="togHab('${k}','${fd}')"><span class="hi">${ic}</span><span>${k==='steps'?(stepGoal()/1000)+'k steps':n}</span></button>`}).join('')}</div>
  <div class="wk" style="margin-top:10px">${weekDates().map(d=>`<div class="d${d===tk?' today':''}${d>tk?' fut':''}">${dayName(d)}<div class="hs">${d>tk?'·':habScore(d)}</div></div>`).join('')}</div>
- <p class="dim small" style="margin-top:8px">5–6 = a fat-loss day · 3–4 = holding · 0–2 = reset tomorrow, no guilt.</p></div>`;
+ <p class="dim small" style="margin-top:8px">5–6 a day = fat-loss day. Protein ticks itself from your food log.</p></div>`;
 }
-function burnersCard(){return `<details class="card" style="display:block"><summary>🔥 “Burners” — what actually burns belly fat</summary>${BURNERS_WORK.map(b=>`<h3>${b[0]}</h3><p class="small">${b[1]}</p>`).join('')}<h3>⛔ Skip the fat-burner pills</h3><p class="small">${BURNERS_SKIP}</p></details>`}
-function herbsCard(){return `<details class="card" style="display:block"><summary>🌿 Herbs & teas through the day</summary><div class="tl">${dayPlan().filter(x=>/tea|ginger|garlic|beetroot|coffee/i.test(x[1])).map(x=>`<div><b>${x[0]}</b> — ${x[1]}</div>`).join('')}</div><p class="dim small">${HERB_AVOID}</p><p class="dim small">The full day — supplements included — is on Today → Your day.</p></details>`}
-function swapsCard(){return `<details class="card" style="display:block"><summary>🔁 Belly swaps — same life, fewer calories</summary><table>${SWAPS.map(x=>`<tr><td>${x[0]}</td><td>→ ${x[1]}</td><td style="color:var(--grn);white-space:nowrap">${x[2]}</td></tr>`).join('')}</table><p class="dim small">Two weekend swaps ≈ 1,000 kcal a week ≈ 0.5 kg of fat a month that never arrives.</p></details>`}
-/* ---- BODY (data) ---- */
-function heartCard(){
- const dk=todayKey(),z=hrZones(),bR=baseline('rhr',dk),bH=baseline('hrv',dk),vo=lastMetric('vo2'),r=z.rhr,mx=z.max;
- const band=(a,b)=>r?[Math.round(r+a*(mx-r)),Math.round(r+b*(mx-r))]:[Math.round((a+.05)*mx),Math.round(Math.min(1,b+.05)*mx)];
- const Z=[['Z1 recovery',.5,.6],['Z2 fat-burn / base',.6,.7],['Z3 tempo',.7,.8],['Z4 threshold · 4×4',.8,.9],['Z5 max',.9,1]];
- const cls=vo?vo2Class(vo.v):null;
- const adv={low:'Low for your age → two Zone 2 sessions (35–45 min) + one 4×4 a week. It’s the number that improves fastest.',average:'Average → 1–2 Zone 2 sessions + one 4×4 a week; aim for +3 in 12 weeks.',good:'Good → one 4×4 + one Zone 2 a week keeps it climbing.',excellent:'Excellent → one interval session a week maintains it.'};
- return `<div class="card"><h2>❤️ Heart & zones — ${WHO()}</h2>
- <p class="small">Normal resting HR <b>${bR??'—'}</b> · normal HRV <b>${bH??'—'}</b> ms <span class="dim">(your 14-day median — needs 3+ days)</span></p>
- <table>${Z.map(x=>{const b=band(x[1],x[2]);return `<tr${x[1]===.6?' style="color:var(--grn)"':''}><td>${x[0]}</td><td><b>${b[0]}–${b[1]}</b> bpm</td></tr>`}).join('')}</table>
- <p class="dim small">Max HR ${mx} (${(prof==='her'?cfg().hrmaxHer:cfg().hrmax)?'your setting':'208 − 0.7 × age'}) · zones ${z.src}. Zone 2 check: you can talk in full sentences.</p>
- ${vo?`<p class="small" style="margin-top:6px">VO₂ max <b>${vo.v}</b> (${fmtD(vo.d)}) — <b>${cls}</b> for 40–49. ${adv[cls]}</p>`:'<p class="dim small" style="margin-top:6px">VO₂ max: add it from Health → Heart → Cardio Fitness (or via the shortcut) to get cardio advice.</p>'}</div>`;
-}
+/* ---- BODY ---- */
 function saveBench(k,v){const b=benchAll(),tk=todayKey();b[k]=(b[k]||[]).filter(x=>x.d!==tk);if(v!==''&&!isNaN(parseFloat(v)))b[k].unshift({d:tk,v:parseFloat(v)});S.set(P()+'bench',b);MEMO={}}
 function benchCard(){
- const b=benchAll(),her=prof==='her'?1:0,tk=todayKey(),vo=lastMetric('vo2'),lb=benchLast();
+ const b=benchAll(),her=prof==='her'?1:0,tk=todayKey(),lb=benchLast();
  const rows=BENCH.map(t=>{
-  const arr=(b[t.k]||[]).slice();if(t.k==='vo2'&&vo&&!arr.some(x=>x.d===vo.d))arr.push({d:vo.d,v:vo.v});arr.sort((x,y)=>x.d<y.d?1:-1);
+  const arr=(b[t.k]||[]).slice();arr.sort((x,y)=>x.d<y.d?1:-1);
   const last=arr[0],prev=arr[1],g=t.g[her],ch=last&&prev?Math.round((last.v-prev.v)*10)/10:null,better=ch==null?null:(t.hi?ch>0:ch<0);
   const lvl=!last?'':t.hi?(last.v>=g[1]?'great':last.v>=g[0]?'good':'build'):(last.v<=g[1]?'great':last.v<=g[0]?'good':'build');
   const todayV=(b[t.k]||[]).find(x=>x.d===tk);
@@ -1697,70 +1582,7 @@ function benchCard(){
    <details class="howto"><summary class="small dim">How to test · why it matters</summary><p class="small">${t.how}</p><p class="dim small">${t.why}</p></details></div>
    <input type="number" inputmode="decimal" style="width:82px;flex:none" placeholder="${t.u||'value'}" value="${todayV?todayV.v:''}" onchange="saveBench('${t.k}',this.value);render()"></div>`;
  }).join('');
- return `<div class="card"><h2>🏅 Athlete check — every 6 weeks</h2><p class="dim small">Muscle is half of it. This measures what makes you athletic — power, engine, grip, balance and mobility. Enter today’s results; the app tracks the change. Last test: <b>${lb?fmtD(lb):'never'}</b>. Guides are rough targets for your age.</p>${rows}</div>`;
-}
-function syncBase(){return(location.protocol==='https:'?location.origin+location.pathname:'https://themaltesir.github.io/index.html/')}
-function clareSteps(){
- const link=syncBase()+'?p=clare&rhr=RHR&hrv=HRV&sleep=SLEEP';
- return `Recomp43 — connect your Apple Watch (2 minutes, on your iPhone):
-1. Shortcuts app → + → name it “Recomp43 Clare”.
-2. Add “Find Health Samples” → Resting Heart Rate · Sort by Start Date · Latest First · Limit 1. Then “Get Details of Health Sample” → Value.
-3. Do the same for Heart Rate Variability.
-4. Optional: Sleep Analysis for last night (total hours). Skip it if fiddly — the morning check-in covers sleep.
-5. Add “Text” with this link, swapping RHR, HRV and SLEEP for the values from steps 2–4:
-${link}
-6. Finish with “Send Message” to Brian (if we log on his phone — he taps the link) or “Open URLs” (if you use the app on your own phone).
-7. Automation tab → + → Time of Day 08:00 → Daily → Run Immediately.`;
-}
-function clareCard(){
- const ls=S.get('lastSyncHer','');
- return `<div class="card"><h2>⌚ Connect Clare’s Apple Watch</h2>
- <p class="small">${ls?'Last sync: <b>'+esc(ls)+'</b>':'<b>Not connected yet.</b>'} With her Watch data, Clare’s sessions adapt to her own resting HR, HRV and sleep — exactly like Brian’s.</p>
- <ol class="small"><li>On Clare’s iPhone: Shortcuts → + → “Recomp43 Clare”.</li><li>Find Health Samples → Resting Heart Rate (latest 1) → Get Details → Value. Same for HRV.</li><li>Text: the link below with her values dropped in.</li><li>End with <b>Send Message → Brian</b> (if you log on Brian’s phone) or <b>Open URLs</b> (her own phone).</li><li>Automation → Time of Day 08:00 → Run Immediately.</li></ol>
- <p class="dim small" style="word-break:break-all">${esc(syncBase())}?p=clare&rhr=…&hrv=…&sleep=…</p>
- <div class="row"><button class="btn2" onclick="shareText(clareSteps())">📤 Send the steps to Clare</button><button class="btn2" onclick="copyText(syncBase()+'?p=clare&rhr=&hrv=&sleep=')">Copy link</button></div>
- <p class="dim small" style="margin-top:8px">Data lives on the phone that opens the link — the <b>p=clare</b> part files it under Clare, never under Brian. No shortcut? Type her resting HR in “This morning” above, or use the 3-tap check-in.</p></div>`;
-}
-function dataView(){
- const dk=todayKey(),m=metrics(),tm=m[dk]||{},her=prof==='her';
- const fields=[['rhr','Resting HR','52'],['hrv','HRV ms','45'],['sleep','Sleep h','7.2'],['energy','Energy 1–5','3'],['wt','Weight kg',her?'64.0':'86.0'],['waist','Waist cm',her?'78':'92'],['steps','Steps','9500'],['vo2','VO₂ max','40'],['move','Move kcal','620'],['exmin','Exercise min','32']];
- const days=Object.keys(m).sort().reverse().slice(0,14);
- const ls=S.get(her?'lastSyncHer':'lastSync','');
- return `
- ${ls?`<div class="banner g">✓ Synced: ${esc(ls)}</div>`:''}
- <div class="card"><h2>This morning — ${WHO()}</h2>
-  <div class="grid3">${fields.map(f=>`<div><label>${f[1]}</label><input type="number" inputmode="decimal" placeholder="${f[2]}" value="${tm[f[0]]??''}" oninput="saveMetric('${dk}','${f[0]}',this.value)" onchange="render()"></div>`).join('')}</div>
-  <p class="dim small" style="margin-top:4px;color:var(--grn)">Saves as you type. Weigh Mon & Thu mornings; waist weekly at the navel.</p>
-  ${whtr()}</div>
- ${heartCard()}
- ${progressCard()}
- ${benchCard()}
- ${her?clareCard():`<div class="card"><h2>⌚ Brian’s Watch sync</h2>
-  <p class="small">Last sync: <b>${esc(S.get('lastSync','')||'never')}</b> · today: RHR ${tm.rhr??'—'} · HRV ${tm.hrv??'—'} · Sleep ${tm.sleep??'—'}</p>
-  <div class="row"><button class="btn2" onclick="location.href=location.pathname+'?test=1'">1. Test the link</button>
-  <button class="btn2" onclick="window.open('shortcuts://','_blank')">2. Open Shortcuts</button></div>
-  <p class="dim small" style="margin-top:7px"><b>Make it automatic:</b> Shortcuts → <b>Automation</b> → + → <b>Time of Day</b> 07:45 daily → <b>Run Immediately</b> (Notify off) → “Sync Recomp43 3”. Wear the Watch to bed; a 1-minute Breathe session on waking guarantees a fresh HRV.</p></div>
- <details class="card" style="display:block"><summary>Shortcut set-up (both of you)</summary>
-  <ol class="small" style="padding-left:18px">
-   <li>Shortcuts → + → “Sync Recomp43”</li>
-   <li>Find Health Samples → Resting Heart Rate, latest 1 → Get Details → Value</li>
-   <li>Find Health Samples → Heart Rate Variability, latest 1 → Value</li>
-   <li>Find Health Samples → Sleep (last night, total hours) — optional</li>
-   <li>Open URLs → <span style="color:var(--acc);word-break:break-all">${esc(syncBase())}?rhr=</span>[1]<span style="color:var(--acc)">&hrv=</span>[2]<span style="color:var(--acc)">&sleep=</span>[3]</li>
-   <li>Automation → Time of Day 07:45 → Run Immediately</li>
-  </ol>
-  <p class="dim small">For Clare add <b>&p=clare</b>. Also accepted: <b>&wt=</b> · <b>&waist=</b> · <b>&steps=</b> · <b>&vo2=</b> · <b>&energy=</b> · <b>&move=</b> · <b>&exmin=</b>. Run it any time — later runs update today’s numbers.</p></details>`}
- <div class="card"><h2>History</h2><table><tr><th>Date</th><th>RHR</th><th>HRV</th><th>Slp</th><th>E</th><th>Wt</th><th>Waist</th></tr>
- ${days.map(d=>`<tr><td>${dayName(d)} ${+d.slice(8)}</td><td>${m[d].rhr??''}</td><td>${m[d].hrv??''}</td><td>${m[d].sleep??''}</td><td>${m[d].energy??''}</td><td>${m[d].wt??''}</td><td>${m[d].waist??''}</td></tr>`).join('')}</table>
- ${days.length?'':'<p class="dim small">No entries yet.</p>'}</div>
- <details class="card" style="display:block"><summary>Trends (last 14 entries)</summary>
- ${spark('wt','Weight kg')+spark('waist','Waist cm')+spark('rhr','Resting HR')+spark('hrv','HRV')+spark('steps','Steps')||'<p class="dim small">Trends appear after a few days of entries.</p>'}</details>
- <details class="card" style="display:block"><summary>Bulk CSV import</summary><p class="dim small">Lines: date,rhr,hrv,sleep</p>
- <textarea id="csvBox" rows="3" placeholder="2026-07-01,52,48,7.2"></textarea>
- <div style="margin-top:7px"><button class="btn2" onclick="importCSV()">Import</button> <span class="dim small" id="csvMsg"></span></div></details>
- <details class="card" style="display:block"><summary>How your data drives the plan · 12-week roadmap</summary>
- <table>${HEALTHDATA.map(h=>`<tr><td>${h[0]}</td><td>${h[1]}</td></tr>`).join('')}</table>
- <table><tr><th>Wk</th><th>Focus</th></tr>${ROADMAP.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table></details>`;
+ return `<details class="card" style="display:block"><summary>🏅 Athlete check · last: ${lb?fmtD(lb):'never'}</summary><p class="dim small">Every 6 weeks — power, engine, grip and balance, not just muscle.</p>${rows}</details>`;
 }
 function spark(key,label){
  const m=metrics();const ks=Object.keys(m).filter(d=>m[d][key]!=null).sort().slice(-14);
@@ -1770,18 +1592,41 @@ function spark(key,label){
  return `<h3>${label} <span class="dim small">${vs[0]} → ${vs[vs.length-1]} (${dir>0?'+':''}${Math.round(dir*10)/10})</span></h3>
  <div style="display:flex;align-items:flex-end;gap:2px;height:34px;margin:3px 0 8px">${vs.map(v=>`<div style="flex:1;background:var(--acc);opacity:.75;border-radius:2px;height:${mx===mn?55:Math.round(18+82*(v-mn)/(mx-mn))}%"></div>`).join('')}</div>`;
 }
-function importCSV(){
- const lines=el('csvBox').value.split('\n');let n=0;
- lines.forEach(L=>{
-  const p=L.trim().split(',');
-  if(p.length>=2&&/^\d{4}-\d{2}-\d{2}/.test(p[0])){
-   const dk=p[0].slice(0,10);
-   if(p[1])saveMetric(dk,'rhr',p[1]);if(p[2])saveMetric(dk,'hrv',p[2]);if(p[3])saveMetric(dk,'sleep',p[3]);n++;
-  }});
- el('csvMsg').textContent=n+' days imported';setTimeout(render,600);
+function dataView(){
+ const dk=todayKey(),m=metrics(),tm=m[dk]||{},her=prof==='her';
+ const days=Object.keys(m).filter(d=>m[d].wt!=null||m[d].waist!=null).sort().reverse().slice(0,12);
+ const sp=spark('wt','Weight')+spark('waist','Waist');
+ return `<div class="card"><h2>Weigh-in & waist — ${WHO()}</h2>
+  <div class="grid2"><div><label>Weight kg (Mon & Thu)</label><input type="number" inputmode="decimal" placeholder="${her?'64.0':'86.0'}" value="${tm.wt??''}" oninput="saveMetric('${dk}','wt',this.value)" onchange="render()"></div>
+  <div><label>Waist cm (weekly)</label><input type="number" inputmode="decimal" placeholder="${her?'78':'92'}" value="${tm.waist??''}" oninput="saveMetric('${dk}','waist',this.value)" onchange="render()"></div></div>
+  ${whtr()}</div>
+ ${progressCard()}
+ ${sp?`<div class="card">${sp}</div>`:''}
+ ${benchCard()}
+ ${days.length?`<details class="card" style="display:block"><summary>History</summary><table><tr><th>Date</th><th>Weight</th><th>Waist</th></tr>${days.map(d=>`<tr><td>${fmtD(d)}</td><td>${m[d].wt??''}</td><td>${m[d].waist??''}</td></tr>`).join('')}</table></details>`:''}`;
 }
 
 /* ---- MORE ---- */
+/* Put the programme at a given cycle/week: the start date is worked out for you (time off included) */
+function setProgWeek(cy,wk){
+ cy=Math.max(1,Math.min(9,+cy||1));wk=Math.max(1,Math.min(12,+wk||1));
+ const tk=todayKey(),mon=addDays(tk,-((new Date(tk+'T12:00').getDay()+6)%7)),c=cfg();
+ c.start=addDays(mon,-((cy-1)*84+(wk-1)*7));S.set('cfg',c);MEMO={};
+ for(let i=0;i<12;i++){const diff=((cycleNum()-1)*12+weekNum())-((cy-1)*12+wk);if(!diff)break;c.start=addDays(c.start,diff*7);S.set('cfg',c);MEMO={}}
+ S.set('autoStart','');toast('✓ Cycle '+cycleNum()+' · Week '+weekNum()+' — '+BLOCKS[curBlock()].name.split(' · ')[1]+' block');render();
+}
+function setProgStart(d){if(!d){toast('Pick a date first');return}const c=cfg();c.start=d;S.set('cfg',c);MEMO={};S.set('autoStart','');toast('✓ Cycle '+cycleNum()+' · Week '+weekNum());render()}
+function progCard(){
+ const c=cfg(),cy=cycleNum(),wk=weekNum();
+ return `<div class="card"><h2>Your programme</h2>
+ <p class="small">Cycle <b>${cy}</b> · Week <b>${wk}</b> of 12 · ${BLOCKS[curBlock()].name.split(' · ')[1]} block${isConsol()?' (light week)':''}</p>
+ <div class="grid2"><div><label>Cycle</label><select id="pgC" style="width:100%">${[1,2,3,4,5,6].map(n=>`<option ${n===cy?'selected':''}>${n}</option>`).join('')}</select></div>
+ <div><label>Week</label><select id="pgW" style="width:100%">${Array.from({length:12},(_,i)=>i+1).map(n=>`<option ${n===wk?'selected':''}>${n}</option>`).join('')}</select></div></div>
+ <button class="btn2" style="width:100%;margin-top:8px" onclick="setProgWeek(el('pgC').value,el('pgW').value)">Set my week</button>
+ <details style="margin-top:8px"><summary class="small dim">Or pick the date you started</summary>
+  <input type="date" id="pgD" value="${c.start}"><button class="btn2" style="width:100%;margin-top:8px" onclick="setProgStart(el('pgD').value)">Use this start date</button></details>
+ <p class="dim small" style="margin-top:6px">Weeks 1–4 Foundation · 5–8 Strength · 9–12 Definition, then a new cycle with fresh exercises. Your logged weights carry over whichever week you pick.</p></div>`;
+}
 let offDraft={type:'holiday',who:'both',gym:true,from:'',to:''};
 function setDraft(k,v){offDraft[k]=v;render()}
 function addOff(){
@@ -1795,7 +1640,7 @@ function delOff(id){if(!confirm('Remove this time off?'))return;S.set('off',offL
 function offCard(){
  const l=offList(),tk=todayKey(),who={both:'Both of us',me:'Brian',her:'Clare'};
  return `<div class="card" id="offCard"><h2>🧳 Time off & holidays</h2>
- <p class="dim small">Holidays, illness, busy weeks. Shared time off pauses the programme clock so blocks resume where you stopped; your first session back is lighter automatically, and before a trip the Coach tells you what to fit in.</p>
+ <p class="dim small">The plan pauses while you’re away and eases you back in.</p>
  ${l.length?l.map(o=>`<div class="fentry"><span class="small">${OFFTYPES[o.type].ic} ${fmtD(o.from)} → ${fmtD(o.to)} · ${who[o.who]}${o.type==='holiday'?(o.gym?' · hotel gym':' · no gym'):''}${o.to<tk?' <span class="dim">(past)</span>':o.from<=tk?' <b style="color:var(--amb)">now</b>':''}</span><button class="btn3" aria-label="Remove" onclick="delOff(${o.id})">×</button></div>`).join(''):'<p class="dim small">Nothing planned.</p>'}
  <h3>Add time off</h3>
  <div>${Object.keys(OFFTYPES).map(k=>`<span class="chip ${offDraft.type===k?'on':''}" onclick="setDraft('type','${k}')">${OFFTYPES[k].ic} ${OFFTYPES[k].n}</span>`).join('')}</div>
@@ -1808,41 +1653,48 @@ function backupText(){
  const out={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith('r43_'))out[k]=localStorage.getItem(k)}
  return JSON.stringify(out);
 }
-function doBackup(){el('bkBox').value=backupText();el('bkBox').select();S.set('lastBk',todayKey());try{document.execCommand('copy');el('bkMsg').textContent='Copied — paste somewhere safe (Notes)'}catch(e){el('bkMsg').textContent='Select-all and copy manually'}}
-function doRestore(){
- try{const o=JSON.parse(el('bkBox').value);Object.keys(o).forEach(k=>{if(k.startsWith('r43_'))localStorage.setItem(k,o[k])});el('bkMsg').textContent='Restored ✓';setTimeout(()=>location.reload(),600)}catch(e){el('bkMsg').textContent='Invalid backup text'}
+function backupFile(){
+ const t=backupText(),name='recomp43-backup-'+todayKey()+'.json';S.set('lastBk',todayKey());
+ try{if(typeof File!=='undefined'){const f=new File([t],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:'Recomp43 backup'}).catch(()=>{});return}}}catch(e){}
+ try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},800);toast('Backup saved')}catch(e){copyText(t)}
 }
+function restoreText(t){
+ let o;try{o=JSON.parse(t)}catch(e){toast('That isn’t a Recomp43 backup');return}
+ const ks=Object.keys(o||{}).filter(k=>k.startsWith('r43_'));if(!ks.length){toast('That isn’t a Recomp43 backup');return}
+ if(!confirm('Replace the data on this phone with this backup?'))return;
+ ks.forEach(k=>localStorage.setItem(k,o[k]));toast('Restored ✓');setTimeout(()=>location.reload(),700);
+}
+function restoreFile(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>restoreText(String(r.result));r.readAsText(f);inp.value=''}
+function doBackup(){el('bkBox').value=backupText();el('bkBox').select();S.set('lastBk',todayKey());try{document.execCommand('copy');toast('Copied — paste it into Notes')}catch(e){toast('Select all and copy')}}
+function doRestore(){restoreText(el('bkBox').value)}
 function moreView(){
  const c=cfg(),chips=(k,opts)=>opts.map(([v,l])=>`<span class="chip ${String(c[k])===String(v)?'on':''}" onclick="setCfg('${k}',${typeof v==='number'?v:`'${v}'`})">${l}</span>`).join('');
+ const lb=S.get('lastBk','');
  return `
+ ${progCard()}
  ${offCard()}
- <div class="card"><h2>Settings</h2>
+ <div class="card"><h2>Backup</h2>
+  <p class="dim small">Your data lives only in this copy of the app (this browser on this phone). Save a file every week or two${lb?` — last: ${fmtD(lb)}`:''}.</p>
+  <div class="row"><button class="btn2" onclick="backupFile()">💾 Save backup file</button><label class="btn2 filebtn">📂 Restore from file<input type="file" accept=".json,application/json,text/plain" onchange="restoreFile(this)"></label></div>
+  <details style="margin-top:6px"><summary class="small dim">Copy / paste instead</summary><textarea id="bkBox" rows="3" placeholder="Backup text appears / paste here"></textarea>
+  <div class="row" style="margin-top:7px"><button class="btn2" onclick="doBackup()">Copy</button><button class="btn2" onclick="doRestore()">Restore pasted text</button></div></details></div>
+ <details class="card" style="display:block"><summary>Settings</summary>
   <div class="grid2"><div><label>Brian weight (kg)</label><input type="number" value="${c.wt}" onchange="setCfg('wt',parseFloat(this.value)||86)"></div>
   <div><label>Clare weight (kg)</label><input type="number" value="${c.wtHer}" onchange="setCfg('wtHer',parseFloat(this.value)||64)"></div></div>
   <div class="grid2"><div><label>Brian height (cm)</label><input type="number" value="${c.ht}" onchange="setCfg('ht',parseFloat(this.value)||180)"></div>
   <div><label>Clare height (cm)</label><input type="number" value="${c.htHer}" onchange="setCfg('htHer',parseFloat(this.value)||165)"></div></div>
   <div class="grid2"><div><label>Brian age</label><input type="number" value="${c.age}" onchange="setCfg('age',parseFloat(this.value)||43)"></div>
   <div><label>Clare age</label><input type="number" value="${c.ageHer}" onchange="setCfg('ageHer',parseFloat(this.value)||43)"></div></div>
-  <div class="grid2"><div><label>Brian max HR (optional)</label><input type="number" placeholder="${Math.round(208-0.7*c.age)}" value="${c.hrmax||''}" onchange="setCfg('hrmax',parseFloat(this.value)||'')"></div>
-  <div><label>Clare max HR (optional)</label><input type="number" placeholder="${Math.round(208-0.7*c.ageHer)}" value="${c.hrmaxHer||''}" onchange="setCfg('hrmaxHer',parseFloat(this.value)||'')"></div></div>
-  <label>Goal mode — ${WHO()} (switch profile to set the other)</label>${Object.keys(MODES).map(k=>`<span class="chip ${myMode()===k?'on':''}" onclick="setCfg('${prof==='her'?'modeHer':'mode'}','${k}')">${MODES[k].n} −${Math.round(MODES[k].d*(prof==='her'?0.75:1))}</span>`).join('')}
-  <label>Your gym’s dumbbell steps</label>${chips('dbStep',[[2,'2 kg (2, 4, 6…)'],[2.5,'2.5 kg (2.5, 5, 7.5…)']])}
-  <label>Machine & cable stack steps</label>${chips('mcStep',[[2.5,'2.5 kg'],[5,'5 kg']])}
-  <p class="dim small">Weights are rounded to what actually exists in your gym — no impossible 23.5 kg dumbbells.</p>
+  <label>Goal — ${WHO()}</label>${Object.keys(MODES).map(k=>`<span class="chip ${myMode()===k?'on':''}" onclick="setCfg('${prof==='her'?'modeHer':'mode'}','${k}')">${MODES[k].n}</span>`).join('')}
+  <label>Dumbbells at your gym go up in</label>${chips('dbStep',[[2,'2 kg'],[2.5,'2.5 kg']])}
+  <label>Machine & cable stacks go up in</label>${chips('mcStep',[[2.5,'2.5 kg'],[5,'5 kg']])}
   <label>Warm-up — Brian</label><input type="text" value="${esc(c.warm)}" onchange="setCfg('warm',this.value)">
   <label>Warm-up — Clare</label><input type="text" value="${esc(c.warmHer)}" onchange="setCfg('warmHer',this.value)">
-  <label>Exercise variety</label>${chips('variety',[['low','Low — same lifts all block'],['med','Medium — A/B swap every 2 visits'],['high','High — new pick every visit']])}
-  <label>Paired exercises</label>${chips('ssMode',[['pair','Paired — same station'],['straight','Straight sets — busy gym']])}
-  <label>Programme start (a Monday)</label><input type="date" value="${c.start}" onchange="setCfg('start',this.value)">
-  <p class="dim small">Cycle ${cycleNum()} · Week ${weekNum()} · ${BLOCKS[curBlock()].name}${isConsol()?' · consolidation':''} · v${VERSION} · <span class="linkbtn" onclick="S.set('seenV','');go('today')">what’s new</span></p></div>
+  <label>Exercise variety</label>${chips('variety',[['low','Same lifts all block'],['med','Swap every 2 visits'],['high','New every visit']])}
+  <label>Paired exercises</label>${chips('ssMode',[['pair','Back-to-back'],['straight','Straight sets (busy gym)']])}
+  <p class="dim small" style="margin-top:8px">v${VERSION}</p></details>
  ${EDGE}
- <details class="card" style="display:block"><summary>Backup & restore (your data lives on this phone)</summary>
-  <p class="dim small">Copy the text into Notes weekly. Restore by pasting it back and tapping Restore.</p>
-  <p class="small" style="color:var(--amb)">iOS keeps <b>separate data</b> for the Home-Screen icon vs Safari. Use Safari only (the morning sync opens there). If data is “missing”, it’s in the other one — Copy backup there, Restore here.</p>
-  <textarea id="bkBox" rows="3" placeholder="Backup text appears / paste here"></textarea>
-  <div class="row" style="margin-top:7px"><button class="btn2" onclick="doBackup()">Copy backup</button><button class="btn2" onclick="doRestore()">Restore</button></div>
-  <p class="dim small" id="bkMsg"></p></details>
- <div class="card"><h2>Danger zone</h2><button class="btn2" style="color:var(--red)" onclick="if(confirm('Erase ALL data (both profiles)?')){localStorage.clear();location.reload()}">Reset all data</button></div>`;
+ <details class="card" style="display:block"><summary>Reset</summary><button class="btn2" style="color:var(--red)" onclick="if(confirm('Erase ALL data on this phone (both profiles)? Save a backup file first.')){localStorage.clear();location.reload()}">Erase all data</button></details>`;
 }
 /* ---- TIMER (auto-starts after each ticked set) ---- */
 let tInt=null,tEnd=0,tHide=null,aCtx=null;
@@ -1864,27 +1716,8 @@ let wakeLock=null;
 async function holdWake(){try{if(navigator.wakeLock&&!wakeLock&&!document.hidden){wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',()=>{wakeLock=null})}}catch(e){}}
 function releaseWake(){try{if(wakeLock)wakeLock.release()}catch(e){}wakeLock=null}
 
-/* ---- URL SYNC (iOS Shortcut) ---- */
-(function(){try{
- const src=(location.search&&location.search.length>1)?location.search:(location.hash&&location.hash.indexOf('=')>-1?'?'+location.hash.slice(1):'');
- if(!src)return;
- const q=new URLSearchParams(src);
- if(q.get('test')){
-  S.set('lastSync','Test ping '+todayKey()+' — the link into the app works ✓ (now check the shortcut/automation)');
-  tab='data';S.set('tab','data');
-  try{history.replaceState(null,'',location.pathname)}catch(e){}
-  return;
- }
- /* p=clare (or her) files the numbers under Clare; anything else goes to Brian */
- const who=(q.get('p')||q.get('who')||'').toLowerCase(),pfx=/^(clare|her|c)$/.test(who)?'her_':'';
- const dk=(q.get('d')||todayKey()).slice(0,10);let got=[];
- [['rhr',30,120],['hrv',5,250],['sleep',1,16],['energy',1,5],['wt',30,200],['waist',40,200],['steps',0,100000],['vo2',10,80],['move',0,4000],['exmin',0,600],['stand',0,24]].forEach(([k,lo,hi])=>{
-  const v=parseFloat(q.get(k));
-  if(!isNaN(v)&&v>=lo&&v<=hi){saveMetric(dk,k,String(Math.round(v*10)/10),pfx);got.push(k.toUpperCase()+' '+(Math.round(v*10)/10))}
- });
- if(got.length){S.set(pfx?'lastSyncHer':'lastSync',dk+' — '+got.join(' · '));tab='today';S.set('tab','today');prof=pfx?'her':'me';S.set('prof',prof);
-  try{history.replaceState(null,'',location.pathname)}catch(e){}}
-}catch(e){}})();
+/* Old Shortcut links (?rhr=…) are ignored — just tidy the address bar */
+try{if(location.search&&location.search.length>1)history.replaceState(null,'',location.pathname)}catch(e){}
 
 /* Ask iOS/browser to protect localStorage from eviction */
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
