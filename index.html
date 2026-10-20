@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Recomp43</title>
 <meta name="theme-color" content="#07090d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Recomp43">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
 <style>
 :root{--bg:#07090d;--card:#10151c;--card2:#161d27;--card3:#1d2632;--line:#222c39;--line2:#303d4f;--txt:#f2f5f9;--dim:#8b97a9;--acc:#38bdf8;--acc2:#0b2536;--accTxt:#03131d;--grad:linear-gradient(135deg,#38bdf8 0%,#2dd4bf 100%);--glow:rgba(56,189,248,.22);--grn:#4ade80;--grn2:#0e2619;--amb:#fbbf24;--red:#f87171;--pink:#f472b6;--pur:#a78bfa;--gold:#fcd34d;--r:18px;--sh:0 8px 24px rgba(0,0,0,.35)}
 body.her{--acc:#f472b6;--acc2:#35122a;--accTxt:#2a0718;--grad:linear-gradient(135deg,#f472b6 0%,#c084fc 100%);--glow:rgba(244,114,182,.22)}
@@ -1336,8 +1343,9 @@ function offHero(off){
 /* No history on this phone/browser copy → most likely the data lives in the other copy (Home-Screen icon vs browser) */
 function freshCard(){
  if(S.get('hist',[]).length||S.get('her_hist',[]).length||S.get('freshOk',false))return '';
+ const sa=!!(navigator.standalone||(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches));
  return `<div class="card" style="border-color:var(--amb)"><h2>No history here yet</h2>
- <p class="small">Used the app before? Your data is almost certainly in the other copy — the Home-Screen icon, Safari and Chrome each keep their own. Open the app the way you used to → More → <b>Save backup file</b>, then here: More → <b>Restore from file</b>.</p>
+ <p class="small">${sa?'This Home Screen app keeps its own data. Your history is in Safari: open Safari → More → <b>Save backup file</b>, then come back here → More → <b>Restore from file</b>. After that, use only this icon.':'Used the app before? Your data is in another copy — the Home Screen icon, Safari and Chrome each keep their own. Open the one you used before → More → <b>Save backup file</b>, then here: More → <b>Restore from file</b>.'}</p>
  <div class="row" style="margin-top:8px"><button class="btn2" onclick="go('more')">Restore a backup</button><button class="btn2" onclick="S.set('freshOk',true);render()">I’m starting fresh</button></div></div>`;
 }
 function todayView(){
@@ -1763,7 +1771,7 @@ function moreView(){
  ${progCard()}
  ${offCard()}
  <div class="card"><h2>Backup</h2>
-  <p class="dim small">Your data lives only in this copy of the app (this browser on this phone). Save a file every week or two${lb?` — last: ${fmtD(lb)}`:''}.</p>
+  <p class="dim small">Your data lives only in this copy of the app on this phone — the Home Screen app, Safari and Chrome each keep their own. Use one and back it up every week or two${lb?` — last: ${fmtD(lb)}`:''}.</p>
   <div class="row"><button class="btn2" onclick="backupFile()">💾 Save backup file</button><label class="btn2 filebtn">📂 Restore from file<input type="file" accept=".json,application/json,text/plain" onchange="restoreFile(this)"></label></div>
   <details style="margin-top:6px"><summary class="small dim">Copy / paste instead</summary><textarea id="bkBox" rows="3" placeholder="Backup text appears / paste here"></textarea>
   <div class="row" style="margin-top:7px"><button class="btn2" onclick="doBackup()">Copy</button><button class="btn2" onclick="doRestore()">Restore pasted text</button></div></details></div>
