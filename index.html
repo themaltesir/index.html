@@ -253,7 +253,7 @@ details.howto summary::after{font-size:16px}
 <div class="toast" id="toast"></div>
 <nav id="nav"></nav>
 <script>
-const VERSION='6.2';
+const VERSION='6.3';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* ============ STORAGE / PROFILE ============ */
 const S={
@@ -279,7 +279,7 @@ function memo(k,fn){if(!(k in MEMO))MEMO[k]=fn();return MEMO[k]}
 
 /* ============ SETTINGS ============ */
 const CFG_DEF={wt:86,wtHer:64,ht:180,htHer:165,age:43,ageHer:43,mode:'recomp',modeHer:'recomp',start:'',wake:'07:30',variety:'med',ssMode:'pair',
- dbStep:2,mcStep:2.5,warm:'5 min uphill walk — 15% incline at 4 km/h',warmHer:'5 min uphill walk — 15% incline at 4 km/h'};
+ dbStep:2,mcStep:2.5,timerSound:'on',warm:'5 min uphill walk — 15% incline at 4 km/h',warmHer:'5 min uphill walk — 15% incline at 4 km/h'};
 function cfg(){return Object.assign({},CFG_DEF,S.get('cfg',{}))}
 function ensureStart(){
  const c=cfg();if(c.start)return;
@@ -287,7 +287,7 @@ function ensureStart(){
  const d=new Date((h[0]||todayKey())+'T12:00');d.setDate(d.getDate()-((d.getDay()+6)%7));
  c.start=todayKey(d);S.set('cfg',c);S.set('autoStart',c.start);
 }
-function setCfg(k,v){const c=cfg();c[k]=v;S.set('cfg',c);render()}
+function setCfg(k,v){const c=cfg();c[k]=v;S.set('cfg',c);if(k==='timerSound'&&v==='on'){try{unlockAudio()}catch(e){}}render()}
 function myWt(pfx){return (pfx??P())==='her_'?(+cfg().wtHer||64):(+cfg().wt||86)}
 function myAge(pfx){return (pfx??P())==='her_'?(+cfg().ageHer||43):(+cfg().age||43)}
 function myWarm(pfx){return (pfx??P())==='her_'?cfg().warmHer:cfg().warm}
@@ -320,9 +320,9 @@ const DAYTYPE={
  P:{n:'Pump day',ic:'🔥',d:'Lighter weights, more reps, short rests — burns more, easy on the joints.'}};
 /* rs = rest seconds (auto timer); rsL = rest for lower-body main lifts */
 const ZONES={
- S:{main:{sets:4,lo:6,hi:8,rir:2,rs:120,rsL:150},acc:{sets:3,lo:8,hi:10,rir:2,rs:90},ss:{sets:3,lo:8,hi:10,rir:1,rs:60},iso:{sets:2,lo:10,hi:12,rir:1,rs:45},core:{sets:3,lo:8,hi:12,rir:1,rs:45}},
- B:{main:{sets:4,lo:8,hi:10,rir:2,rs:120,rsL:120},acc:{sets:3,lo:10,hi:12,rir:1,rs:75},ss:{sets:3,lo:10,hi:12,rir:1,rs:60},iso:{sets:2,lo:12,hi:15,rir:1,rs:45},core:{sets:3,lo:10,hi:15,rir:1,rs:45}},
- P:{main:{sets:3,lo:10,hi:12,rir:2,rs:90,rsL:105},acc:{sets:3,lo:12,hi:15,rir:1,rs:60},ss:{sets:3,lo:12,hi:15,rir:1,rs:45},iso:{sets:3,lo:15,hi:20,rir:1,rs:30},core:{sets:3,lo:15,hi:20,rir:1,rs:30}}};
+ S:{main:{sets:4,lo:6,hi:8,rir:2,rs:120,rsL:150},acc:{sets:3,lo:8,hi:10,rir:2,rs:90},ss:{sets:3,lo:8,hi:10,rir:1,rs:60},iso:{sets:3,lo:10,hi:12,rir:1,rs:45},core:{sets:3,lo:8,hi:12,rir:1,rs:45}},
+ B:{main:{sets:4,lo:8,hi:10,rir:2,rs:120,rsL:120},acc:{sets:3,lo:10,hi:12,rir:1,rs:75},ss:{sets:3,lo:10,hi:12,rir:1,rs:50},iso:{sets:3,lo:12,hi:15,rir:0,rs:45},core:{sets:3,lo:10,hi:15,rir:1,rs:45}},
+ P:{main:{sets:3,lo:10,hi:12,rir:2,rs:90,rsL:105},acc:{sets:3,lo:12,hi:15,rir:1,rs:60},ss:{sets:3,lo:12,hi:15,rir:0,rs:45},iso:{sets:3,lo:15,hi:20,rir:0,rs:30},core:{sets:3,lo:15,hi:20,rir:1,rs:30}}};
 const PWRZ={sets:3,lo:3,hi:5,rir:null,rs:60};
 const DRILLZ={sets:1,lo:1,hi:1,rir:null,rs:0};
 const TZONES={S:{lo:20,hi:30},B:{lo:30,hi:45},P:{lo:40,hi:60}}; /* timed core / carries, seconds */
@@ -346,9 +346,9 @@ const SESSIONS=[
   prep:'band pull-aparts ×15 · cat-cow ×8 · <b>athletic primer:</b> 2×5 explosive med-ball chest passes (or fast push-ups)',
   work:[
    {t:'main',pool:['Flat DB Bench Press','Barbell Bench Press','Machine Chest Press','Smith Bench Press'],m:{Chest:1,Triceps:.5,Shoulders:.5},cue:'Full stretch at the bottom, no bounce; breathe out as you press',why:'A deep, controlled press is the base of chest growth. Never below 6 reps and always 2 in reserve: the same growth as grinding heavy, with far less joint and blood-pressure stress (Refalo 2023).'},
+   {t:'acc',pool:['Incline DB Press','Incline Machine Press','Incline Smith Press','Low-to-High Cable Fly'],m:{Chest:1,Shoulders:.5},cue:'30° incline — upper chest, deep stretch at the bottom',why:'A 30° incline biases the upper chest, which fills out the top of the chest. Chest now gets 10 sets on this day — the dose that changes its shape.'},
    {t:'acc',pool:['Chest-Supported Row','Seated Cable Row','1-Arm DB Row','Machine Row','T-Bar Row'],m:{Back:1,Biceps:.5},cue:'Let the shoulder blades stretch forward, 1s squeeze at the back',why:'Chest support takes the lower back out of the lift, so all the effort goes into the upper back.'},
-   {t:'acc',pool:['Incline DB Press','Incline Machine Press','Incline Smith Press','Low-to-High Cable Fly'],m:{Chest:1,Shoulders:.5},cue:'30° incline — upper chest',why:'A 30° incline biases the upper chest, which fills out the top of the chest.'},
-   {t:'acc',pool:['Lat Pulldown','Pull-up','Neutral-Grip Pulldown','1-Arm Cable Pulldown','Chin-up'],m:{Back:1,Biceps:.5},cue:'Full stretch at the top, drive the elbows to the hips',why:'Lats give width — a wider back makes the waist look smaller.'},
+   {t:'ss',pool:['Cable Fly + Straight-Arm Pulldown','High Cable Fly + Kneeling Straight-Arm Pulldown','Low Cable Fly + 1-Arm Cable Pulldown'],m:[{Chest:1},{Back:1}],st:'same cable station',cue:'Fly: let the hands come wide and feel the stretch, pause 1 s · pull: elbows to hips',why:'Flyes load the chest in the stretched position — the part of the range that grows muscle most (Pedrosa 2022, Maeo 2023). Paired with a lat pull at the same station.'},
    {t:'ss',pool:['Cable Lateral Raise + Cable Overhead Triceps Extension','DB Lateral Raise + Seated DB Overhead Extension','Cable Y-Raise + Cross-Body Cable Extension'],m:[{Shoulders:1},{Triceps:1}],st:'one cable station (two pulleys), or one pair of dumbbells',cue:'Light, perfect reps; triceps with the arm overhead',why:'Side delts make the shoulders wider. Overhead triceps work grew the triceps about 1.5× more than pushdowns (Maeo 2023).'},
    {t:'core',pool:['Cable Crunch','Machine Crunch','Weighted Decline Crunch'],m:{Abs:1},cue:'Curl the ribs towards the hips, round the back, breathe out hard',why:'Abs are a muscle: loaded crunches build the “blocks”. They show once body fat drops — crunches themselves don’t burn belly fat (Vispute 2011).'}],
   fin:{name:'Bike sprints',opt:true,desc:'6 × 20s hard / 40s easy',swaps:'Rower / ski erg'}},
@@ -363,15 +363,15 @@ const SESSIONS=[
    {t:'iso',pool:['Standing Calf Raise','Leg-Press Calf Raise','Seated Calf Raise'],m:{Calves:1},cue:'2s pause in the bottom stretch',why:'Calves and Achilles tendons take the load in every jump and sprint.'},
    {t:'core',pool:['Ab-Wheel Rollout','Dead Bug','Body-Saw Plank'],m:{Abs:1},cue:'Ribs down, don’t let the lower back sag',why:'Anti-extension work teaches the abs to protect the spine under load (McGill 2010).'}],
   fin:{name:'Farmer’s carry',opt:true,desc:'3 × 40 m, heaviest dumbbells you can hold while standing tall',swaps:'Kettlebells or trap bar'}},
- {id:'upB',grp:1,title:'Upper B — Shoulders, Back & Arms',short:'Upper B',lower:false,focus:'Shoulders · Back · Chest · Arms · Abs',
+ {id:'upB',grp:1,title:'Upper B — Shoulders, Back & Arms',short:'Upper B',lower:false,focus:'Shoulders · Arms · Chest · Back · Abs',
   prep:'band dislocates ×10 · scap pull-ups ×8 · <b>athletic primer:</b> 2×5 slam-ball slams or med-ball overhead throws',
   work:[
    {t:'main',pool:['Seated DB Shoulder Press','Machine Shoulder Press','Landmine Press','Barbell OHP','Smith OHP'],m:{Shoulders:1,Triceps:.5},cue:'Ribs down, no lower-back arch; breathe out through the press',why:'Seated pressing loads the shoulders without the lower-back strain of standing presses.'},
    {t:'acc',pool:['Pull-up','Assisted Pull-up','Neutral-Grip Pulldown','Weighted Pull-up','Meadows Row'],m:{Back:1,Biceps:.5},cue:'Full hang to chin over',why:'Back’s second session of the week — twice a week grows more muscle than once (Schoenfeld 2019). Pulling your own bodyweight is the most athletic upper-body skill.'},
-   {t:'acc',pool:['Cable Fly','Pec Deck','Machine Chest Press','Deficit Push-up'],m:{Chest:1},cue:'Wide stretch, 1s squeeze',why:'Chest’s second weekly session; flyes load the stretch with little elbow stress.'},
-   {t:'ss',pool:['Incline DB Curl + Seated DB Overhead Extension','Cable Bayesian Curl + Cable Overhead Extension','EZ-Bar Curl + EZ-Bar Skullcrusher'],m:[{Biceps:1},{Triceps:1}],st:'same bench and dumbbells, or same cable, or same bar',cue:'Train the stretched position',why:'Curls with the elbow behind the body stretch the biceps more; muscles trained at long lengths tend to grow more.'},
+   {t:'ss',pool:['Pec Deck + Reverse Pec Deck','Cable Fly + Face Pull','Deficit Push-up + Band Pull-Apart'],m:[{Chest:1},{Shoulders:1,Back:.5}],st:'the pec-deck machine both ways round, or one cable station',cue:'Fly: wide stretch, 1 s squeeze · rear delts: light, slow',why:'Chest’s second session of the week, in the stretch. Rear delts balance all the pressing and pull the shoulders back.'},
+   {t:'ss',pool:['Incline DB Curl + Seated DB Overhead Extension','Cable Bayesian Curl + Cable Overhead Extension','EZ-Bar Curl + EZ-Bar Skullcrusher'],m:[{Biceps:1},{Triceps:1}],st:'same bench and dumbbells, or same cable, or same bar',cue:'Train the stretched position — full straight arm at the bottom',why:'Arms get nine direct sets each today. Curls with the elbow behind the body and extensions with the arm overhead load the stretch, where muscle grows most (Maeo 2023, Pedrosa 2022).'},
    {t:'ss',pool:['Rope Hammer Curl + Rope Pressdown','Hammer Curl + Close-Grip Push-up','DB Curl + Bench Dips'],m:[{Biceps:1},{Triceps:1}],st:'same cable and rope, or same dumbbells, or same bench',cue:'Elbows pinned, no swinging',why:'Hammer curls add the brachialis and forearms — thicker-looking arms and a stronger grip.'},
-   {t:'iso',pool:['Reverse Pec Deck','Face Pull','Cable Rear-Delt Fly','Bent-Over Rear-Delt Raise'],m:{Shoulders:1,Back:.5},cue:'Rear delts = 3D shoulders and better posture',why:'Rear delts balance all the pressing and pull the shoulders back.'},
+   {t:'ss',pool:['Spider Curl + DB Kickback','Cable Curl + Cross-Body Cable Extension','Concentration Curl + Seated DB Overhead Extension'],m:[{Biceps:1},{Triceps:1}],st:'same incline bench and dumbbells, or same cable',cue:'Last set of each: go to the last clean rep',why:'Third arm pair — squeeze-position work after the stretch work. Arms are small muscles that recover fast and respond to extra direct sets (Schoenfeld 2017).'},
    {t:'core',pool:['Hanging Knee Raise','Captain’s Chair Leg Raise','Reverse Crunch'],m:{Abs:1},cue:'Curl the pelvis up — don’t just swing the legs',why:'Tilting the pelvis up works the lower abs; swinging the legs only works the hip flexors.'}],
   fin:{name:'8-min EMOM',opt:true,desc:'Odd minutes: 12 kettlebell swings · even: 8 push-ups',swaps:'Rower 8×100 m'}},
  {id:'loB',grp:1,title:'Lower B — Hinge & Power',short:'Lower B',lower:true,focus:'Glutes · Hamstrings · Quads · Calves · Abs',
@@ -421,10 +421,10 @@ const SESSIONS_HER=[
   prep:'band pull-aparts ×15 · arm circles · <b>primer:</b> 2×5 med-ball chest passes',
   work:[
    {t:'main',pool:['Machine Chest Press','Flat DB Bench Press','Incline DB Press','Push-up'],m:{Chest:1,Triceps:.5},cue:'Full range, controlled',why:'Pressing strength keeps the upper body strong and toned.'},
-   {t:'acc',pool:['Lat Pulldown','Assisted Pull-up','Neutral-Grip Pulldown'],m:{Back:1,Biceps:.5},cue:'Elbows down, chest tall',why:'A strong back means better posture and a smaller-looking waist.'},
-   {t:'acc',pool:['Seated Cable Row','Chest-Supported DB Row','1-Arm DB Row'],m:{Back:1,Biceps:.5},cue:'Squeeze the shoulder blades',why:''},
+   {t:'acc',pool:['Lat Pulldown','Assisted Pull-up','Neutral-Grip Pulldown','Seated Cable Row'],m:{Back:1,Biceps:.5},cue:'Elbows down, chest tall',why:'A strong back means better posture and a smaller-looking waist.'},
    {t:'ss',pool:['Seated DB Shoulder Press + DB Lateral Raise','Cable Lateral Raise + Face Pull'],m:[{Shoulders:1},{Shoulders:1}],st:'same dumbbells, or same cable',cue:'Delts love volume',why:'Rounder shoulders make the waist look narrower.'},
    {t:'ss',pool:['Rope Hammer Curl + Rope Pressdown','DB Curl + Seated DB Overhead Extension'],m:[{Biceps:1},{Triceps:1}],st:'same cable and rope, or same bench',cue:'No swinging',why:'Triceps are two-thirds of the upper arm — direct work firms the backs of the arms.'},
+   {t:'ss',pool:['Spider Curl + DB Kickback','Cable Curl + Cable Overhead Extension'],m:[{Biceps:1},{Triceps:1}],st:'same incline bench and dumbbells, or same cable',cue:'Slow lowering, last set to the last clean rep',why:'Second arm pair — arms now get nine direct sets each a week, the dose that firms and shapes them.'},
    {t:'core',pool:['Cable Crunch','Reverse Crunch','Pallof Press'],m:{Abs:1},cue:'Breathe out fully at the top of every rep',why:''}],
   fin:{name:'',desc:'',swaps:''}},
  {id:'hlo2',grp:1,title:'Lower B — Quads, Glutes & Hamstrings',short:'Lower B',lower:true,focus:'Quads · Glutes · Hamstrings · Abs',
@@ -536,7 +536,7 @@ const EQ={
  'Cable Fly':['mc',.13],'Pec Deck':['mc',.55],'Deficit Push-up':['bw'],
  'Incline DB Curl':['db',.12],'Cable Bayesian Curl':['mc',.1],'Cable Overhead Extension':['mc',.3],'EZ-Bar Curl':['bb',.38],'EZ-Bar Skullcrusher':['bb',.33],
  'Rope Hammer Curl':['mc',.35],'Rope Pressdown':['mc',.35],'Hammer Curl':['db',.16],'Close-Grip Push-up':['bw'],'DB Curl':['db',.15],'Bench Dips':['bw'],
- 'Reverse Pec Deck':['mc',.4],'Face Pull':['mc',.3],'Cable Rear-Delt Fly':['mc',.07],'Bent-Over Rear-Delt Raise':['db',.09],
+ 'Reverse Pec Deck':['mc',.4],'Face Pull':['mc',.3],'Straight-Arm Pulldown':['mc',.4],'Low Cable Fly':['mc',.12],'High Cable Fly':['mc',.12],'Kneeling Straight-Arm Pulldown':['mc',.4],'Band Pull-Apart':['bw'],'Spider Curl':['db',.12],'Cable Curl':['mc',.35],'Concentration Curl':['db',.12],'DB Kickback':['db',.1],'Cable Rear-Delt Fly':['mc',.07],'Bent-Over Rear-Delt Raise':['db',.09],
  'Hanging Knee Raise':['bw'],'Captain’s Chair Leg Raise':['bw'],'Reverse Crunch':['bw'],
  'Romanian Deadlift':['bb',1.25],'Trap-Bar Deadlift':['bb',1.6],'Barbell Hip Thrust':['bb',1.5],'Smith RDL':['bb',1.1],'Smith Squat':['bb',1.1],'Goblet Squat':['one',.4],
  'Leg Extension':['mc',.75],'Reverse Nordic':['bw'],'Sissy Squat':['bw'],
@@ -697,7 +697,7 @@ function doneVol(pfx){
  return out;
 }
 /* ============ LOAD ENGINE — an exact weight for every set ============
-   1. Estimated max (e1RM) per lift, from the last session's sets with reps-in-reserve (Epley + RIR).
+   1. Estimated max (e1RM) per lift, from the last session's sets with reps-in-reserve (rep-% table, see PCT).
    2. Hit every target → +2.5%. Missed → follows what you actually did. Never more than +5% / −8% per session,
       so suggestions move in small, real steps (2 kg dumbbells, 2.5 kg plates/stacks — set in More).
    3. Today's day type picks the reps (Strength 6–8, Build 8–12, Pump 12–20); the weight follows from the max.
@@ -707,8 +707,13 @@ const lg=s=>!!(s&&(s.w||s.r||s.ok));
 function slKey(name,pfx){return 'sl_'+(pfx??P())+slug(name)}
 function setLog(name,pfx){return S.get(slKey(name,pfx),null)}
 const PRESC={}; /* prescription on screen — stamped onto the day's log with the first saved set */
-const e1Of=(w,r,rir)=>w*(1+Math.min(30,r+(rir??2))/30);
-const wFor=(e1,r,rir)=>e1/(1+(r+(rir??2))/30);
+/* % of 1-rep max you can lift for N "effective reps" (reps done + reps left in reserve). Standard strength-coaching
+   table (NSCA/Brzycki to 10 reps, flattening beyond): 10 reps ≈ 75%, 15 ≈ 67%, 20 ≈ 60%. The old straight-line formula
+   over-read high-rep sets (60 × 15 came out as a 92 kg max; this gives 87). */
+const PCT=[1,1,.955,.93,.905,.88,.86,.84,.815,.795,.775,.76,.745,.73,.715,.70,.69,.68,.67,.66,.65,.64,.63,.62,.61,.60,.59,.58,.57,.56,.55];
+const effR=(r,rir)=>Math.max(1,Math.min(30,Math.round((+r||0)+(rir??2))));
+const e1Of=(w,r,rir)=>w/PCT[effR(r,rir)];
+const wFor=(e1,r,rir)=>e1*PCT[effR(r,rir)];
 const kg=v=>String(Math.round(parseFloat(v)*100)/100);
 function stepFor(name){const e=eqOf(name).eq,c=cfg();return(e==='db'||e==='one'||e==='t')?(+c.dbStep||2):e==='mc'?(+c.mcStep||2.5):e==='as'?5:2.5}
 function rTo(w,st){return Math.max(st,Math.round(w/st)*st)}
@@ -739,7 +744,7 @@ function e1Now(name,pfx){
   const rec=lastRecord(name,pfx),me0=recE1(rec);
   if(me0){
    const m=rec.m||{},lf=(m.lf>0&&m.lf<1)?m.lf:1,me=me0/lf; /* a lighter readiness day isn't a weaker max */
-   const hit=hitTarget(rec),base=m.e1||me;let e;
+   const hit=hitTarget(rec),base=(m.v>=2&&m.e1)||me;let e; /* stamps from the old straight-line formula (no v) are ignored — the measured sets are the truth */
    if(!m.e1)e=me; /* older logs without a stamped prescription */
    else if(m.src&&m.src!=='log')e=hit?Math.max(me,base)*(lf<1?1:1.025):me; /* calibrating a first-time estimate: free to move up, never down if you hit the targets */
    else{e=Math.min(base*1.05,Math.max(base*.92,hit?Math.max(me,base)*(lf<1?1:1.025):me)); /* max(me,base): rounding can't freeze light lifts */
@@ -789,7 +794,7 @@ function presc(name,slot,sess,pfx,plan){
   if(!reps.length)return Object.assign(out,{kind:'bw',first:true,why:'Bodyweight: as many clean reps as you can, stopping 1–2 short of failure. Next time the app sets the target.'});
   const best=Math.max(...reps),top=reps.every(r=>r>=z.hi);
   return Object.assign(out,{kind:'bw',tr:top?z.hi:Math.min(z.hi,best+1),w:maxW?(top?maxW+2.5:maxW):'',up:top,
-   why:top?'You hit the top of the range last time — add 2.5 kg (hold a dumbbell) or slow the lowering to 3 seconds.':'Beat your best from last time ('+best+') by one rep.'});
+   why:top?'You hit the top of the range last time — make it harder: hold a weight, slow the lowering to 3 seconds, or pick a tougher version.':'Beat your best from last time ('+best+') by one rep.'});
  }
  if(ei.eq==='as'){
   if(!reps.length){const a=rTo(myWt(pfx)*(pfx==='her_'?.55:.4),5);return Object.assign(out,{kind:'as',w:a,tr:z.hi,first:true,why:'Assisted: the number is the help — less help is harder. Start at '+a+' kg; if set 1 is easy, take 5 kg off.'})}
@@ -807,7 +812,7 @@ function presc(name,slot,sess,pfx,plan){
  const E=e1Now(name,pfx),first=E.src!=='log';
  const rr=first?Math.max(rir??2,3):(rir??2);
  const ov=twGet(name,pfx),w=ov!=null?ov:rTo(wFor(E.e1*plan.loadF,z.hi,rr),step);
- return Object.assign(out,{kind:'load',w,tr:z.hi,first,E,rir:rr,adj:ov!=null,stamp:{e1:Math.round(E.e1*10)/10,tr:z.hi,rir:rr,sets,dt:plan.t,lo:z.lo,hi:z.hi,src:E.src,lf:plan.loadF}});
+ return Object.assign(out,{kind:'load',w,tr:z.hi,first,E,rir:rr,adj:ov!=null,stamp:{v:2,e1:Math.round(E.e1*10)/10,tr:z.hi,rir:rr,sets,dt:plan.t,lo:z.lo,hi:z.hi,src:E.src,lf:plan.loadF}});
 }
 /* Per-set targets: set 1 = the prescription; later sets follow what you actually did */
 function rowTargets(p,cur){
@@ -849,7 +854,7 @@ function adjW(btn,name,pfx,dir){
  S.set(twKey(name,pfx),{d:todayKey(),w});MEMO={};
  /* the chosen weight is today's plan: stamp it so next session builds from what you actually lifted */
  const tr=box?+box.dataset.tr:0,rr=box?+box.dataset.rir:2,e1=tr>0?Math.round(e1Of(w,tr,rr)*10)/10:null;
- if(e1){const k=pfx+name,st0=PRESC[k]||{};PRESC[k]=Object.assign({},st0,{e1,src:'adj'});const o=setLog(name,pfx);if(o&&o.d===todayKey()&&o.m){o.m.e1=e1;o.m.src='adj';S.set(slKey(name,pfx),o)}}
+ if(e1){const k=pfx+name,st0=PRESC[k]||{};PRESC[k]=Object.assign({},st0,{v:2,e1,src:'adj'});const o=setLog(name,pfx);if(o&&o.d===todayKey()&&o.m){o.m.e1=e1;o.m.src='adj';o.m.v=2;S.set(slKey(name,pfx),o)}}
  if(!box){render();return}
  box.dataset.w=w;box.dataset.ov=w;
  const b=presc&&presc.querySelector('b');if(b)b.textContent=b.textContent.replace(/[\d.]+(?= ?kg| ?\+kg)/,kg(w));
@@ -888,13 +893,19 @@ function whyWeight(p,pfx){
  else if(E.src==='pool')s='First time on this variation — scaled from your '+E.from+' logs (same movement). Set 1 calibrates.';
  else if(E.src==='transfer')s='First time on this lift — estimated from your other '+regionOf(p.name)+'-body lifts. Set 1 calibrates.';
  else s='First time — a cautious starting estimate for your size. Set 1 calibrates: if it’s easy, the next sets go up.';
- return s+' '+DAYTYPE[p.dt].n+': '+p.tr+' reps with '+p.rir+' in reserve ≈ '+pct+'% of your max.';
+ return s+' '+DAYTYPE[p.dt].n+': '+p.tr+' reps with '+p.rir+' in reserve ≈ '+pct+'% of your max → '+kg(p.w)+' kg.';
 }
 function platesTxt(name,w){
  if(!/^(Barbell|Romanian Deadlift|Front Squat|EZ-Bar)/.test(name)||/Smith/.test(name))return '';
  const bar=/^EZ-Bar/.test(name)?10:20;let per=(w-bar)/2;if(per<=0)return '';
  const out=[];[25,20,15,10,5,2.5,1.25].forEach(p=>{while(per>=p-1e-9){out.push(p);per-=p}});
  return out.length?'Per side: '+out.join(' + ')+(bar===10?' (10 kg EZ bar)':''):'';
+}
+/* Records saved before v6.3 used the old straight-line formula (3–5% high at 10+ reps): rescale once on read */
+function normPR(o){
+ if(!o||o.v>=2)return o;
+ const f=x=>(x&&x.w>0&&x.r>0)?Object.assign({},x,{e1:Math.round(e1Of(x.w,x.r,0)*10)/10}):x;
+ const n=f(o);if(n.base)n.base=f(n.base);if(n.was!=null&&n.base)n.was=n.base.e1;n.v=2;return n;
 }
 function saveSet(name,si,field,val,pfx,sid){
  pfx=pfx??P();const key=slKey(name,pfx);let o=S.get(key,null);const tk=todayKey();
@@ -907,9 +918,9 @@ function saveSet(name,si,field,val,pfx,sid){
  if(!o.m&&PRESC[pfx+name])o.m=PRESC[pfx+name];
  o.n=name;o.sets[si]=o.sets[si]||{};o.sets[si][field]=val;if(field==='w'||field==='r')delete o.sets[si]['af'+field];S.set(key,o);
  if(['bb','db','one','mc'].includes(eqOf(name).eq)){ /* personal record follows today's sets, so typos and corrections can't stick */
-  const pk='pr_'+pfx+slug(name),pr=S.get(pk,null),prior=pr?(pr.d!==tk?pr:(pr.base||null)):null;let best=null;
-  o.sets.forEach(x=>{const w=parseFloat(x&&x.w),r=parseFloat(x&&x.r);if(w>0&&w<=400&&r>0&&r<=15){const e1=Math.round(w*(1+r/30)*10)/10;if(!best||e1>best.e1)best={e1,w,r}}});
-  if(best&&(!prior||best.e1>prior.e1))S.set(pk,{n:name,e1:best.e1,w:best.w,r:best.r,d:tk,was:prior?prior.e1:null,base:prior?{n:prior.n,e1:prior.e1,w:prior.w,r:prior.r,d:prior.d,was:prior.was??null}:null});
+  const pk='pr_'+pfx+slug(name),pr0=S.get(pk,null),pr=normPR(pr0);if(pr&&pr!==pr0)S.set(pk,pr);const prior=pr?(pr.d!==tk?pr:(pr.base||null)):null;let best=null;
+  o.sets.forEach(x=>{const w=parseFloat(x&&x.w),r=parseFloat(x&&x.r);if(w>0&&w<=400&&r>0&&r<=15){const e1=Math.round(e1Of(w,r,0)*10)/10;if(!best||e1>best.e1)best={e1,w,r}}});
+  if(best&&(!prior||best.e1>prior.e1))S.set(pk,{v:2,n:name,e1:best.e1,w:best.w,r:best.r,d:tk,was:prior?prior.e1:null,base:prior?{n:prior.n,e1:prior.e1,w:prior.w,r:prior.r,d:prior.d,was:prior.was??null}:null});
   else if(pr&&pr.d===tk)S.set(pk,prior);
  }
  if(sid)markAct(sid,name,si,pfx);
@@ -989,13 +1000,13 @@ function prList(){
  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);
   if(!k||!k.startsWith(pf))continue;
   if(P()===''&&k.startsWith('r43_pr_her_'))continue;
-  try{const o=JSON.parse(localStorage.getItem(k));if(o&&o.e1)out.push(o)}catch(e){}}
+  try{const o=normPR(JSON.parse(localStorage.getItem(k)));if(o&&o.e1)out.push(o)}catch(e){}}
  return out.sort((a,b)=>b.e1-a.e1).slice(0,12);
 }
 function howTo(name){window.open('https://www.youtube.com/results?search_query='+encodeURIComponent(name+' proper form technique'),'_blank')}
 const jsq=s=>String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 /* ============ NUTRITION ============ */
-const MODES={recomp:{d:350,n:'Recomp'},cut:{d:500,n:'Cut'},hard:{d:650,n:'Hard cut'}};
+const MODES={build:{d:-150,n:'Lean build'},recomp:{d:350,n:'Recomp'},cut:{d:500,n:'Cut'},hard:{d:650,n:'Hard cut'}};
 function myMode(){const c=cfg(),m=prof==='her'?(c.modeHer||'recomp'):(c.mode||'recomp');return MODES[m]?m:'recomp'}
 function targets(dayType){
  const wt=myWt(),mult=prof==='her'?29:30.8,pmult=prof==='her'?1.8:2.1;
@@ -1111,7 +1122,7 @@ const HOTCARD=`<div class="card"><h2>Hot-climate protocol (35–45°C)</h2>
 /* ---- Belly plan: six daily habits that move the waist (some tick themselves) ---- */
 function habKey(){return P()+'hab'}
 function habDay(dk){return S.get(habKey(),{})[dk]||{}}
-function stepGoal(pfx){const m=(pfx??P())==='her_'?(cfg().modeHer||'recomp'):(cfg().mode||'recomp');return m==='recomp'?8000:10000}
+function stepGoal(pfx){const m=(pfx??P())==='her_'?(cfg().modeHer||'recomp'):(cfg().mode||'recomp');return(m==='recomp'||m==='build')?8000:10000}
 function habAuto(dk){
  const day=fday(dk),t=targets(day.type),m=metrics()[dk]||{},out={};
  const tot=day.items.reduce((a,i)=>({p:a.p+(i.p||0),alc:a.alc+(i.a?(i.k||0):0)}),{p:0,alc:0});
@@ -1163,7 +1174,8 @@ const PROGRESSION=[
  ['Heavy & light days','Each muscle gets one heavier and one lighter session a week: 💪 Strength 6–8 reps · ⚖️ Build 8–12 · 🔥 Pump 12–20.'],
  ['Did more or fewer reps?','Type them before ✓ — that’s how the app learns. An easy set raises the next one.'],
  ['Missed or swapped a day','Nothing is skipped: the session you’ve gone longest without is always next.'],
- ['Morning check-in','Three taps. A rough morning (or drinks last night) makes the session lighter automatically.']];
+ ['Morning check-in','Three taps. A rough morning (or drinks last night) makes the session lighter automatically.'],
+ ['Size needs food','Arms and chest grow slowly in a calorie deficit — that is physics, not the programme. If size matters more than the waist for a while, switch to Lean build (More → Goal) for 8–12 weeks, keep protein high, and expect about +0.5 cm on the arm every 2–3 months.']];
 /* ============ YOUR DAY — supplements, herbs & teas, anchored to wake time ============ */
 function dayPlan(pfx){
  const w=cfg().wake||'07:30',[h,m]=w.split(':').map(Number);
@@ -1255,6 +1267,7 @@ function coachItems(){
   const m=metrics(pfx)[tk]||{};
   if((dow===1||dow===4)&&m.wt==null&&hr<15)add(70,'⚖️','Weigh-in morning: after the loo, before food or drink.',['Log it',`go('data')`]);
   const lw=lastMetric('waist',pfx);if(!lw||daysAgo(lw.d)>=7)add(55,'📏','Waist check due — tape at the navel, relaxed.',['Log it',`go('data')`]);
+  const la=lastMetric('arm',pfx);if(hist().length>6&&(!la||daysAgo(la.d)>=30))add(40,'💪','Monthly size check — tape your upper arm and chest. It shows growth the mirror hides.',['Log it',`go('data')`]);
   if(alcYesterday(pfx)>=450&&hr<15)add(68,'💧','Morning after: water + electrolytes, eggs, then move — today’s session is already lighter.');
   if((dow===5||dow===6)&&hr>=12)add(50,'🍷','Drinks tonight? 40–50 g protein first, water between drinks.');
   if(hr>=16){const day=fday(tk),t=targets(day.type),pr=day.items.reduce((a,i)=>a+(i.p||0),0);if(day.items.length&&pr<t.p*0.7)add(65,'🥩',`${t.p-pr} g protein still to go — a kwark bowl (+48 g) or chicken wrap (+40 g) tonight.`,['Food',`go('food')`])}
@@ -1412,7 +1425,7 @@ function estMin(sess,pfx){
  const plan=planFor(sess,pfx);let m=7;
  sess.work.forEach((w,i)=>{
   if(w.t==='drill'){const mm=(chosenEx(sess,i,pfx).match(/(\d+)\s*min/)||[])[1];m+=mm?+mm:(w.n||1)+1;return}
-  const z=zoneOf(w.t,plan.t,w.pool[0]),sets=Math.max(1,z.sets+plan.setAdj),work=w.t==='pwr'?15:w.t==='main'?50:40,rest=(w.t==='main'&&sess.lower&&z.rsL)?z.rsL:z.rs;
+  const z=zoneOf(w.t,plan.t,w.pool[0]),sets=Math.max(1,z.sets+plan.setAdj),work=w.t==='pwr'?15:w.t==='main'?50:(w.t==='ss'||w.t==='iso'||w.t==='core')?32:40,rest=(w.t==='main'&&sess.lower&&z.rsL)?z.rsL:z.rs;
   m+=sets*((w.t==='ss'?2:1)*work+rest)/60+1});
  return Math.round(m);
 }
@@ -1573,10 +1586,10 @@ function weekBudget(){
  return{budget,used,usedAlc,toDate,missing,daysLeft,remaining:budget-used,perDay:daysLeft?Math.round((budget-used)/daysLeft):0};
 }
 /* ---- Progress check: 7-day average vs 2–4 weeks ago ---- */
-function trendDelta(key){
- const m=metrics(),now=new Date(todayKey()+'T12:00');
+function trendDelta(key,back){
+ const m=metrics(),now=new Date(todayKey()+'T12:00'),lo=back?back/2:14,hi=back||28,win=back?14:7;
  const pts=Object.keys(m).filter(d=>m[d][key]!=null).map(d=>[(now-new Date(d+'T12:00'))/864e5,m[d][key]]);
- const rec=pts.filter(p=>p[0]>=0&&p[0]<=7).map(p=>p[1]),old=pts.filter(p=>p[0]>=14&&p[0]<=28).map(p=>p[1]);
+ const rec=pts.filter(p=>p[0]>=0&&p[0]<=win).map(p=>p[1]),old=pts.filter(p=>p[0]>=lo&&p[0]<=hi).map(p=>p[1]);
  if(!rec.length||!old.length)return null;
  const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
  return Math.round((avg(rec)-avg(old))*10)/10;
@@ -1588,6 +1601,11 @@ function progressCard(){
  const b=bits.length?' ('+bits.join(', ')+' vs 2–4 weeks ago)':'';
  let cls='n',msg;
  if(dw==null&&dz==null)msg='Activates once there are weigh-ins this week and from 2–4 weeks ago (Mon & Thu mornings), plus a weekly waist measurement at the navel. During recomposition the waist tells the truth; the scale often doesn’t.';
+ else if(myMode()==='build'){
+  if(dz!=null&&dz>=1.5){cls='a';msg='Lean build: waist up '+dz+' cm — gaining a little fast. Trim 100–150 kcal/day; keep protein.'}
+  else if(dw!=null&&dw<0.2){cls='a';msg='Lean build: weight flat'+b+'. Add 100–150 kcal/day (carbs around training) so the arms and chest have something to grow from.'}
+  else{cls='g';msg='Lean build on track'+b+' — slow gain, waist steady.'}
+ }
  else if(dz!=null&&dz<=-1){cls='g';msg='Fat is coming off'+b+'.'+(dw!=null&&dw>-0.3?' Weight holding while the waist drops is textbook recomposition.':'')+' Change nothing.'}
  else if(dw!=null&&dw<-0.025*myWt()){cls='a';msg='Dropping faster than ~1% a week'+b+'. Add ~150 kcal/day (carbs around training) to protect muscle.'}
  else if((dw==null||dw>-0.3)&&(dz==null||dz>-0.5)){cls='a';msg='Flat for about three weeks'+b+'. Next step: 150–200 kcal/day less on Mon–Thu from carbs or fats (never protein) — or halve one evening’s drinks, which does the same. Training stays unchanged.'}
@@ -1691,16 +1709,20 @@ function spark(key,label){
 }
 function dataView(){
  const dk=todayKey(),m=metrics(),tm=m[dk]||{},her=prof==='her';
- const days=Object.keys(m).filter(d=>m[d].wt!=null||m[d].waist!=null).sort().reverse().slice(0,12);
- const sp=spark('wt','Weight')+spark('waist','Waist');
+ const days=Object.keys(m).filter(d=>m[d].wt!=null||m[d].waist!=null||m[d].arm!=null||m[d].chest!=null).sort().reverse().slice(0,12);
+ const sp=spark('wt','Weight')+spark('waist','Waist')+spark('arm','Arm')+spark('chest','Chest');
  return `<div class="card"><h2>Weigh-in & waist — ${WHO()}</h2>
   <div class="grid2"><div><label>Weight kg (Mon & Thu)</label><input type="number" inputmode="decimal" placeholder="${her?'64.0':'86.0'}" value="${tm.wt??''}" oninput="saveMetric('${dk}','wt',this.value)" onchange="render()"></div>
   <div><label>Waist cm (weekly)</label><input type="number" inputmode="decimal" placeholder="${her?'78':'92'}" value="${tm.waist??''}" oninput="saveMetric('${dk}','waist',this.value)" onchange="render()"></div></div>
   ${whtr()}</div>
  ${progressCard()}
+ <div class="card"><h2>Size check — monthly</h2>
+  <div class="grid2"><div><label>Upper arm cm (flexed)</label><input type="number" inputmode="decimal" placeholder="${her?'28':'36'}" value="${tm.arm??''}" oninput="saveMetric('${dk}','arm',this.value)" onchange="render()"></div>
+  <div><label>Chest cm (at the nipple)</label><input type="number" inputmode="decimal" placeholder="${her?'90':'104'}" value="${tm.chest??''}" oninput="saveMetric('${dk}','chest',this.value)" onchange="render()"></div></div>
+  <p class="dim small">Same tape, same spot, first thing in the morning. ${(()=>{const a=trendDelta('arm',56),c=trendDelta('chest',56);return a!=null||c!=null?'Change vs 1–2 months ago: '+[a!=null?'arm '+(a>0?'+':'')+a+' cm':null,c!=null?'chest '+(c>0?'+':'')+c+' cm':null].filter(Boolean).join(' · ')+'.':'A tape beats the mirror for spotting arm and chest growth — expect about +0.5 cm on the arm per 2–3 months when it’s working.'})()}</p></div>
  ${sp?`<div class="card">${sp}</div>`:''}
  ${benchCard()}
- ${days.length?`<details class="card" style="display:block"><summary>History</summary><table><tr><th>Date</th><th>Weight</th><th>Waist</th></tr>${days.map(d=>`<tr><td>${fmtD(d)}</td><td>${m[d].wt??''}</td><td>${m[d].waist??''}</td></tr>`).join('')}</table></details>`:''}`;
+ ${days.length?`<details class="card" style="display:block"><summary>History</summary><table><tr><th>Date</th><th>Weight</th><th>Waist</th><th>Arm</th><th>Chest</th></tr>${days.map(d=>`<tr><td>${fmtD(d)}</td><td>${m[d].wt??''}</td><td>${m[d].waist??''}</td><td>${m[d].arm??''}</td><td>${m[d].chest??''}</td></tr>`).join('')}</table></details>`:''}`;
 }
 
 /* ---- MORE ---- */
@@ -1783,6 +1805,7 @@ function moreView(){
   <div class="grid2"><div><label>Brian age</label><input type="number" value="${c.age}" onchange="setCfg('age',parseFloat(this.value)||43)"></div>
   <div><label>Clare age</label><input type="number" value="${c.ageHer}" onchange="setCfg('ageHer',parseFloat(this.value)||43)"></div></div>
   <label>Goal — ${WHO()}</label>${Object.keys(MODES).map(k=>`<span class="chip ${myMode()===k?'on':''}" onclick="setCfg('${prof==='her'?'modeHer':'mode'}','${k}')">${MODES[k].n}</span>`).join('')}
+  <label>Rest-timer sound</label>${chips('timerSound',[['on','Soft beep (mixes with your music)'],['off','Silent — just watch the bar']])}
   <label>Dumbbells at your gym go up in</label>${chips('dbStep',[[2,'2 kg'],[2.5,'2.5 kg']])}
   <label>Machine & cable stacks go up in</label>${chips('mcStep',[[2.5,'2.5 kg'],[5,'5 kg']])}
   <label>Warm-up — Brian</label><input type="text" value="${esc(c.warm)}" onchange="setCfg('warm',this.value)">
@@ -1795,7 +1818,10 @@ function moreView(){
 }
 /* ---- TIMER (auto-starts after each ticked set) ---- */
 let tInt=null,tEnd=0,tTot=1,tHide=null,aCtx=null;
-function unlockAudio(){try{if(!aCtx)aCtx=new (window.AudioContext||window.webkitAudioContext)();if(aCtx.state==='suspended')aCtx.resume()}catch(e){}}
+/* Mix with, never interrupt, podcasts or music: iOS honours the 'ambient' audio session (Safari 17+) */
+function ambient(){try{if(navigator.audioSession&&navigator.audioSession.type!=='ambient')navigator.audioSession.type='ambient'}catch(e){}}
+function soundOn(){return cfg().timerSound!=='off'}
+function unlockAudio(){if(!soundOn())return;ambient();try{if(!aCtx)aCtx=new (window.AudioContext||window.webkitAudioContext)();if(aCtx.state==='suspended')aCtx.resume()}catch(e){}}
 function tTick(){
  const left=Math.max(0,Math.round((tEnd-Date.now())/1000));
  el('timerBox').textContent=Math.floor(left/60)+':'+String(left%60).padStart(2,'0');
@@ -1806,6 +1832,7 @@ function startTimer(sec){clearInterval(tInt);clearTimeout(tHide);el('timer').cla
 function addTime(s){const left=Math.max(0,tEnd-Date.now()),tot=tTot;startTimer(Math.round(left/1000)+s);tTot=tot+s}
 function stopTimer(){clearInterval(tInt);clearTimeout(tHide);const t=el('timer');if(t)t.classList.add('hide')}
 function beep(){
+ if(!soundOn())return;
  try{unlockAudio();const c=aCtx;if(c)[0,.25,.5].forEach(t=>{const o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.setValueAtTime(.3,c.currentTime+t);o.start(c.currentTime+t);o.stop(c.currentTime+t+.16)})}catch(e){}
  try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}
 }
