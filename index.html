@@ -38,8 +38,6 @@ main{padding:14px 16px 24px;max-width:640px;margin:0 auto}
 .donecard{background:radial-gradient(420px 180px at 100% 0%,rgba(74,222,128,.18),transparent 70%),linear-gradient(160deg,#0f2a1c 0%,var(--card) 75%);border-color:rgba(74,222,128,.45)}
 .eyebrow{font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--acc)}
 .big{font-size:24px;font-weight:900;letter-spacing:-.4px;line-height:1.15;margin:4px 0 8px}
-.mchips{display:flex;flex-wrap:wrap;gap:5px}
-.mchips span{font-size:11.5px;font-weight:700;color:var(--txt);background:rgba(255,255,255,.06);border:1px solid var(--line2);border-radius:999px;padding:3px 9px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
 .stat{background:rgba(255,255,255,.05);border-radius:13px;padding:10px 6px;text-align:center}
 .stat b{display:block;font-size:21px;font-weight:900;font-variant-numeric:tabular-nums}
@@ -58,7 +56,6 @@ button{font-family:inherit;cursor:pointer}
 .btn{background:var(--grad);color:var(--accTxt);border:none;border-radius:14px;padding:14px 18px;font-size:16px;font-weight:800;width:100%;min-height:52px;box-shadow:0 8px 22px var(--glow),0 2px 6px rgba(0,0,0,.4);letter-spacing:.2px}
 .btn:active,.btn2:active,.tick:active,.iconbtn:active{transform:scale(.97)}
 .btn.pinkbg{background:linear-gradient(135deg,#f472b6,#c084fc);color:#2a0718}
-.btn.grn{background:linear-gradient(135deg,#4ade80,#2dd4bf);color:#052e16}
 .btn2{background:var(--card3);color:var(--txt);border:1px solid var(--line2);border-radius:12px;padding:10px 13px;font-size:13.5px;font-weight:600;min-height:42px}
 .btn3{background:none;border:none;color:var(--red);font-size:17px;padding:2px 8px}
 .linkbtn{background:none;border:none;color:var(--acc);font-size:12.5px;font-weight:700;padding:2px 0}
@@ -77,12 +74,12 @@ nav button.on{color:var(--acc);background:var(--acc2)}
 .exbtns{display:flex;gap:6px;flex:none}
 .iconbtn{width:40px;height:40px;border-radius:12px;background:var(--card3);border:1px solid var(--line2);color:var(--txt);font-size:16px;display:flex;align-items:center;justify-content:center}
 .ex .name{font-weight:800;font-size:16.5px;margin-top:5px;letter-spacing:-.1px;line-height:1.25}
-.ex .scheme{color:var(--grn);font-size:12.5px;margin:4px 0 2px;font-weight:600}
 .ex .cue{color:var(--dim);font-size:12px}
-.sugg{color:#c4b5fd;font-size:13px;margin-top:8px;font-weight:700;background:rgba(167,139,250,.12);border-radius:9px;padding:6px 9px;display:inline-block}
 .last{color:var(--dim);font-size:11.5px;margin-top:4px}
 .part{font-size:13.5px;font-weight:800;margin-top:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .part .pl{background:var(--card3);border:1px solid var(--line2);border-radius:7px;font-size:11px;padding:1px 7px;color:var(--acc)}
+.part .pn{flex:1;min-width:0}
+.iconbtn.sm{width:36px;height:32px;border-radius:9px;font-size:14px;flex:none}
 .info{margin-top:10px;padding:11px 12px;background:var(--card3);border:1px solid var(--line);border-radius:13px;font-size:13px}
 .info p{margin-bottom:6px}
 .sets{margin-top:8px}
@@ -124,9 +121,8 @@ label{font-size:11.5px;color:var(--dim);display:block;margin:8px 0 4px}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .row>*{flex:1}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.grid2>*,.grid3>*,.grid4>*{min-width:0}
+.grid2>*,.grid4>*{min-width:0}
 input[type=date],input[type=time]{min-width:0;max-width:100%}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 details{margin-bottom:6px}
 details.card{padding:6px 16px}
@@ -138,11 +134,6 @@ details[open]>summary::after{transform:rotate(-90deg)}
 .hide{display:none!important}
 ul,ol{padding-left:18px;margin-bottom:8px}
 li{margin-bottom:4px}
-.kpi{background:var(--card2);border-radius:12px;padding:10px 6px;text-align:center}
-.kpi .v{font-size:17px;font-weight:800;color:var(--acc)}
-.kpi .v.over{color:var(--red)}
-.kpi .v.good{color:var(--grn)}
-.kpi .k{font-size:10.5px;color:var(--dim)}
 .bar{height:8px;background:var(--card3);border-radius:5px;margin-top:5px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--grad);border-radius:5px}
 .bar i.over{background:var(--red)}
@@ -172,7 +163,6 @@ hr{border:none;border-top:1px solid var(--line);margin:10px 0}
 .vol .dn{position:absolute;top:0;bottom:0;left:0;background:var(--grad);border-radius:6px}
 .qlist .qi{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
 .qlist .qi:last-child{border-bottom:none}
-.qn{font-size:11px;font-weight:800;color:var(--dim);width:18px}
 .sesscard{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .badge{font-size:10.5px;font-weight:800;border-radius:999px;padding:3px 9px;background:var(--acc);color:var(--accTxt);letter-spacing:.3px}
 .presc{display:flex;flex-direction:column;gap:2px;margin-top:8px;background:rgba(56,189,248,.08);border:1px solid var(--line2);border-radius:12px;padding:8px 11px}
@@ -197,8 +187,9 @@ body.her .presc{background:rgba(244,114,182,.08)}
 .ex.complete.open .info:not(.hide){display:block}
 .ex .donesum{display:none;margin-top:6px;font-size:13px;color:var(--grn);font-weight:700;cursor:pointer}
 .ex.complete .donesum{display:block}
-.ex.complete.open .donesum{display:none}
 .ex.complete{padding:12px 14px;opacity:.92}
+.ex .donesum.skp{color:var(--amb)}
+.ex[data-skip]{opacity:.7;border-color:rgba(251,191,36,.45)}
 .mini{display:flex;align-items:flex-end;gap:2px;height:22px;width:120px;margin-top:4px}
 .mini i{flex:1;background:var(--acc);opacity:.7;border-radius:2px;display:block}
 .ex .exnote{display:inline-block;margin-top:5px;font-size:12px;color:var(--amb);background:rgba(251,191,36,.1);border-radius:7px;padding:2px 8px}
@@ -253,7 +244,7 @@ details.howto summary::after{font-size:16px}
 <div class="toast" id="toast"></div>
 <nav id="nav"></nav>
 <script>
-const VERSION='6.3';
+const VERSION='6.4';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* ============ STORAGE / PROFILE ============ */
 const S={
@@ -320,7 +311,7 @@ const DAYTYPE={
  P:{n:'Pump day',ic:'🔥',d:'Lighter weights, more reps, short rests — burns more, easy on the joints.'}};
 /* rs = rest seconds (auto timer); rsL = rest for lower-body main lifts */
 const ZONES={
- S:{main:{sets:4,lo:6,hi:8,rir:2,rs:120,rsL:150},acc:{sets:3,lo:8,hi:10,rir:2,rs:90},ss:{sets:3,lo:8,hi:10,rir:1,rs:60},iso:{sets:3,lo:10,hi:12,rir:1,rs:45},core:{sets:3,lo:8,hi:12,rir:1,rs:45}},
+ S:{main:{sets:4,lo:6,hi:8,rir:2,rs:120,rsL:135},acc:{sets:3,lo:8,hi:10,rir:2,rs:90},ss:{sets:3,lo:8,hi:10,rir:1,rs:50},iso:{sets:3,lo:10,hi:12,rir:1,rs:45},core:{sets:3,lo:8,hi:12,rir:1,rs:45}},
  B:{main:{sets:4,lo:8,hi:10,rir:2,rs:120,rsL:120},acc:{sets:3,lo:10,hi:12,rir:1,rs:75},ss:{sets:3,lo:10,hi:12,rir:1,rs:50},iso:{sets:3,lo:12,hi:15,rir:0,rs:45},core:{sets:3,lo:10,hi:15,rir:1,rs:45}},
  P:{main:{sets:3,lo:10,hi:12,rir:2,rs:90,rsL:105},acc:{sets:3,lo:12,hi:15,rir:1,rs:60},ss:{sets:3,lo:12,hi:15,rir:0,rs:45},iso:{sets:3,lo:15,hi:20,rir:0,rs:30},core:{sets:3,lo:15,hi:20,rir:1,rs:30}}};
 const PWRZ={sets:3,lo:3,hi:5,rir:null,rs:60};
@@ -331,7 +322,7 @@ const BLOCKS={
  b2:{name:'Block 2 · Strength',wks:'Wks 5–8',pair:['S','B'],goal:'Heavier: Strength and Build days, never below 6 reps. Add one 4×4 interval session a week.'},
  b3:{name:'Block 3 · Definition',wks:'Wks 9–12',pair:['S','P'],goal:'Full wave — one heavy and one pump day per muscle each week, burner finishers on.'}};
 const CONSOL='Light week: 1 set fewer, a little lighter — it’s when the gains settle in.';
-const MUSCLES=['Chest','Back','Shoulders','Biceps','Triceps','Quads','Glutes','Hamstrings','Calves','Abs'];
+const MUSCLES=['Chest','Back','Shoulders','Biceps','Triceps','Quads','Glutes','Hamstrings','Calves','Abs','Obliques','Lower back'];
 /* Day type for a session on a date: weeks 1 (new cycle) and 4/8/12 are Build; otherwise the block's pair alternates by week */
 function dayType(sid,pfx,dk){
  dk=dk||todayKey();const s=sessOf(sid,pfx);if(!s||s.extra)return 'B';
@@ -350,18 +341,18 @@ const SESSIONS=[
    {t:'acc',pool:['Chest-Supported Row','Seated Cable Row','1-Arm DB Row','Machine Row','T-Bar Row'],m:{Back:1,Biceps:.5},cue:'Let the shoulder blades stretch forward, 1s squeeze at the back',why:'Chest support takes the lower back out of the lift, so all the effort goes into the upper back.'},
    {t:'ss',pool:['Cable Fly + Straight-Arm Pulldown','High Cable Fly + Kneeling Straight-Arm Pulldown','Low Cable Fly + 1-Arm Cable Pulldown'],m:[{Chest:1},{Back:1}],st:'same cable station',cue:'Fly: let the hands come wide and feel the stretch, pause 1 s · pull: elbows to hips',why:'Flyes load the chest in the stretched position — the part of the range that grows muscle most (Pedrosa 2022, Maeo 2023). Paired with a lat pull at the same station.'},
    {t:'ss',pool:['Cable Lateral Raise + Cable Overhead Triceps Extension','DB Lateral Raise + Seated DB Overhead Extension','Cable Y-Raise + Cross-Body Cable Extension'],m:[{Shoulders:1},{Triceps:1}],st:'one cable station (two pulleys), or one pair of dumbbells',cue:'Light, perfect reps; triceps with the arm overhead',why:'Side delts make the shoulders wider. Overhead triceps work grew the triceps about 1.5× more than pushdowns (Maeo 2023).'},
-   {t:'core',pool:['Cable Crunch','Machine Crunch','Weighted Decline Crunch'],m:{Abs:1},cue:'Curl the ribs towards the hips, round the back, breathe out hard',why:'Abs are a muscle: loaded crunches build the “blocks”. They show once body fat drops — crunches themselves don’t burn belly fat (Vispute 2011).'}],
+   {t:'core',pool:['Cable Crunch','Machine Crunch','Weighted Decline Crunch','Ab-Wheel Rollout'],m:{Abs:1},cue:'Curl the ribs towards the hips, round the back, breathe out hard',why:'Abs are a muscle: loaded crunches build the “blocks”. They show once body fat drops — crunches themselves don’t burn belly fat (Vispute 2011).'}],
   fin:{name:'Bike sprints',opt:true,desc:'6 × 20s hard / 40s easy',swaps:'Rower / ski erg'}},
- {id:'loA',grp:0,title:'Lower A — Squat & Jump',short:'Lower A',lower:true,focus:'Quads · Glutes · Hamstrings · Calves · Abs',
+ {id:'loA',grp:0,title:'Lower A — Squat & Jump',short:'Lower A',lower:true,focus:'Quads · Glutes · Hamstrings · Lower back · Waist',
   prep:'world’s greatest stretch ×3/side · 10 bodyweight squats · 2×5 pogo hops',
   work:[
    {t:'pwr',pool:['Box Jump (step down)','Broad Jump','Kettlebell Swing','Pogo Hops'],m:{},cue:'Land soft and quiet, step down — never jump down',why:'Power fades earlier and faster than strength after 40. A few explosive reps keep you athletic and cost almost no recovery (Reid & Fielding 2012).'},
    {t:'main',pool:['Barbell or Smith Squat','Hack Squat','Leg Press','Front Squat'],m:{Quads:1,Glutes:.5},cue:'Depth over load; breathe out on the way up, no breath-holding grinds',why:'Deep squats grew the glutes and inner thighs more than half squats (Kubo 2019).'},
-   {t:'acc',pool:['DB RDL','45° Back Extension','Single-Leg DB RDL','Cable Pull-Through'],m:{Hamstrings:1,Glutes:.5},cue:'Hips back, feel the hamstring stretch',why:'Hinges load the hamstrings at long length. The single-leg version adds balance — real athletic carry-over.'},
+   {t:'acc',pool:['DB RDL','Single-Leg DB RDL','Cable Pull-Through'],m:{Hamstrings:1,Glutes:.5,'Lower back':.5},cue:'Hips back, flat back, feel the hamstring stretch',why:'Hinges load the hamstrings at long length and make the lower back hold position. The single-leg version adds balance — real athletic carry-over.'},
    {t:'acc',pool:['Bulgarian Split Squat','Walking Lunge','Smith Reverse Lunge','Deficit Reverse Lunge'],m:{Quads:1,Glutes:1},cue:'Long stride + slight forward lean = more glute',why:'Single-leg work evens out left–right gaps and trains balance — how legs actually work in sport.'},
    {t:'acc',pool:['Seated Leg Curl','Lying Leg Curl','Nordic Negatives'],m:{Hamstrings:1},cue:'Seated beats lying for hamstring growth',why:'Seated leg curls grew the hamstrings more than lying curls (Maeo 2021). Strong hamstrings protect against the classic over-40 hamstring tear.'},
    {t:'iso',pool:['Standing Calf Raise','Leg-Press Calf Raise','Seated Calf Raise'],m:{Calves:1},cue:'2s pause in the bottom stretch',why:'Calves and Achilles tendons take the load in every jump and sprint.'},
-   {t:'core',pool:['Ab-Wheel Rollout','Dead Bug','Body-Saw Plank'],m:{Abs:1},cue:'Ribs down, don’t let the lower back sag',why:'Anti-extension work teaches the abs to protect the spine under load (McGill 2010).'}],
+   {t:'ss',tag:'Lower back · Waist',pool:['45° Back Extension + Roman-Chair Side Bend','Bird-Dog + Side Plank (sec/side)','Back Extension Machine + Cable Woodchop'],m:[{'Lower back':1},{Obliques:1,Abs:.5}],st:'the 45° back-extension bench for both, or a mat for both, or the machine then a cable',cue:'Back extension: hinge at the hips, flat back, squeeze the glutes at the top, breathe out on the way up · side bend: slow, reach long',why:'Direct lower-back work makes the spine muscles stronger and harder to tire, which protects the back (Steele 2015). Side bends and side planks train the obliques and the deep side muscle under the love handles. Honest note: this firms the waist, but the fat on top only goes with the weekly calorie budget — nobody can burn fat from one spot (Vispute 2011, Ramírez-Campillo 2013).'}],
   fin:{name:'Farmer’s carry',opt:true,desc:'3 × 40 m, heaviest dumbbells you can hold while standing tall',swaps:'Kettlebells or trap bar'}},
  {id:'upB',grp:1,title:'Upper B — Shoulders, Back & Arms',short:'Upper B',lower:false,focus:'Shoulders · Arms · Chest · Back · Abs',
   prep:'band dislocates ×10 · scap pull-ups ×8 · <b>athletic primer:</b> 2×5 slam-ball slams or med-ball overhead throws',
@@ -370,20 +361,20 @@ const SESSIONS=[
    {t:'acc',pool:['Pull-up','Assisted Pull-up','Neutral-Grip Pulldown','Weighted Pull-up','Meadows Row'],m:{Back:1,Biceps:.5},cue:'Full hang to chin over',why:'Back’s second session of the week — twice a week grows more muscle than once (Schoenfeld 2019). Pulling your own bodyweight is the most athletic upper-body skill.'},
    {t:'ss',pool:['Pec Deck + Reverse Pec Deck','Cable Fly + Face Pull','Deficit Push-up + Band Pull-Apart'],m:[{Chest:1},{Shoulders:1,Back:.5}],st:'the pec-deck machine both ways round, or one cable station',cue:'Fly: wide stretch, 1 s squeeze · rear delts: light, slow',why:'Chest’s second session of the week, in the stretch. Rear delts balance all the pressing and pull the shoulders back.'},
    {t:'ss',pool:['Incline DB Curl + Seated DB Overhead Extension','Cable Bayesian Curl + Cable Overhead Extension','EZ-Bar Curl + EZ-Bar Skullcrusher'],m:[{Biceps:1},{Triceps:1}],st:'same bench and dumbbells, or same cable, or same bar',cue:'Train the stretched position — full straight arm at the bottom',why:'Arms get nine direct sets each today. Curls with the elbow behind the body and extensions with the arm overhead load the stretch, where muscle grows most (Maeo 2023, Pedrosa 2022).'},
-   {t:'ss',pool:['Rope Hammer Curl + Rope Pressdown','Hammer Curl + Close-Grip Push-up','DB Curl + Bench Dips'],m:[{Biceps:1},{Triceps:1}],st:'same cable and rope, or same dumbbells, or same bench',cue:'Elbows pinned, no swinging',why:'Hammer curls add the brachialis and forearms — thicker-looking arms and a stronger grip.'},
-   {t:'ss',pool:['Spider Curl + DB Kickback','Cable Curl + Cross-Body Cable Extension','Concentration Curl + Seated DB Overhead Extension'],m:[{Biceps:1},{Triceps:1}],st:'same incline bench and dumbbells, or same cable',cue:'Last set of each: go to the last clean rep',why:'Third arm pair — squeeze-position work after the stretch work. Arms are small muscles that recover fast and respond to extra direct sets (Schoenfeld 2017).'},
-   {t:'core',pool:['Hanging Knee Raise','Captain’s Chair Leg Raise','Reverse Crunch'],m:{Abs:1},cue:'Curl the pelvis up — don’t just swing the legs',why:'Tilting the pelvis up works the lower abs; swinging the legs only works the hip flexors.'}],
+   {t:'ss',pool:['Rope Hammer Curl + Rope Pressdown','Hammer Curl + Close-Grip Push-up','DB Curl + DB Skullcrusher'],m:[{Biceps:1},{Triceps:1}],st:'same cable and rope, or same dumbbells, or same bench',cue:'Elbows pinned, no swinging',why:'Hammer curls add the brachialis and forearms — thicker-looking arms and a stronger grip.'},
+   {t:'ss',pool:['Spider Curl + DB Kickback','Cable Curl + Cross-Body Cable Extension','Concentration Curl + 1-Arm DB Overhead Extension'],m:[{Biceps:1},{Triceps:1}],st:'same incline bench and dumbbells, or same cable',cue:'Last set of each: go to the last clean rep',why:'Third arm pair — squeeze-position work after the stretch work. Arms are small muscles that recover fast and respond to extra direct sets (Schoenfeld 2017).'},
+   {t:'core',pool:['Hanging Knee Raise','Captain’s Chair Leg Raise','Reverse Crunch','Dead Bug'],m:{Abs:1},cue:'Curl the pelvis up — don’t just swing the legs',why:'Tilting the pelvis up works the lower abs; swinging the legs only works the hip flexors.'}],
   fin:{name:'8-min EMOM',opt:true,desc:'Odd minutes: 12 kettlebell swings · even: 8 push-ups',swaps:'Rower 8×100 m'}},
- {id:'loB',grp:1,title:'Lower B — Hinge & Power',short:'Lower B',lower:true,focus:'Glutes · Hamstrings · Quads · Calves · Abs',
-  prep:'glute bridges ×12 · 10 hip hinges · 2×3 easy broad jumps',
+ {id:'loB',grp:1,title:'Lower B — Hinge & Power',short:'Lower B',lower:true,focus:'Glutes · Hamstrings · Lower back · Quads · Waist',
+  prep:'glute bridges ×12 · 10 hip hinges · bird-dog ×6/side · 2×3 easy broad jumps',
   work:[
    {t:'pwr',pool:['Kettlebell Swing','Med-Ball Scoop Toss','Lateral Bound','Box Jump (step down)'],m:{},cue:'Snap the hips, then relax',why:'Hip-snap power is what makes you feel athletic — sprinting, jumping, picking things up fast.'},
-   {t:'main',pool:['Romanian Deadlift','Trap-Bar Deadlift','Barbell Hip Thrust','Smith RDL'],m:{Hamstrings:1,Glutes:1},cue:'Brace, breathe out through the hard part; stop 2 reps before form slips',why:'The hinge builds the whole back of the body — glutes, hamstrings, spinal muscles — the engine for running and jumping.'},
+   {t:'main',pool:['Romanian Deadlift','Trap-Bar Deadlift','Barbell Hip Thrust','Smith RDL'],m:{Hamstrings:1,Glutes:1,'Lower back':.5},cue:'Brace, breathe out through the hard part; stop 2 reps before form slips',why:'The hinge builds the whole back of the body — glutes, hamstrings and the lower-back muscles — the engine for running and jumping. This is your heavy lower-back work of the week.'},
    {t:'acc',pool:['Leg Press','Hack Squat','Smith Squat','Goblet Squat'],m:{Quads:1,Glutes:.5},cue:'Full depth, 2s lowering',why:'Quads’ second weekly session without loading the spine again.'},
    {t:'acc',pool:['Seated Leg Curl','Lying Leg Curl','Nordic Negatives'],m:{Hamstrings:1},cue:'Hamstrings twice a week',why:'Seated curls train the hamstrings at long length (Maeo 2021).'},
    {t:'acc',pool:['Leg Extension','Reverse Nordic','Sissy Squat'],m:{Quads:1},cue:'Slow lowering; lean back slightly for more stretch',why:'Leg extensions reach the front quad muscle (rectus femoris) that squats train poorly — it’s the one that kicks and sprints.'},
    {t:'iso',pool:['Seated Calf Raise','Standing Calf Raise','Leg-Press Calf Raise'],m:{Calves:1},cue:'Full stretch, 2s pause at the bottom',why:'Calves twice a week, full range.'},
-   {t:'core',pool:['Pallof Press','Suitcase Carry (sec/side)','Side Plank (sec/side)','Cable Woodchop'],m:{Abs:1},cue:'Resist the twist — hips and ribs stay square',why:'Anti-rotation and side work train the obliques that hold the waist in and protect the back (McGill 2010).'}],
+   {t:'core',tag:'Obliques · Waist',pool:['Pallof Press','Suitcase Carry (sec/side)','Side Plank (sec/side)','Cable Woodchop'],m:{Obliques:1,Abs:.5},cue:'Resist the twist — hips and ribs stay square',why:'Anti-rotation and side work train the obliques — the muscles under the love handles — that hold the waist in and protect the back (McGill 2010).'}],
   fin:{name:'Cool-down',opt:true,desc:'5–10 min incline walk (Zone 2)',swaps:''}},
  {id:'ath',grp:0,title:'Extra — Athletic Session',short:'Athletic',lower:true,extra:true,focus:'Power · Speed · Agility · Carries',
   prep:'leg swings ×10/side · 2×20 m skips · 2×5 pogo hops',
@@ -406,16 +397,16 @@ const SESSIONS=[
 /* ============ SESSIONS (Clare) — glutes/legs/arms priority; power for bone + athleticism, abs every session ============ */
 const ROT_HER=['hlo1','hup','hlo2','hup2'];
 const SESSIONS_HER=[
- {id:'hlo1',grp:0,title:'Lower A — Glutes & Hamstrings',short:'Lower A',lower:true,focus:'Glutes · Hamstrings · Quads · Abs',
+ {id:'hlo1',grp:0,title:'Lower A — Glutes & Hamstrings',short:'Lower A',lower:true,focus:'Glutes · Hamstrings · Lower back · Waist',
   prep:'glute bridges ×12 · 10 hinges · monster walks ×10/side',
   work:[
    {t:'pwr',pool:['Kettlebell Swing','Box Jump (step down)','Pogo Hops'],m:{},cue:'Fast hips, soft landings',why:'Jumps and fast lifts keep bones and power strong through the 40s. Heavy lifting plus impact work raised bone density in women (Watson 2018) — worth building before menopause.'},
    {t:'main',pool:['Barbell Hip Thrust','Machine Hip Thrust','Smith Hip Thrust','B-Stance Hip Thrust'],m:{Glutes:1},cue:'Ribs down, full lockout, 1s squeeze',why:'Hip thrusts load the glutes hard with little stress on the back.'},
-   {t:'acc',pool:['Romanian Deadlift','DB RDL','45° Back Extension','Cable Pull-Through'],m:{Hamstrings:1,Glutes:.5},cue:'Stretch the hamstrings, soft knees',why:'Hinges train glutes and hamstrings in the stretch.'},
+   {t:'acc',pool:['Romanian Deadlift','DB RDL','Cable Pull-Through'],m:{Hamstrings:1,Glutes:.5,'Lower back':.5},cue:'Stretch the hamstrings, soft knees, flat back',why:'Hinges train glutes and hamstrings in the stretch and make the lower back hold position.'},
    {t:'acc',pool:['Bulgarian Split Squat','Reverse Lunge','Step-Up','Walking Lunge'],m:{Glutes:1,Quads:1},cue:'Long stride = glute bias',why:'Single-leg work shapes the glutes and improves balance.'},
    {t:'acc',pool:['Seated Leg Curl','Lying Leg Curl'],m:{Hamstrings:1},cue:'Seated beats lying',why:'Seated leg curls grew the hamstrings more than lying curls (Maeo 2021).'},
    {t:'iso',pool:['Hip Abduction Machine','Cable Hip Abduction','Banded Side Steps'],m:{Glutes:1},cue:'Lean slightly forward, slow reps',why:'Upper-glute work rounds out the hips and steadies the knees.'},
-   {t:'core',pool:['Dead Bug','Ab-Wheel Rollout','Body-Saw Plank'],m:{Abs:1},cue:'Ribs down, lower back stays flat',why:'A strong deep core flattens the stomach wall and protects the back.'}],
+   {t:'ss',tag:'Lower back · Waist',pool:['45° Back Extension + Roman-Chair Side Bend','Bird-Dog + Side Plank (sec/side)','Back Extension Machine + Cable Woodchop'],m:[{'Lower back':1},{Obliques:1,Abs:.5}],st:'the 45° back-extension bench for both, or a mat for both, or the machine then a cable',cue:'Back extension: hinge at the hips, flat back, squeeze the glutes at the top, breathe out on the way up · side bend: slow, reach long',why:'Direct lower-back work makes the spine muscles stronger and harder to tire, which protects the back (Steele 2015). Side bends and side planks train the obliques and the deep side muscle under the love handles. Honest note: this firms the waist, but the fat on top only goes with the weekly calorie budget — nobody can burn fat from one spot (Vispute 2011, Ramírez-Campillo 2013).'}],
   fin:{name:'Glute burnout',opt:true,desc:'Banded glute bridge ×25 + pulses ×15, 2 rounds',swaps:''}},
  {id:'hup',grp:0,title:'Upper A — Push, Pull & Arms',short:'Upper A',lower:false,focus:'Chest · Back · Shoulders · Arms · Abs',
   prep:'band pull-aparts ×15 · arm circles · <b>primer:</b> 2×5 med-ball chest passes',
@@ -425,9 +416,9 @@ const SESSIONS_HER=[
    {t:'ss',pool:['Seated DB Shoulder Press + DB Lateral Raise','Cable Lateral Raise + Face Pull'],m:[{Shoulders:1},{Shoulders:1}],st:'same dumbbells, or same cable',cue:'Delts love volume',why:'Rounder shoulders make the waist look narrower.'},
    {t:'ss',pool:['Rope Hammer Curl + Rope Pressdown','DB Curl + Seated DB Overhead Extension'],m:[{Biceps:1},{Triceps:1}],st:'same cable and rope, or same bench',cue:'No swinging',why:'Triceps are two-thirds of the upper arm — direct work firms the backs of the arms.'},
    {t:'ss',pool:['Spider Curl + DB Kickback','Cable Curl + Cable Overhead Extension'],m:[{Biceps:1},{Triceps:1}],st:'same incline bench and dumbbells, or same cable',cue:'Slow lowering, last set to the last clean rep',why:'Second arm pair — arms now get nine direct sets each a week, the dose that firms and shapes them.'},
-   {t:'core',pool:['Cable Crunch','Reverse Crunch','Pallof Press'],m:{Abs:1},cue:'Breathe out fully at the top of every rep',why:''}],
+   {t:'core',pool:['Cable Crunch','Reverse Crunch','Dead Bug','Ab-Wheel Rollout'],m:{Abs:1},cue:'Breathe out fully at the top of every rep',why:'A strong front wall flattens the stomach and protects the back.'}],
   fin:{name:'',desc:'',swaps:''}},
- {id:'hlo2',grp:1,title:'Lower B — Quads, Glutes & Hamstrings',short:'Lower B',lower:true,focus:'Quads · Glutes · Hamstrings · Abs',
+ {id:'hlo2',grp:1,title:'Lower B — Quads, Glutes & Hamstrings',short:'Lower B',lower:true,focus:'Quads · Glutes · Hamstrings · Waist',
   prep:'10 squats · leg swings ×10/side · 2×5 pogo hops',
   work:[
    {t:'pwr',pool:['Box Jump (step down)','Med-Ball Scoop Toss','Kettlebell Swing'],m:{},cue:'Quality over quantity — fast and crisp',why:'Impact and speed keep bones strong and legs springy.'},
@@ -436,7 +427,7 @@ const SESSIONS_HER=[
    {t:'acc',pool:['Curtsy Lunge','Single-Leg Press','Reverse Lunge'],m:{Glutes:1,Quads:.5},cue:'Slow lowering',why:''},
    {t:'acc',pool:['Seated Leg Curl','Lying Leg Curl'],m:{Hamstrings:1},cue:'Slow lowering, full stretch',why:'Hamstrings twice a week instead of once — the evidence favours ≥2 sessions per muscle (Schoenfeld 2019), and strong hamstrings protect the knees.'},
    {t:'iso',pool:['Standing Calf Raise','Seated Calf Raise'],m:{Calves:1},cue:'Full stretch at the bottom',why:''},
-   {t:'core',pool:['Side Plank (sec/side)','Pallof Press','Suitcase Carry (sec/side)'],m:{Abs:1},cue:'Hips square, keep breathing',why:'Obliques and the deep core pull the waist in.'}],
+   {t:'core',tag:'Obliques · Waist',pool:['Side Plank (sec/side)','Pallof Press','Suitcase Carry (sec/side)','Cable Woodchop'],m:{Obliques:1,Abs:.5},cue:'Hips square, keep breathing',why:'Obliques and the deep core pull the waist in and steady the lower back (McGill 2010).'}],
   fin:{name:'Incline walk',opt:true,desc:'10 min brisk',swaps:''}},
  {id:'hup2',grp:1,title:'Upper B — Back, Shoulders & Arms + Glutes',short:'Upper B',lower:false,focus:'Back · Shoulders · Arms · Glutes · Abs',
   prep:'band pull-aparts ×15 · glute bridges ×12',
@@ -480,7 +471,7 @@ const HOLFULL=[
    {t:'acc',pool:['Flat DB Bench Press','Machine Chest Press','Push-up (elevate feet if easy)'],m:{Chest:1,Triceps:.5},cue:'Full stretch, no bounce',why:''},
    {t:'acc',pool:['1-Arm DB Row','Seated Cable Row','Machine Row'],m:{Back:1,Biceps:.5},cue:'1s squeeze at the chest',why:''},
    {t:'ss',pool:['DB RDL + DB Lateral Raise','Cable Pull-Through + Cable Lateral Raise'],m:[{Hamstrings:1,Glutes:.5},{Shoulders:1}],st:'same dumbbells, or same cable',cue:'Hinge, then delts',why:''},
-   {t:'ss',pool:['DB Curl + Bench Dips','Rope Hammer Curl + Rope Pressdown'],m:[{Biceps:1},{Triceps:1}],st:'same bench, or same cable and rope',cue:'Arms to finish',why:''},
+   {t:'ss',pool:['DB Curl + Close-Grip Push-up','Rope Hammer Curl + Rope Pressdown'],m:[{Biceps:1},{Triceps:1}],st:'same bench, or same cable and rope',cue:'Arms to finish',why:''},
    {t:'core',pool:['Dead Bug','Plank (sec)','Ab-Wheel Rollout'],m:{Abs:1},cue:'Core — skip if short on time',why:''}],
   fin:{name:'',desc:'',swaps:''}},
  {id:'fbB',grp:1,title:'Holiday Full-Body B',short:'Full-Body B',lower:true,focus:'Whole body · Abs',
@@ -511,6 +502,8 @@ const EXM={};
  const parts=p.includes(' + ')?p.split(' + '):[p];
  parts.forEach((pt,j)=>{const m=Array.isArray(w.m)?(w.m[j]||{}):(w.m||{});if(!EXM[pt])EXM[pt]=m});
 }))));
+/* the first slot an exercise appears in sets its muscles; these few differ from that slot's default */
+Object.assign(EXM,{'Barbell Hip Thrust':{Glutes:1,Hamstrings:.5},'Cable Pull-Through':{Glutes:1,Hamstrings:.5}});
 
 /* ============ EQUIPMENT LIBRARY — how each lift is loaded + a starting-strength estimate ============
    eq: bb barbell/plate-loaded (total kg) · db dumbbell (kg per hand) · one = one dumbbell held in both hands ·
@@ -530,12 +523,12 @@ const EQ={
  'Bulgarian Split Squat':['db',.22],'Walking Lunge':['db',.25],'Smith Reverse Lunge':['bb',.55],'Deficit Reverse Lunge':['db',.2],
  'Seated Leg Curl':['mc',.55],'Lying Leg Curl':['mc',.45],'Nordic Negatives':['bw'],
  'Standing Calf Raise':['mc',1.1],'Leg-Press Calf Raise':['bb',1.6],'Seated Calf Raise':['bb',.7],
- 'Ab-Wheel Rollout':['bw'],'Dead Bug':['bw'],'Body-Saw Plank':['bw'],
+ 'Ab-Wheel Rollout':['bw'],'Dead Bug':['bw'],'Body-Saw Plank':['bw'],'Roman-Chair Side Bend':['bw'],'Bird-Dog':['bw'],'Back Extension Machine':['mc',.9],'DB Skullcrusher':['db',.11],
  'Seated DB Shoulder Press':['db',.24],'Machine Shoulder Press':['mc',.55],'Landmine Press':['bb',.35],'Barbell OHP':['bb',.6],'Smith OHP':['bb',.55],
  'Assisted Pull-up':['as'],'Weighted Pull-up':['bw'],'Meadows Row':['bb',.35],
  'Cable Fly':['mc',.13],'Pec Deck':['mc',.55],'Deficit Push-up':['bw'],
  'Incline DB Curl':['db',.12],'Cable Bayesian Curl':['mc',.1],'Cable Overhead Extension':['mc',.3],'EZ-Bar Curl':['bb',.38],'EZ-Bar Skullcrusher':['bb',.33],
- 'Rope Hammer Curl':['mc',.35],'Rope Pressdown':['mc',.35],'Hammer Curl':['db',.16],'Close-Grip Push-up':['bw'],'DB Curl':['db',.15],'Bench Dips':['bw'],
+ 'Rope Hammer Curl':['mc',.35],'Rope Pressdown':['mc',.35],'Hammer Curl':['db',.16],'Close-Grip Push-up':['bw'],'DB Curl':['db',.15],'1-Arm DB Overhead Extension':['db',.09],
  'Reverse Pec Deck':['mc',.4],'Face Pull':['mc',.3],'Straight-Arm Pulldown':['mc',.4],'Low Cable Fly':['mc',.12],'High Cable Fly':['mc',.12],'Kneeling Straight-Arm Pulldown':['mc',.4],'Band Pull-Apart':['bw'],'Spider Curl':['db',.12],'Cable Curl':['mc',.35],'Concentration Curl':['db',.12],'DB Kickback':['db',.1],'Cable Rear-Delt Fly':['mc',.07],'Bent-Over Rear-Delt Raise':['db',.09],
  'Hanging Knee Raise':['bw'],'Captain’s Chair Leg Raise':['bw'],'Reverse Crunch':['bw'],
  'Romanian Deadlift':['bb',1.25],'Trap-Bar Deadlift':['bb',1.6],'Barbell Hip Thrust':['bb',1.5],'Smith RDL':['bb',1.1],'Smith Squat':['bb',1.1],'Goblet Squat':['one',.4],
@@ -557,7 +550,7 @@ function eqOf(name){
  if(/\(sec/.test(name))return{eq:'t',r:0};if(/\bDB\b|Dumbbell/.test(name))return{eq:'db',r:.2};
  if(/Barbell|Smith|EZ-Bar/.test(name))return{eq:'bb',r:.6};return{eq:'mc',r:.4};
 }
-function regionOf(name){const m=EXM[name]||{};if(m.Glutes===1&&!m.Quads)return 'glute';if(m.Quads||m.Hamstrings||m.Calves||m.Glutes)return 'lower';if(m.Abs)return 'core';return 'upper'}
+function regionOf(name){const m=EXM[name]||{};if(m.Glutes===1&&!m.Quads)return 'glute';if(m.Quads||m.Hamstrings||m.Calves||m.Glutes)return 'lower';if(m.Abs||m.Obliques||m['Lower back'])return 'core';return 'upper'}
 /* ============ READINESS — 3-tap morning check-in + last night's drinks + illness ============
    (Watch/Shortcut sync removed in v6.1: a web app can't read the Watch, and the Shortcut opened a separate
    copy of the app's data. The check-in gives the same steer and changes today's weights directly.) */
@@ -704,6 +697,7 @@ function doneVol(pfx){
    4. During the session each set steers the next: easy → up a step, too hard → down a step.
    First time on a lift: estimated from your other lifts in the same body region, else a cautious size-based guess. */
 const lg=s=>!!(s&&(s.w||s.r||s.ok));
+const CONTROL=new Set(['Bird-Dog','Dead Bug','Roman-Chair Side Bend','Band Pull-Apart','Banded Side Steps','Banded Glute Bridge']);
 function slKey(name,pfx){return 'sl_'+(pfx??P())+slug(name)}
 function setLog(name,pfx){return S.get(slKey(name,pfx),null)}
 const PRESC={}; /* prescription on screen — stamped onto the day's log with the first saved set */
@@ -791,6 +785,8 @@ function presc(name,slot,sess,pfx,plan){
  const rec=lastRecord(name,pfx),reps=rec?rec.sets.filter(s=>s&&parseFloat(s.r)>0).map(s=>parseFloat(s.r)):[];
  const maxW=rec?Math.max(0,...rec.sets.map(s=>parseFloat(s&&s.w)||0)):0;
  if(ei.eq==='bw'){
+  /* control moves are done for clean, slow reps — never "as many as you can" */
+  if(CONTROL.has(name))return Object.assign(out,{kind:'bw',tr:z.hi,ctl:true,why:'Slow, controlled reps — quality over quantity. If it has two sides, do the reps on each side.'});
   if(!reps.length)return Object.assign(out,{kind:'bw',first:true,why:'Bodyweight: as many clean reps as you can, stopping 1–2 short of failure. Next time the app sets the target.'});
   const best=Math.max(...reps),top=reps.every(r=>r>=z.hi);
   return Object.assign(out,{kind:'bw',tr:top?z.hi:Math.min(z.hi,best+1),w:maxW?(top?maxW+2.5:maxW):'',up:top,
@@ -920,7 +916,7 @@ function saveSet(name,si,field,val,pfx,sid){
  if(['bb','db','one','mc'].includes(eqOf(name).eq)){ /* personal record follows today's sets, so typos and corrections can't stick */
   const pk='pr_'+pfx+slug(name),pr0=S.get(pk,null),pr=normPR(pr0);if(pr&&pr!==pr0)S.set(pk,pr);const prior=pr?(pr.d!==tk?pr:(pr.base||null)):null;let best=null;
   o.sets.forEach(x=>{const w=parseFloat(x&&x.w),r=parseFloat(x&&x.r);if(w>0&&w<=400&&r>0&&r<=15){const e1=Math.round(e1Of(w,r,0)*10)/10;if(!best||e1>best.e1)best={e1,w,r}}});
-  if(best&&(!prior||best.e1>prior.e1))S.set(pk,{v:2,n:name,e1:best.e1,w:best.w,r:best.r,d:tk,was:prior?prior.e1:null,base:prior?{n:prior.n,e1:prior.e1,w:prior.w,r:prior.r,d:prior.d,was:prior.was??null}:null});
+  if(best&&(!prior||best.e1>prior.e1))S.set(pk,{v:2,n:name,e1:best.e1,w:best.w,r:best.r,d:tk,t:(pr&&pr.d===tk&&pr.t===best.e1)?pr.t:undefined,was:prior?prior.e1:null,base:prior?{n:prior.n,e1:prior.e1,w:prior.w,r:prior.r,d:prior.d,was:prior.was??null}:null});
   else if(pr&&pr.d===tk)S.set(pk,prior);
  }
  if(sid)markAct(sid,name,si,pfx);
@@ -934,13 +930,12 @@ function tickSet(btn,name,si,pfx,sid,rest){
  if(cur.ok){
   ins.forEach((inp,j)=>{const f=j?'r':'w';if(cur['af'+f]){inp.value='';saveSet(name,si,f,'',pfx,sid)}}); /* clear what ✓ filled in */
   saveSet(name,si,'ok',0,pfx,sid);row.classList.remove('done');btn.classList.remove('on');liveAdjust(row.closest('.sets'));updSessBar();return}
- const before=S.get('pr_'+pfx+slug(name),null);
  ins.forEach((inp,j)=>{if(!inp.value&&inp.dataset.v){const f=j?'r':'w';inp.value=inp.dataset.v;saveSet(name,si,f,inp.value,pfx,sid);saveSet(name,si,'af'+f,1,pfx,sid)}});
  saveSet(name,si,'ok',1,pfx,sid);
  row.classList.add('done');btn.classList.add('on');
  liveAdjust(row.closest('.sets'));
  const after=S.get('pr_'+pfx+slug(name),null);
- if(after&&after.d===todayKey()&&after.was!=null&&(!before||after.e1>before.e1||before.d!==todayKey()))toast('🏆 New best on '+name+' — '+after.w+' kg × '+after.r);
+ if(after&&after.d===todayKey()&&after.was!=null&&after.t!==after.e1){toast('🏆 New best on '+name+' — '+after.w+' kg × '+after.r);S.set('pr_'+pfx+slug(name),Object.assign({},after,{t:after.e1}))}
  if(rest>0)startTimer(rest);
  updSessBar();
  const card=row.closest('.ex');
@@ -1052,11 +1047,6 @@ function addCustom(){
 function delFood(idx){const day=fday(foodDate);day.items.splice(idx,1);saveFday(foodDate,day);render()}
 function setDayType(t){const day=fday(foodDate);day.type=t;saveFday(foodDate,day);render()}
 function shiftFoodDate(n){const d=new Date(foodDate+'T12:00');d.setDate(d.getDate()+n);foodDate=todayKey(d);render()}
-function weekAlc(){
- const f=flog(),now=new Date(todayKey()+'T12:00'),mon=new Date(now);mon.setDate(now.getDate()-((now.getDay()+6)%7));
- let k=0;Object.keys(f).forEach(dk=>{if(new Date(dk+'T12:00')>=mon&&new Date(dk+'T12:00')<=now)f[dk].items.forEach(it=>{if(it.a)k+=it.k})});
- return k;
-}
 /* Recipes — targeted at remaining macros */
 const RECIPES=[
  {n:'Kwark power bowl',k:330,p:48,c:28,f:3,tags:['rest','quick','hot'],d:'300g kwark 0% + ½ scoop whey stirred in + berries + drizzle of honey'},
@@ -1163,7 +1153,7 @@ const HOMEOPTS=[
  {n:'Abs & Core · 12 min',d:'3 rounds, 40s on / 20s off: dead bug · reverse crunch · side plank left · side plank right · hollow hold. Slow reps, ribs down, breathe out hard. Won’t affect tomorrow’s gym session.'},
  {n:'Burner 15 · 15 min',d:'No equipment. 3 rounds of 4 min — 30s fast / 30s easy: squat-to-reach · fast mountain climbers · skater steps · burpee (step back if needed). 1 min walk between rounds. Gets the heart rate into the 4×4 zone ({Z4} bpm).'},
  {n:'Athletic 20 · 20 min',d:'4 rounds, 60s rest: 5 squat jumps (land soft) · 8 fast push-ups · 10 reverse lunges · 20s fast feet · 30s side plank each side. Knees or Achilles grumbling? Swap jumps for fast bodyweight squats.'},
- {n:'Core & Carry · 15 min',d:'3 rounds: dead bug ×10 · side plank 45s/side · glute bridge ×15 · bird-dog ×8/side · plank 45s. Finish: heaviest-DB carry 4×30s'},
+ {n:'Lower Back & Waist · 12 min',d:'The three moves with the best evidence for a strong, pain-free back (McGill 2010). 3 rounds: curl-up 5 × 10 s holds (one knee bent, hands under the lower back) · side plank 20–30 s each side · bird-dog 6 × 10 s each side. Finish: cat-cow ×8, child’s pose 1 min.'},
  {n:'DB Pump · 30 min',d:'4 rounds, 2 reps in reserve: goblet squat ×12 · DB row ×12/side · floor press ×12 · lateral raise ×15 · curl ×12. Deliberately light — won’t touch tomorrow’s gym session'},
  {n:'Zone 2 · 40 min',d:'Brisk outdoor walk, hills if possible. Keep the heart rate at {Z2} bpm — you can talk but not sing.'}];
 const BURNERFIN=['Bike: 30s hard / 30s easy × 8','Incline walk: 8 min at 12–15%, brisk','Rower: 4 × 250 m hard, 60s easy','Kettlebell swings: 15 every minute × 6','Battle ropes: 20s on / 40s off × 6','Stair climber: 8 min, steady-hard'];
@@ -1205,6 +1195,7 @@ const BURNERS_WORK=[
  ['🔥 Pump days','Short rests and higher reps keep the heart rate up — more calories per minute than heavy days.'],
  ['☕ Caffeine before training','About 3 mg/kg: more work done, slightly higher burn. Before 14:00 only.'],
  ['🌶 Chilli & green tea','Small extras — a few dozen calories and more fullness. Nice, not magic.'],
+ ['🎯 Love handles & lower back','Love handles are fat stored over the side muscles. Nobody can burn fat from one spot (Vispute 2011) — they shrink with the weekly calorie budget, usually last. What training does: Lower A and B now work the obliques and lower back directly, which firms the waist and protects the back.'],
  ['😴 7+ hours sleep','On short sleep, more of the weight you lose comes from muscle instead of fat (Nedeltcheva 2010).']];
 const BURNERS_SKIP='Skip “fat burner” supplements. Stimulant blends (synephrine / bitter orange, yohimbine, high-dose caffeine stacks) push heart rate and blood pressure up — a bad idea with heart monitoring and TRT. Green-tea extract capsules have liver-injury reports (NIDDK LiverTox). Raspberry ketones, garcinia, CLA, L-carnitine and apple-cider vinegar showed no meaningful fat loss in trials.';
 const SWAPS=[['6 pints of lager','3 pints + 3 spirits with diet mixer','−500 kcal'],['6 standard pints','6 light lagers','−600 kcal'],['Bottle of wine','4 glasses as spritzers with soda water','−150 kcal'],['Crisps with drinks','Biltong, olives or edamame','−100 kcal'],['Late-night snack','Kwark + berries + cinnamon','−200 kcal, +20 g protein'],['Bread basket','Grilled prawns or calamari starter','more protein'],['Creamy pasta','Tomato pasta + chicken','−250 kcal'],['Juice or smoothie','Whole fruit + water','−100 kcal, more fibre'],['Takeaway pizza','Wrap “pizza” with chicken + mozzarella','−400 kcal']];
@@ -1296,8 +1287,7 @@ function toggleInfo(uid){const b=el('info_'+uid);if(!b)return;b.classList.toggle
 function noteSave(inp,name,pfx){noteSet(name,pfx,inp.value);const c=inp.closest&&inp.closest('.ex'),box=c&&c.querySelector('.exnotes');if(!box)return;
  let parts=[];try{parts=JSON.parse(box.dataset.parts||'[]')}catch(e){}box.innerHTML=parts.map(pt=>noteGet(pt,pfx)).filter(Boolean).map(n=>`<span class="exnote">📝 ${esc(n)}</span>`).join(' ');toast('Note saved')}
 function copyText(t){try{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Copied ✓')}catch(e){prompt('Copy this:',t)}}
-async function shareText(t){try{if(navigator.share){await navigator.share({text:t});return}}catch(e){return}copyText(t)}
-const restTxt=s=>s>=120?(s%60?(s/60).toFixed(1).replace('.0',''):s/60)+' min':s+'s';
+const restTxt=s=>s>=120?(s%60?Math.floor(s/60)+':'+String(s%60).padStart(2,'0'):s/60)+' min':s+'s';
 function isHol(){const o=offOn(todayKey());return !!o&&o.type==='holiday'}
 
 /* ---- TODAY ---- */
@@ -1407,19 +1397,49 @@ function visits(sess,pfx){
  const c=cfg();if(!c.start)return 0;const bk=blockStart(),tk=todayKey();
  return S.get((pfx??P())+'hist',[]).filter(x=>x.id===sess.id&&x.d>=bk&&x.d<tk).length;
 }
-function chosenEx(sess,i,pfx){
- const ex=sess.work[i],v=cfg().variety||'med';
- const shift=v==='low'?0:v==='high'?visits(sess,pfx):(Math.floor(visits(sess,pfx)/2)%2); /* each A/B pick lasts 2 visits → meets both the heavy and the light day */
- const def=ex.pool[(blockNum()-1+i+cycleNum()-1+shift)%ex.pool.length];
- const sw=S.get(swKey(sess.id,i,pfx),null);
- return (sw&&ex.pool.includes(sw))?sw:def;
+/* Picks for a whole session. A paired slot's pool lists 'A + B' defaults, but each half is chosen — and can be
+   swapped — on its own. No exercise appears twice in one session (the logs are keyed by exercise name). */
+function nParts(ex){return ex.t==='ss'&&ex.pool[0].includes(' + ')?ex.pool[0].split(' + ').length:1}
+function halfPool(ex,j){if(nParts(ex)<2)return ex.pool;const out=[];ex.pool.forEach(p=>{const pt=p.split(' + ')[j];if(pt&&!out.includes(pt))out.push(pt)});return out}
+function partKey(sid,i,j,pfx){return swKey(sid,i,pfx)+'_'+j}
+function nextFree(pool,c,used){const k=pool.indexOf(c);for(let n=1;n<=pool.length;n++){const alt=pool[(k+n)%pool.length];if(!used.has(alt))return alt}return c}
+function sessPicks(sess,pfx){
+ pfx=pfx??P();const v=cfg().variety||'med',vis=visits(sess,pfx);
+ const shift=v==='low'?0:v==='high'?vis:(Math.floor(vis/2)%2); /* each A/B pick lasts 2 visits → meets both the heavy and the light day */
+ const used=new Set(),out=[],pinned=new Set();
+ /* 1. the rotation's defaults (or a whole-slot choice saved before v6.4), stepping past anything already in the session */
+ sess.work.forEach((ex,i)=>{
+  const n=nParts(ex),legacy=S.get(swKey(sess.id,i,pfx),null),base=(legacy&&ex.pool.includes(legacy))?legacy:ex.pool[(blockNum()-1+i+cycleNum()-1+shift)%ex.pool.length];
+  const bp=n>1?base.split(' + '):[base],row=[];
+  for(let j=0;j<n;j++){let c=bp[j];if(used.has(c))c=nextFree(halfPool(ex,j),c,used);row.push(c);used.add(c)}
+  out.push(row);
+ });
+ /* 2. your own swaps go on top, one half at a time — every other card stays exactly as it was */
+ const ovs=[];sess.work.forEach((ex,i)=>{for(let j=0;j<out[i].length;j++){const ov=S.get(partKey(sess.id,i,j,pfx),null);if(ov&&halfPool(ex,j).includes(ov)){if(ov===out[i][j])pinned.add(i+'|'+j);else ovs.push([i,j,ov])}}});
+ ovs.forEach(([i,j,ov])=>{
+  if(used.has(ov)){ /* safety net: the name is held by another slot → that slot moves on, unless it is one of your swaps too */
+   let hi=-1,hj=-1;out.forEach((r,x)=>r.forEach((nm,y)=>{if(nm===ov){hi=x;hj=y}}));
+   if(hi<0||pinned.has(hi+'|'+hj))return;
+   const alt=nextFree(halfPool(sess.work[hi],hj),ov,used);if(alt===ov)return;
+   out[hi][hj]=alt;used.add(alt)}
+  used.delete(out[i][j]);out[i][j]=ov;used.add(ov);pinned.add(i+'|'+j);
+ });
+ return out;
 }
-function doSwap(sid,i,val,pfx){S.set(swKey(sid,i,pfx),val);render();toast('Swapped to '+val)}
-function shuffleEx(sid,i,pfx){
- const sess=sessOf(sid,pfx),ex=sess.work[i];
- const cur=chosenEx(sess,i,pfx),idx=ex.pool.indexOf(cur),nx=ex.pool[(idx+1)%ex.pool.length];
- S.set(swKey(sid,i,pfx),nx);render();toast('🔀 '+nx);
+function chosenEx(sess,i,pfx){return sessPicks(sess,pfx)[i].join(' + ')}
+function freeOptions(sess,i,j,pfx){const picks=sessPicks(sess,pfx),cur=picks[i][j],taken=new Set(picks.flat());return halfPool(sess.work[i],j).filter(n=>n===cur||!taken.has(n))}
+function okToSwap(cur,pfx){const o=setLog(cur,pfx);return !(o&&o.d===todayKey()&&o.sets.some(lg))||confirm('You’ve logged sets on '+cur+' today. Swap anyway? Those sets stay saved and come back if you swap back.')}
+function swapPart(sid,i,j,val,pfx){if(!okToSwap(sessPicks(sessOf(sid,pfx),pfx)[i][j],pfx)){render();return}S.set(partKey(sid,i,j,pfx),val);render();toast('Swapped to '+val)}
+function shufflePart(sid,i,j,pfx){
+ const sess=sessOf(sid,pfx),opts=freeOptions(sess,i,j,pfx),cur=sessPicks(sess,pfx)[i][j];
+ if(opts.length<2){toast('No other option for this one');return}
+ if(!okToSwap(cur,pfx))return;
+ const nx=opts[(opts.indexOf(cur)+1)%opts.length];S.set(partKey(sid,i,j,pfx),nx);render();toast('🔀 '+nx);
 }
+/* Skip an exercise for today (machine taken, niggle): it folds away and the counter moves on */
+function skipKey(pfx){return (pfx??P())+'skip'}
+function isSkipped(sid,i,pfx){const o=S.get(skipKey(pfx),null);return !!(o&&o.d===todayKey()&&o.k&&o.k[sid+'|'+i])}
+function toggleSkip(sid,i,pfx){let o=S.get(skipKey(pfx),null);if(!o||o.d!==todayKey())o={d:todayKey(),k:{}};const k=sid+'|'+i,uid=(pfx||'me_')+sid+'_'+i;if(o.k[k])delete o.k[k];else o.k[k]=1;S.set(skipKey(pfx),o);openInfo.delete(uid);const c=el('ex_'+uid);if(c&&c.classList)c.classList.remove('open');render();toast(o.k[k]?'Skipped for today':'Back in')}
 /* Estimated session length (warm-up + work + rest + changeovers) */
 function estMin(sess,pfx){
  const plan=planFor(sess,pfx);let m=7;
@@ -1433,7 +1453,8 @@ function exCard(sess,ex,i,pfx){
  const plan=planFor(sess,pfx),chosen=chosenEx(sess,i,pfx);
  const parts=(ex.t==='ss'&&chosen.includes(' + '))?chosen.split(' + '):[chosen];
  const paired=parts.length>1,straight=paired&&cfg().ssMode==='straight';
- const tagTxt={main:'Main lift',acc:'Accessory',iso:'Isolation',core:'Abs · Core',pwr:'⚡ Power',drill:ex.n>1?'⚡ Drill':'🫀 Cardio'}[ex.t]||(paired?(straight?'Straight sets':'Paired set'):'');
+ const tagTxt=ex.tag||{main:'Main lift',acc:'Accessory',iso:'Isolation',core:'Abs · Core',pwr:'⚡ Power',drill:ex.n>1?'⚡ Drill':'🫀 Cardio'}[ex.t]||(paired?(straight?'Straight sets':'Paired set'):'');
+ const skipped=isSkipped(sess.id,i,pfx);
  const pink=pfx==='her_'&&prof!=='her',uid=(pfx||'me_')+sess.id+'_'+i;
  let infoW='';
  const blocks=parts.map((pt,pi)=>{
@@ -1444,7 +1465,7 @@ function exCard(sess,ex,i,pfx){
   let head;
   if(p.kind==='load')head=`${p.sets} × ${p.tr} @ ${kg(p.w)} ${u}`;
   else if(p.kind==='as')head=`${p.sets} × ${p.tr} · ${kg(p.w)} kg help`;
-  else if(p.kind==='bw')head=p.first?`${p.sets} sets · max clean reps`:`${p.sets} × ${p.tr}${p.w?' +'+kg(p.w)+' kg':''}`;
+  else if(p.kind==='bw')head=p.first?`${p.sets} sets · max clean reps`:`${p.sets} × ${p.tr}${p.ctl?' slow reps':''}${p.w?' +'+kg(p.w)+' kg':''}`;
   else if(p.kind==='t')head=`${p.sets} × ${p.tr} s${p.w?' @ '+kg(p.w)+' kg/hand':''}`;
   else if(p.kind==='pwr')head=`${p.sets} × ${p.lo}–${p.hi} explosive`;
   else head=ex.n>1?`${ex.n} rounds`:'1 block';
@@ -1467,22 +1488,23 @@ function exCard(sess,ex,i,pfx){
    <button class="tick${s.ok?' on':''}" aria-label="Set done" onclick="tickSet(this,'${nm}',${si},'${pfx}','${sess.id}',${rest})">✓</button></div>`;
   }).join('');
   const ctx=prescCtx(p,pfx);
-  return `${paired?`<div class="part"><span class="pl">${'AB'[pi]}</span><span>${esc(pt)}</span><button class="linkbtn" onclick="howTo('${nm}')">▶ form</button></div>`:''}
+  return `${paired?`<div class="part"><span class="pl">${'AB'[pi]}</span><span class="pn">${esc(pt)}</span>${halfPool(ex,pi).length>1?`<button class="iconbtn sm" aria-label="Swap exercise ${'AB'[pi]} only" onclick="shufflePart('${sess.id}',${i},${pi},'${pfx}')">🔀</button>`:''}<button class="linkbtn" onclick="howTo('${nm}')">▶ form</button></div>`:''}
   <div class="presc"><div class="pl1"><b>${head}</b>${p.kind==='load'?`<div class="stp"><button aria-label="Lighter" onclick="adjW(this,'${nm}','${pfx}',-1)">−</button><button aria-label="Heavier" onclick="adjW(this,'${nm}','${pfx}',1)">+</button></div>`:''}</div>${ctx?`<div class="ctx">${ctx}</div>`:''}<span>${sub}</span></div>
   ${extras.length?`<div class="last">${extras.join('<br>')}</div>`:''}
   <div class="sets" data-kind="${p.kind}" data-x="${esc(pt)}" data-w="${p.kind==='load'?kg(p.w):''}"${p.adj?` data-ov="${kg(p.w)}"`:''} data-step="${p.step}" data-tr="${p.tr||0}" data-rir="${p.rir??2}" data-lo="${p.lo}">${p.kind==='drill'?'':`<div class="sethd"><span>Set</span><span>${u}</span><span>${p.sec?'sec':'reps'}</span><span>Done</span></div>`}${rowsHTML}<div class="adj">${note}</div></div>`;
  }).join('');
  const mus=Object.keys(Array.isArray(ex.m)?Object.assign({},...ex.m):(ex.m||{})).join(' · ');
- return `<div class="ex" id="ex_${uid}"${pink?' style="border-color:#5b2a46"':''}>
+ return `<div class="ex${skipped?' complete':''}" id="ex_${uid}"${skipped?' data-skip="1"':''}${pink?' style="border-color:#5b2a46"':''}>
   <div class="exhd"><div style="min-width:0">
    <span class="tag ${ex.t}">${tagTxt}</span>${pink?' <span class="tag" style="background:#3a2030;color:var(--pink)">Clare</span>':''}
-   <div class="name">${esc(chosen)}</div><span class="exnotes" data-parts="${esc(JSON.stringify(parts))}" data-p="${pfx}">${parts.map(pt=>noteGet(pt,pfx)).filter(Boolean).map(n=>`<span class="exnote">📝 ${esc(n)}</span>`).join(' ')}</span><div class="donesum" onclick="this.closest('.ex').classList.toggle('open')"><span class="ds1">✓ Done · tap to see sets</span><span class="ds2">▴ fold up</span></div></div>
-   <div class="exbtns">${ex.pool.length>1?`<button class="iconbtn" aria-label="Swap exercise" onclick="shuffleEx('${sess.id}',${i},'${pfx}')">🔀</button>`:''}<button class="iconbtn" aria-label="How and why" onclick="toggleInfo('${uid}')">ⓘ</button></div></div>
+   <div class="name">${esc(chosen)}</div><span class="exnotes" data-parts="${esc(JSON.stringify(parts))}" data-p="${pfx}">${parts.map(pt=>noteGet(pt,pfx)).filter(Boolean).map(n=>`<span class="exnote">📝 ${esc(n)}</span>`).join(' ')}</span>${skipped?`<div class="donesum skp" onclick="toggleSkip('${sess.id}',${i},'${pfx}')">⏭ Skipped today · tap to bring back</div>`:`<div class="donesum" onclick="this.closest('.ex').classList.toggle('open')"><span class="ds1">✓ Done · tap to see sets</span><span class="ds2">▴ fold up</span></div>`}</div>
+   <div class="exbtns">${!paired&&ex.pool.length>1?`<button class="iconbtn" aria-label="Swap exercise" onclick="shufflePart('${sess.id}',${i},0,'${pfx}')">🔀</button>`:''}<button class="iconbtn" aria-label="How and why" onclick="toggleInfo('${uid}')">ⓘ</button></div></div>
   <div class="info${openInfo.has(uid)?'':' hide'}" id="info_${uid}">
    <p><b>How:</b> ${ex.cue}</p>${paired&&!straight&&ex.st?`<p><b>Station:</b> ${ex.st}</p>`:''}${ex.why?`<p><b>Why this exercise:</b> ${ex.why}</p>`:''}${infoW}${mus?`<p class="dim">Works: ${mus}</p>`:''}
-   ${ex.pool.length>1?`<label>Pick exercise</label><select onchange="doSwap('${sess.id}',${i},this.value,'${pfx}')">${ex.pool.map(p=>`<option ${p===chosen?'selected':''}>${esc(p)}</option>`).join('')}</select>`:''}
+   ${parts.map((pt,pi)=>{const opts=freeOptions(sess,i,pi,pfx);return opts.length>1?`<label>${paired?'Exercise '+'AB'[pi]:'Pick exercise'}</label><select onchange="swapPart('${sess.id}',${i},${pi},this.value,'${pfx}')">${opts.map(p=>`<option ${p===pt?'selected':''}>${esc(p)}</option>`).join('')}</select>`:''}).join('')}
    ${!paired&&ex.t!=='drill'?`<p style="margin:8px 0 0"><button class="linkbtn" onclick="howTo('${jsq(parts[0])}')">▶ Watch the form</button></p>`:''}
-   ${ex.t!=='drill'&&ex.t!=='pwr'?parts.map(pt=>`<label>Note for ${esc(pt)} (seat, pin, grip…)</label><input type="text" maxlength="60" value="${esc(noteGet(pt,pfx))}" placeholder="e.g. seat 4 · pin 3" onchange="noteSave(this,'${jsq(pt)}','${pfx}')">`).join(''):''}</div>
+   ${ex.t!=='drill'&&ex.t!=='pwr'?parts.map(pt=>`<label>Note for ${esc(pt)} (seat, pin, grip…)</label><input type="text" maxlength="60" value="${esc(noteGet(pt,pfx))}" placeholder="e.g. seat 4 · pin 3" onchange="noteSave(this,'${jsq(pt)}','${pfx}')">`).join(''):''}
+   ${ex.t!=='drill'?`<p style="margin:10px 0 0"><button class="linkbtn" onclick="toggleSkip('${sess.id}',${i},'${pfx}')">${skipped?'↩ Bring this one back':'⏭ Skip this one today'}</button></p>`:''}</div>
   ${blocks}</div>`;
 }
 function togPartner(sess){
@@ -1523,7 +1545,8 @@ function sessBarHTML(sess){
 function rowLogged(r){return r.classList.contains('done')||[...r.querySelectorAll('input')].some(i=>i.value)}
 function updSessBar(){
  const sbN=el('sbN');if(!sbN||!document.querySelectorAll)return;
- const rows=[...document.querySelectorAll('#main .setrow')];if(!rows.length)return;
+ const rows=[...document.querySelectorAll('#main .ex:not([data-skip]) .setrow')];
+ if(!rows.length){sbN.textContent='';const n0=el('sbNext');if(n0){n0.textContent='Nothing left — tap Finish ✓';n0.onclick=null}return}
  const dn=rows.filter(rowLogged).length,nxt=rows.find(r=>!rowLogged(r));
  const st=S.get(P()+'sst',null),mins=(st&&st.d===todayKey()&&st.sid===openSession)?Math.floor((Date.now()-st.t)/60000):null;
  sbN.textContent=dn+'/'+rows.length+' sets'+(mins!=null?' · '+mins+' min':'');
@@ -1533,14 +1556,15 @@ function updSessBar(){
    nb.textContent='Next: '+(ins.length?(isNaN(parseFloat(w))?'':w+' '+(nxt.dataset.u||'kg')+' × ')+r+' · ':'')+nxt.dataset.x+' (set '+(+nxt.dataset.si+1)+')';
    nb.onclick=()=>nxt.scrollIntoView({behavior:'smooth',block:'center'})}
   else{nb.textContent='All sets done — tap Finish ✓';nb.onclick=null}}
- document.querySelectorAll('#main .ex').forEach(c=>{const rs=[...c.querySelectorAll('.setrow')];c.classList.toggle('complete',rs.length>0&&rs.every(r=>r.classList.contains('done')))});
+ document.querySelectorAll('#main .ex').forEach(c=>{const rs=[...c.querySelectorAll('.setrow')];c.classList.toggle('complete',!!(c.dataset&&c.dataset.skip)||(rs.length>0&&rs.every(r=>r.classList.contains('done'))))});
 }
 function volCard(){
  const pfx=P(),pl=plannedVol(pfx),dn=doneVol(pfx),max=24,pc=v=>Math.min(100,v/max*100);
  const rows=MUSCLES.filter(k=>pl[k]||dn[k]).map(k=>{const p=Math.round(pl[k]||0),d=Math.round(dn[k]||0);
-  return `<div class="vol"><span>${k}</span><div class="trk"><div class="zone" style="left:${pc(10)}%;width:${pc(10)}%"></div><div class="plan" style="width:${pc(p)}%"></div><div class="dn" style="width:${pc(d)}%"></div></div><span class="dim" style="text-align:right">${d}/${p}</span></div>`}).join('');
+  const sm=['Calves','Abs','Obliques','Lower back'].includes(k),z0=sm?6:10,z1=sm?12:20;
+  return `<div class="vol"><span>${k}</span><div class="trk"><div class="zone" style="left:${pc(z0)}%;width:${pc(z1-z0)}%"></div><div class="plan" style="width:${pc(p)}%"></div><div class="dn" style="width:${pc(d)}%"></div></div><span class="dim" style="text-align:right">${d}/${p}</span></div>`}).join('');
  return `<details class="card" style="display:block"><summary>📊 Weekly sets per muscle — ${WHO()}</summary>
- <p class="dim small">Colour = done · grey = plan · green zone = 10–20 sets a week.</p>${rows}</details>`;
+ <p class="dim small">Colour = done · grey = plan · green zone = the weekly sets that grow it (10–20; 6–12 for calves, abs, obliques and lower back, which also work in every big lift).</p>${rows}</details>`;
 }
 function trainView(){
  if(openSession){const s=findSess(openSession);if(s)return sessView(s)}
